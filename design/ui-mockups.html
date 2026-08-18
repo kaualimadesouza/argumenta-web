@@ -1,0 +1,637 @@
+<title>Argumenta UI</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  /* ---------- chrome da galeria (segue o tema do leitor) ---------- */
+  :root {
+    --bg: #EFF0EC;
+    --chrome-ink: #22282F;
+    --chrome-muted: #667079;
+    --chrome-line: #DBDCD4;
+    --chrome-accent: #2149C4;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14171C;
+      --chrome-ink: #E5E7E2;
+      --chrome-muted: #97A0A8;
+      --chrome-line: #2B313A;
+      --chrome-accent: #8FA9F0;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14171C;
+    --chrome-ink: #E5E7E2;
+    --chrome-muted: #97A0A8;
+    --chrome-line: #2B313A;
+    --chrome-accent: #8FA9F0;
+  }
+
+  /* ---------- tokens do PRODUTO (tema claro fixo, pintado explicitamente) ---------- */
+  :root {
+    --p-paper: #F6F6F3;
+    --p-card: #FFFFFF;
+    --p-ink: #1D2530;
+    --p-muted: #61707A;
+    --p-caneta: #2149C4;
+    --p-caneta-soft: #E8EDFB;
+    --p-marcatexto: #FFE45C;
+    --p-corretor: #C2402A;
+    --p-corretor-soft: #F9E9E5;
+    --p-aprovado: #2E7D5B;
+    --p-aprovado-soft: #E4F1EA;
+    --p-line: #E5E4DC;
+    --p-noite: #232D3B;
+    --display: "Bricolage Grotesque", "Arial Black", system-ui, sans-serif;
+    --serif: "Source Serif 4", Georgia, serif;
+    --mono: "IBM Plex Mono", "Courier New", monospace;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--chrome-ink);
+    font-family: var(--display);
+    line-height: 1.5;
+  }
+  .wrap { max-width: 84rem; margin: 0 auto; padding: 3rem 1.5rem 5rem; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--chrome-accent);
+    margin: 0 0 0.6rem;
+  }
+  h1 {
+    font-weight: 800;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    margin: 0 0 0.75rem;
+    text-wrap: balance;
+  }
+  .intro { max-width: 58ch; color: var(--chrome-muted); font-size: 1rem; margin: 0 0 2.5rem; }
+  h2.gal {
+    font-weight: 700;
+    font-size: 1.15rem;
+    margin: 3rem 0 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--chrome-line);
+  }
+  h2.gal span { font-family: var(--mono); font-weight: 500; font-size: 0.72rem; color: var(--chrome-accent); letter-spacing: 0.12em; margin-right: 0.6rem; }
+
+  /* ---------- design system strip ---------- */
+  .ds-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1rem; }
+  .ds-card {
+    background: var(--p-card);
+    color: var(--p-ink);
+    border: 1px solid var(--p-line);
+    border-radius: 12px;
+    padding: 1rem 1.1rem;
+  }
+  .ds-card h3 { font-family: var(--mono); font-weight: 600; font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--p-muted); margin: 0 0 0.75rem; }
+  .swatches { display: flex; flex-direction: column; gap: 0.45rem; }
+  .swatch { display: flex; align-items: center; gap: 0.6rem; font-family: var(--mono); font-size: 0.72rem; color: var(--p-ink); }
+  .swatch i { width: 1.6rem; height: 1.6rem; border-radius: 6px; border: 1px solid var(--p-line); flex: none; }
+  .swatch code { color: var(--p-muted); margin-left: auto; }
+  .type-row { margin: 0 0 0.7rem; }
+  .type-row .lbl { font-family: var(--mono); font-size: 0.62rem; color: var(--p-muted); letter-spacing: 0.1em; text-transform: uppercase; display: block; }
+  .spec-display { font-family: var(--display); font-weight: 800; font-size: 1.5rem; letter-spacing: -0.01em; }
+  .spec-serif { font-family: var(--serif); font-size: 1.05rem; }
+  .spec-mono { font-family: var(--mono); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+  .comp-stack { display: flex; flex-direction: column; gap: 0.7rem; align-items: flex-start; }
+  .ds-illu-note { font-size: 0.8rem; color: var(--p-muted); margin: 0.6rem 0 0; }
+
+  /* ---------- componentes do produto ---------- */
+  .btn {
+    font-family: var(--display); font-weight: 700; font-size: 0.95rem;
+    border-radius: 10px; padding: 0.75rem 1.2rem; border: none; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 0.5rem; width: 100%; justify-content: center;
+  }
+  .btn:focus-visible { outline: 3px solid var(--p-marcatexto); outline-offset: 2px; }
+  .btn-primary { background: var(--p-caneta); color: #FFFFFF; }
+  .gtile { width: 22px; height: 22px; background: #FFFFFF; border-radius: 5px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+  .gtile svg { width: 13px; height: 13px; display: block; }
+  .btn-ghost { background: var(--p-card); color: var(--p-ink); border: 1.5px solid var(--p-ink); }
+  .btn-danger { background: var(--p-corretor); color: #FFFFFF; }
+  .btn-inline { width: auto; }
+  .chip {
+    font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase;
+    background: var(--p-caneta-soft); color: var(--p-caneta);
+    border-radius: 999px; padding: 0.22rem 0.6rem; display: inline-block;
+  }
+  .chip.warn { background: var(--p-corretor-soft); color: var(--p-corretor); }
+  .chip.ok { background: var(--p-aprovado-soft); color: var(--p-aprovado); }
+  .chip.streak { background: var(--p-marcatexto); color: var(--p-ink); }
+  .hl { background: linear-gradient(transparent 42%, var(--p-marcatexto) 42%, var(--p-marcatexto) 92%, transparent 92%); padding: 0 0.1em; }
+  .err { text-decoration: underline wavy var(--p-corretor) 1.5px; text-underline-offset: 3px; }
+  .fix { color: var(--p-corretor); font-family: var(--mono); font-size: 0.72em; font-weight: 600; }
+  .mark-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 1.05rem; height: 1.05rem; border-radius: 50%;
+    background: var(--p-corretor); color: #FFF;
+    font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+    vertical-align: super; margin-left: 0.1rem; flex: none;
+  }
+  .mark-num.info { background: var(--p-caneta); }
+
+  .dim { margin-bottom: 0.75rem; }
+  .dim-head { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 0.7rem; margin-bottom: 0.3rem; }
+  .dim-head .score { font-variant-numeric: tabular-nums; color: var(--p-muted); }
+  .dim-head .score strong { color: var(--p-ink); font-weight: 600; }
+  .bar { position: relative; height: 8px; border-radius: 4px; background: #ECEBE4; }
+  .bar .fill { position: absolute; inset: 0 auto 0 0; border-radius: 4px; background: var(--p-caneta); }
+  .bar .fill.low { background: var(--p-corretor); }
+  .bar .piso { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--p-ink); opacity: 0.55; }
+
+  /* ---------- galeria ---------- */
+  .rail-note { font-family: var(--mono); font-size: 0.7rem; color: var(--chrome-muted); margin: 0 0 1rem; }
+  .rail { display: flex; gap: 1.75rem; overflow-x: auto; padding: 0.25rem 0.25rem 1.5rem; align-items: flex-start; }
+  .shot { flex: none; width: 390px; }
+  .shot-label { font-family: var(--mono); font-size: 0.72rem; color: var(--chrome-muted); margin: 0 0 0.6rem; }
+  .shot-label b { color: var(--chrome-accent); font-weight: 600; margin-right: 0.4rem; }
+  .phone {
+    width: 390px; min-height: 800px;
+    background: var(--p-paper); color: var(--p-ink);
+    border-radius: 28px;
+    border: 1px solid var(--chrome-line);
+    box-shadow: 0 12px 32px rgba(15, 20, 30, 0.14);
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    font-family: var(--display);
+    font-size: 0.95rem;
+  }
+  .statusbar { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 0.62rem; color: var(--p-muted); padding: 0.7rem 1.4rem 0; }
+  .screen { padding: 1rem 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 0.9rem; flex: 1; }
+  .appbar { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+  .appbar .title { font-weight: 700; font-size: 1.02rem; }
+  .appbar .back { font-family: var(--mono); font-size: 0.8rem; color: var(--p-muted); }
+  .card { background: var(--p-card); border: 1px solid var(--p-line); border-radius: 14px; padding: 1rem 1.1rem; }
+  .card h4 { margin: 0 0 0.4rem; font-size: 0.95rem; font-weight: 700; }
+  .kicker { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--p-muted); display: block; margin-bottom: 0.35rem; }
+  .narr { font-family: var(--serif); font-size: 1.02rem; line-height: 1.65; }
+  .narr p { margin: 0 0 0.8rem; }
+  .narr p:last-child { margin-bottom: 0; }
+
+  /* painel ilustrado (visual novel) */
+  .panel { margin: 0 -1.25rem; }
+  .panel svg { display: block; width: 100%; height: auto; }
+  .panel-caption { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--p-muted); text-align: right; padding: 0.35rem 1.25rem 0; }
+
+  /* fala com retrato */
+  .fala-row { display: flex; gap: 0.65rem; align-items: flex-start; }
+  .avatar { width: 46px; height: 46px; flex: none; border-radius: 50%; overflow: hidden; border: 2px solid var(--p-ink); background: var(--p-caneta-soft); }
+  .avatar svg { display: block; width: 100%; height: 100%; }
+  .avatar.sm { width: 28px; height: 28px; border-width: 1.5px; }
+  .fala {
+    background: var(--p-card); border: 1px solid var(--p-line);
+    border-radius: 2px 14px 14px 14px; padding: 0.75rem 0.95rem;
+    font-family: var(--serif); font-style: italic; font-size: 0.98rem; line-height: 1.55;
+    flex: 1;
+  }
+  .fala .who { font-family: var(--mono); font-style: normal; font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--p-corretor); display: block; margin-bottom: 0.3rem; }
+
+  .meta-line { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+  .spacer { flex: 1; }
+  .small { font-size: 0.78rem; color: var(--p-muted); }
+  .editor {
+    background: var(--p-card); border: 1.5px solid var(--p-caneta); border-radius: 14px;
+    padding: 0.9rem 1rem; font-family: var(--serif); font-size: 0.98rem; line-height: 1.6; min-height: 14rem;
+  }
+  .editor .caret { display: inline-block; width: 2px; height: 1.05em; background: var(--p-caneta); vertical-align: text-bottom; }
+  .editor-foot { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 0.68rem; color: var(--p-muted); }
+
+  /* trilha com capas ilustradas */
+  .story-card { display: flex; gap: 0.85rem; }
+  .cover { width: 74px; height: 74px; flex: none; border-radius: 12px; overflow: hidden; }
+  .cover svg { display: block; width: 100%; height: 100%; }
+  .story-body { flex: 1; display: flex; flex-direction: column; gap: 0.45rem; min-width: 0; }
+  .story-body .row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+  .story-body h4 { font-size: 1.05rem; margin: 0; }
+  .progress { height: 6px; border-radius: 3px; background: #ECEBE4; position: relative; }
+  .progress .fill { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: var(--p-caneta); }
+  .locked { opacity: 0.55; }
+
+  .verdict { border-radius: 14px; padding: 0.9rem 1.1rem; }
+  .verdict.fail { background: var(--p-corretor-soft); border: 1px solid var(--p-corretor); }
+  .verdict .v-title { font-weight: 800; font-size: 1.05rem; color: var(--p-corretor); display: block; }
+  .anot { font-family: var(--serif); font-size: 0.95rem; line-height: 1.75; }
+  .anot-list { display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.8rem; }
+  .anot-list .item { display: flex; gap: 0.5rem; align-items: baseline; }
+
+  .conseq-band { background: var(--p-noite); color: #F3F1E8; border-radius: 14px; overflow: hidden; }
+  .conseq-band .inner { padding: 0.9rem 1.1rem 1rem; }
+  .conseq-band .kicker { color: var(--p-marcatexto); }
+  .conseq-band .narr { color: #F3F1E8; font-size: 0.98rem; }
+  .conseq-band svg { display: block; width: 100%; height: auto; }
+
+  .spark-row { display: grid; grid-template-columns: 7.4rem 1fr auto; align-items: center; gap: 0.6rem; font-family: var(--mono); font-size: 0.68rem; margin-bottom: 0.55rem; }
+  .spark-row .delta { color: var(--p-aprovado); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .streak-hero { text-align: center; padding: 1.2rem 0 0.4rem; }
+  .streak-hero .num { font-weight: 800; font-size: 3.4rem; line-height: 1; }
+  .streak-hero .num em { font-style: normal; background: linear-gradient(transparent 45%, var(--p-marcatexto) 45%, var(--p-marcatexto) 95%, transparent 95%); padding: 0 0.08em; }
+  .wordmark { font-weight: 800; font-size: 2.6rem; letter-spacing: -0.02em; line-height: 1; }
+  .tab-hint { border-top: 1px solid var(--p-line); margin-top: auto; padding-top: 0.7rem; display: flex; justify-content: space-around; font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--p-muted); }
+  .tab-hint .on { color: var(--p-caneta); font-weight: 600; }
+  footer.colo { font-family: var(--mono); font-size: 0.7rem; color: var(--chrome-muted); border-top: 1px solid var(--chrome-line); margin-top: 3rem; padding-top: 1rem; }
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Argumenta &middot; design v2 &middot; visual novel &middot; mobile 390</p>
+  <h1>Interface do MVP</h1>
+  <p class="intro">Segunda iteração: o produto agora tem cara de visual novel. Cenas ilustradas em recorte plano (sem contorno, paleta limitada, a luz amarela do marca-texto como acento emocional), personagens com retrato nas falas e capas ilustradas na trilha. As ilustrações aqui são guias de direção de arte em SVG; a arte final segue este estilo. Aprovado o visual, tudo vira um plugin que desenha nativamente no Figma.</p>
+
+  <h2 class="gal"><span>DS</span>Design system</h2>
+  <div class="ds-grid">
+    <div class="ds-card">
+      <h3>Paleta</h3>
+      <div class="swatches">
+        <div class="swatch"><i style="background:#F6F6F3"></i>Papel<code>#F6F6F3</code></div>
+        <div class="swatch"><i style="background:#1D2530"></i>Tinta<code>#1D2530</code></div>
+        <div class="swatch"><i style="background:#2149C4"></i>Caneta<code>#2149C4</code></div>
+        <div class="swatch"><i style="background:#FFE45C"></i>Marca-texto<code>#FFE45C</code></div>
+        <div class="swatch"><i style="background:#C2402A"></i>Corretor<code>#C2402A</code></div>
+        <div class="swatch"><i style="background:#232D3B"></i>Noite (cenas)<code>#232D3B</code></div>
+      </div>
+    </div>
+    <div class="ds-card">
+      <h3>Tipografia</h3>
+      <div class="type-row"><span class="lbl">Display e UI &middot; Bricolage Grotesque</span><span class="spec-display">Convença o tio Marcos</span></div>
+      <div class="type-row"><span class="lbl">Narrativa &middot; Source Serif 4</span><span class="spec-serif">Domingo à noite. A pia ainda cheia, a vó já dormindo.</span></div>
+      <div class="type-row"><span class="lbl">Notas e placares &middot; IBM Plex Mono</span><span class="spec-mono">C1 100/200 &middot; piso 120</span></div>
+    </div>
+    <div class="ds-card">
+      <h3>Ilustração &middot; recorte plano</h3>
+      <svg viewBox="0 0 220 96" role="img" aria-label="amostra do estilo de ilustração: janela à noite com lua" style="display:block;width:100%;border-radius:8px">
+        <rect width="220" height="96" fill="#232D3B"/>
+        <rect x="18" y="14" width="78" height="58" rx="6" fill="#2E3D52"/>
+        <circle cx="76" cy="32" r="10" fill="#F6F6F3"/>
+        <circle cx="38" cy="26" r="1.6" fill="#F6F6F3" opacity="0.7"/>
+        <circle cx="52" cy="48" r="1.3" fill="#F6F6F3" opacity="0.5"/>
+        <rect x="150" y="0" width="3" height="24" fill="#141B24"/>
+        <path d="M136 24 h31 l7 14 h-45 z" fill="#FFE45C"/>
+        <path d="M131 38 h41 l22 58 h-85 z" fill="#FFE45C" opacity="0.14"/>
+        <rect x="0" y="76" width="220" height="20" fill="#1A222E"/>
+      </svg>
+      <p class="ds-illu-note">Formas chapadas, sem contorno. Silhuetas para peso dramático, a luz do marca-texto para onde a emoção está. Personagens com rosto mínimo: pontos, sobrancelha, boca.</p>
+    </div>
+    <div class="ds-card">
+      <h3>Componentes</h3>
+      <div class="comp-stack">
+        <button class="btn btn-primary btn-inline">Enviar argumento</button>
+        <span><span class="chip">Tese</span> <span class="chip ok">Aprovado</span> <span class="chip warn">Falha técnica</span> <span class="chip streak">7 dias</span></span>
+        <span class="anot" style="font-size:0.9rem">Ela <span class="err">esta</span> <span class="fix">está</span> cansada, e <span class="hl">segundo o IBGE</span> isso é regra, não exceção.</span>
+        <div style="width:100%">
+          <div class="dim" style="margin:0">
+            <div class="dim-head"><span>Norma culta</span><span class="score"><strong>100</strong>/200 &middot; piso 120</span></div>
+            <div class="bar"><div class="fill low" style="width:50%"></div><div class="piso" style="left:60%"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="gal"><span>01&ndash;07</span>Telas</h2>
+  <p class="rail-note">arraste horizontalmente para percorrer as telas &rarr;</p>
+  <div class="rail">
+
+    <!-- 01 ENTRADA -->
+    <div class="shot">
+      <p class="shot-label"><b>01</b>Entrada</p>
+      <div class="phone">
+        <div class="statusbar"><span>9:41</span><span>5G &middot; 100%</span></div>
+        <div class="screen">
+          <div style="flex:1; display:flex; flex-direction:column; justify-content:center; gap:1.1rem; text-align:center;">
+            <svg viewBox="0 0 220 110" role="img" aria-label="caneta desenhando um traço de marca-texto" style="width:200px; margin:0 auto; display:block">
+              <path d="M18 86 q70 -20 152 -8" fill="none" stroke="#FFE45C" stroke-width="16" stroke-linecap="round"/>
+              <g transform="rotate(38 172 74)">
+                <rect x="166" y="28" width="13" height="40" rx="4" fill="#2149C4"/>
+                <path d="M166 68 h13 l-6.5 14 z" fill="#1D2530"/>
+                <circle cx="172.5" cy="79" r="1.6" fill="#F6F6F3"/>
+              </g>
+            </svg>
+            <div class="wordmark"><span class="hl">Argu</span>menta</div>
+            <p class="narr" style="color:var(--p-muted); margin:0 auto; max-width:24ch;">Vença a discussão dentro da história. Passe no vestibular fora dela.</p>
+          </div>
+          <button class="btn btn-primary">
+            <span class="gtile">
+              <svg viewBox="0 0 18 18" role="img" aria-label="logo do Google">
+                <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/>
+                <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z"/>
+                <path fill="#FBBC05" d="M3.97 10.72A5.41 5.41 0 0 1 3.68 9c0-.6.1-1.18.28-1.72V4.95H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.05l3.01-2.33z"/>
+                <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A9 9 0 0 0 9 0 9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"/>
+              </svg>
+            </span>
+            Entrar com Google
+          </button>
+          <button class="btn btn-ghost">Criar conta com e-mail</button>
+          <p class="small" style="text-align:center; margin:0.2rem 0 0;">Só pedimos e-mail, apelido e o ano do seu vestibular. Nada mais.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 02 TRILHA -->
+    <div class="shot">
+      <p class="shot-label"><b>02</b>Trilha (capas ilustradas)</p>
+      <div class="phone">
+        <div class="statusbar"><span>9:41</span><span>5G &middot; 100%</span></div>
+        <div class="screen">
+          <div class="appbar">
+            <span class="title">Sua trilha</span>
+            <span class="meta-line"><span class="chip streak">7 dias</span><span class="chip">2/3 envios hoje</span></span>
+          </div>
+          <div class="card story-card">
+            <div class="cover">
+              <svg viewBox="0 0 74 74" role="img" aria-label="capa de O Grêmio: megafone">
+                <rect width="74" height="74" fill="#E8EDFB"/>
+                <path d="M14 30 h9 l20 -13 v40 l-20 -13 h-9 z" fill="#2149C4"/>
+                <rect x="17" y="44" width="7" height="12" rx="2.5" fill="#1D2530"/>
+                <path d="M50 28 q9 9 0 18" fill="none" stroke="#FFE45C" stroke-width="4" stroke-linecap="round"/>
+                <path d="M57 22 q15 15 0 30" fill="none" stroke="#FFE45C" stroke-width="4" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="story-body">
+              <div class="row"><h4>O Grêmio</h4><span class="chip ok">Concluída</span></div>
+              <span class="small">Tutorial &middot; 3 capítulos</span>
+              <div class="progress"><div class="fill" style="width:100%; background:var(--p-aprovado)"></div></div>
+            </div>
+          </div>
+          <div class="card" style="border:1.5px solid var(--p-caneta); display:flex; flex-direction:column; gap:0.8rem">
+            <div class="story-card" style="padding:0">
+              <div class="cover">
+                <svg viewBox="0 0 74 74" role="img" aria-label="capa de Cuidado Invisível: poltrona da vó com manta">
+                  <rect width="74" height="74" fill="#232D3B"/>
+                  <rect x="16" y="18" width="34" height="30" rx="9" fill="#1D2530"/>
+                  <rect x="10" y="34" width="12" height="22" rx="5" fill="#1D2530"/>
+                  <rect x="44" y="34" width="12" height="22" rx="5" fill="#1D2530"/>
+                  <rect x="16" y="48" width="40" height="9" rx="4" fill="#141B24"/>
+                  <path d="M20 32 h22 l-4 16 h-18 z" fill="#FFE45C"/>
+                  <circle cx="62" cy="26" r="5" fill="#F6F6F3"/>
+                </svg>
+              </div>
+              <div class="story-body">
+                <div class="row"><h4>Cuidado Invisível</h4><span class="chip">Cap. 2/5</span></div>
+                <span class="small">Tema ENEM 2023 &middot; convença o tio Marcos</span>
+                <div class="progress"><div class="fill" style="width:40%"></div></div>
+              </div>
+            </div>
+            <button class="btn btn-primary">Continuar capítulo 2</button>
+          </div>
+          <div class="card story-card locked">
+            <div class="cover">
+              <svg viewBox="0 0 74 74" role="img" aria-label="capa de Sinal Fechado: semáforo no vermelho">
+                <rect width="74" height="74" fill="#ECEBE4"/>
+                <rect x="34" y="46" width="6" height="22" fill="#61707A"/>
+                <rect x="24" y="8" width="26" height="42" rx="8" fill="#1D2530"/>
+                <circle cx="37" cy="19" r="6" fill="#C2402A"/>
+                <circle cx="37" cy="33" r="6" fill="#3A4552"/>
+                <circle cx="37" cy="44" r="4.5" fill="#3A4552"/>
+              </svg>
+            </div>
+            <div class="story-body">
+              <div class="row"><h4>Sinal Fechado</h4><span class="chip warn">Bloqueada</span></div>
+              <span class="small">Tema FUVEST &middot; conclua Cuidado Invisível</span>
+              <div class="progress"><div class="fill" style="width:0%"></div></div>
+            </div>
+          </div>
+          <div class="tab-hint"><span class="on">Trilha</span><span>Progresso</span><span>Conta</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 03 CENA -->
+    <div class="shot">
+      <p class="shot-label"><b>03</b>Cena ilustrada</p>
+      <div class="phone">
+        <div class="statusbar"><span>9:41</span><span>5G &middot; 100%</span></div>
+        <div class="screen">
+          <div class="appbar">
+            <span class="back">&larr; Trilha</span>
+            <span class="chip">Cap. 2 de 5</span>
+          </div>
+          <div class="panel">
+            <svg viewBox="0 0 390 210" role="img" aria-label="cozinha à noite: a mãe lava a louça sob a luz da lâmpada, janela com lua">
+              <rect width="390" height="210" fill="#232D3B"/>
+              <rect x="28" y="24" width="118" height="86" rx="8" fill="#2E3D52"/>
+              <circle cx="116" cy="50" r="13" fill="#F6F6F3"/>
+              <circle cx="58" cy="42" r="2" fill="#F6F6F3" opacity="0.7"/>
+              <circle cx="84" cy="68" r="1.6" fill="#F6F6F3" opacity="0.5"/>
+              <circle cx="46" cy="88" r="1.6" fill="#F6F6F3" opacity="0.5"/>
+              <rect x="266" y="0" width="3" height="36" fill="#141B24"/>
+              <path d="M248 36 h39 l8 18 h-55 z" fill="#FFE45C"/>
+              <path d="M242 54 h51 l34 156 h-119 z" fill="#FFE45C" opacity="0.12"/>
+              <rect x="0" y="146" width="390" height="64" fill="#1A222E"/>
+              <rect x="186" y="138" width="150" height="10" rx="4" fill="#2E3D52"/>
+              <ellipse cx="332" cy="134" rx="24" ry="5" fill="#8FA3B8"/>
+              <ellipse cx="332" cy="127" rx="20" ry="5" fill="#77899D"/>
+              <ellipse cx="332" cy="120" rx="22" ry="5" fill="#8FA3B8"/>
+              <circle cx="252" cy="84" r="14" fill="#10151C"/>
+              <path d="M252 98 c-16 0 -23 14 -23 32 v16 h46 v-16 c0 -18 -7 -32 -23 -32 z" fill="#10151C"/>
+              <path d="M236 114 q-15 8 -13 24" stroke="#10151C" stroke-width="7" fill="none" stroke-linecap="round"/>
+            </svg>
+            <p class="panel-caption">Cuidado Invisível &middot; tema ENEM 2023</p>
+          </div>
+          <div class="narr">
+            <p>Domingo à noite. A pia ainda cheia, a vó já dormindo. Sua mãe apaga a luz da cozinha com o rosto fechado de quem repete aquilo há meses.</p>
+          </div>
+          <div class="fala-row">
+            <div class="avatar">
+              <svg viewBox="0 0 64 64" role="img" aria-label="retrato do tio Marcos">
+                <rect width="64" height="64" fill="#E8EDFB"/>
+                <circle cx="32" cy="27" r="13" fill="#D9A47E"/>
+                <path d="M19 25 a13 13 0 0 1 26 0 l-5 -5 h-16 z" fill="#2A2118"/>
+                <path d="M12 60 a20 17 0 0 1 40 0 z" fill="#2149C4"/>
+                <circle cx="27" cy="27" r="1.7" fill="#1D2530"/>
+                <circle cx="37" cy="27" r="1.7" fill="#1D2530"/>
+                <path d="M24 23 l6 1.6" stroke="#1D2530" stroke-width="1.7" stroke-linecap="round"/>
+                <path d="M40 23 l-6 1.6" stroke="#1D2530" stroke-width="1.7" stroke-linecap="round"/>
+                <path d="M27 36 q5 3 10 0" fill="none" stroke="#2A2118" stroke-width="2.4" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="fala">
+              <span class="who">Tio Marcos</span>
+              "Sua mãe reclama, mas cuidar da vó nem é trabalho de verdade. Trabalho é o que eu faço: sair de casa às seis e voltar às oito."
+            </div>
+          </div>
+          <div class="spacer"></div>
+          <div class="card">
+            <span class="kicker">Seu objetivo</span>
+            Convencer o tio Marcos de que o cuidado com a vó é trabalho de verdade, e que precisa ser dividido.
+          </div>
+          <button class="btn btn-primary">Argumentar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 04 EDITOR -->
+    <div class="shot">
+      <p class="shot-label"><b>04</b>Editor de argumento</p>
+      <div class="phone">
+        <div class="statusbar"><span>9:41</span><span>5G &middot; 100%</span></div>
+        <div class="screen">
+          <div class="appbar">
+            <span class="back">&larr; Cena</span>
+            <span class="chip">2/3 envios hoje</span>
+          </div>
+          <div class="card" style="padding:0.75rem 1rem">
+            <div class="meta-line" style="margin-bottom:0.5rem">
+              <div class="avatar sm">
+                <svg viewBox="0 0 64 64" role="img" aria-label="tio Marcos">
+                  <rect width="64" height="64" fill="#E8EDFB"/>
+                  <circle cx="32" cy="27" r="13" fill="#D9A47E"/>
+                  <path d="M19 25 a13 13 0 0 1 26 0 l-5 -5 h-16 z" fill="#2A2118"/>
+                  <path d="M12 60 a20 17 0 0 1 40 0 z" fill="#2149C4"/>
+                  <circle cx="27" cy="27" r="1.7" fill="#1D2530"/>
+                  <circle cx="37" cy="27" r="1.7" fill="#1D2530"/>
+                  <path d="M27 36 q5 3 10 0" fill="none" stroke="#2A2118" stroke-width="2.4" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <span class="kicker" style="margin:0">Convença o tio Marcos</span>
+            </div>
+            <span class="meta-line"><span class="chip">Tese</span><span class="chip">Justificativa</span><span class="chip">Repertório explicado</span></span>
+          </div>
+          <div class="editor">
+            Tio, eu entendo que o senhor trabalha muito, mas a mãe também trabalha e ainda cuida da vó todos os dias sem descanso. Concerteza o senhor já percebeu que ela esta cansada. Segundo o IBGE, as mulheres brasileiras dedicam quase o dobro de horas ao trabalho de cuidado em comparação aos homens, oque mostra que essa divisão desigual não acontece só na nossa familia.<span class="caret"></span>
+          </div>
+          <div class="editor-foot"><span>118 / 250 palavras</span><span>rascunho salvo</span></div>
+          <div class="spacer"></div>
+          <button class="btn btn-primary">Enviar para o tio Marcos</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 05 CORRECAO -->
+    <div class="shot">
+      <p class="shot-label"><b>05</b>Correção (falha técnica)</p>
+      <div class="phone">
+        <div class="statusbar"><span>9:41</span><span>5G &middot; 100%</span></div>
+        <div class="screen">
+          <div class="verdict fail">
+            <span class="v-title">Quase. A norma culta segurou você.</span>
+            <span class="small" style="color:var(--p-ink)">Seu argumento é bom, mas há erros de escrita abaixo do piso. Revise e reenvie: a história espera por você.</span>
+          </div>
+          <div class="card">
+            <span class="kicker">Placar &middot; lente ENEM &middot; capítulo</span>
+            <div class="dim">
+              <div class="dim-head"><span>C1 Norma culta</span><span class="score"><strong>100</strong>/200 &middot; piso 120</span></div>
+              <div class="bar"><div class="fill low" style="width:50%"></div><div class="piso" style="left:60%"></div></div>
+            </div>
+            <div class="dim">
+              <div class="dim-head"><span>C2 Repertório</span><span class="score"><strong>160</strong>/200</span></div>
+              <div class="bar"><div class="fill" style="width:80%"></div><div class="piso" style="left:60%"></div></div>
+            </div>
+            <div class="dim">
+              <div class="dim-head"><span>C3 Coerência</span><span class="score"><strong>150</strong>/200</span></div>
+              <div class="bar"><div class="fill" style="width:75%"></div><div class="piso" style="left:60%"></div></div>
+            </div>
+            <div class="dim">
+              <div class="dim-head"><span>C4 Coesão</span><span class="score"><strong>140</strong>/200</span></div>
+              <div class="bar"><div class="fill" style="width:70%"></div><div class="piso" style="left:60%"></div></div>
+            </div>
+            <div class="dim" style="margin-bottom:0">
+              <div class="dim-head"><span>Persuasão &middot; critério Argumenta</span><span class="score"><strong>78</strong>/100</span></div>
+              <div class="bar"><div class="fill" style="width:78%"></div><div class="piso" style="left:60%"></div></div>
+            </div>
+          </div>
+          <div class="card">
+            <span class="kicker">Seu texto, corrigido</span>
+            <p class="anot" style="margin:0">... e ainda cuida da vó todos os dias sem descanso. <span class="err">Concerteza</span><span class="mark-num">1</span> o senhor já percebeu que ela <span class="err">esta</span><span class="mark-num">2</span> cansada. <span class="hl">Segundo o IBGE, as mulheres dedicam quase o dobro de horas ao trabalho de cuidado</span><span class="mark-num info">4</span>, <span class="err">oque</span><span class="mark-num">3</span> mostra que essa divisão não acontece só na nossa <span class="err">familia</span><span class="mark-num">2</span>.</p>
+          </div>
+          <div class="card anot-list">
+            <div class="item"><span class="mark-num">1</span><span><b>Ortografia:</b> "concerteza" não existe. Escreva "com certeza".</span></div>
+            <div class="item"><span class="mark-num">2</span><span><b>Acentuação:</b> "está" e "família" levam acento.</span></div>
+            <div class="item"><span class="mark-num">3</span><span><b>Ortografia:</b> "o que" se escreve separado.</span></div>
+            <div class="item"><span class="mark-num info">4</span><span><b>Repertório bem usado:</b> dado citado, explicado e ligado à tese. É isso.</span></div>
+          </div>
+          <button class="btn btn-danger">Revisar meu texto</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 06 CONSEQUENCIA -->
+    <div class="shot">
+      <p class="shot-label"><b>06</b>Consequência + recuperação</p>
+      <div class="phone">
+        <div class="statusbar"><span>9:41</span><span>5G &middot; 100%</span></div>
+        <div class="screen">
+          <div class="appbar">
+            <span class="back">Cuidado Invisível</span>
+            <span class="chip warn">Não convenceu</span>
+          </div>
+          <div class="conseq-band">
+            <svg viewBox="0 0 390 150" role="img" aria-label="manhã seguinte: mesa vazia com um bilhete, cadeira afastada">
+              <rect width="390" height="150" fill="#26303F"/>
+              <rect x="252" y="18" width="104" height="72" rx="7" fill="#33415A"/>
+              <rect x="252" y="62" width="104" height="28" rx="0" fill="#FFE45C" opacity="0.35"/>
+              <circle cx="304" cy="62" r="14" fill="#FFE45C"/>
+              <rect x="0" y="104" width="390" height="46" fill="#1A222E"/>
+              <rect x="36" y="96" width="230" height="10" rx="4" fill="#3A3128"/>
+              <rect x="52" y="106" width="9" height="44" fill="#2C251E"/>
+              <rect x="240" y="106" width="9" height="44" fill="#2C251E"/>
+              <g transform="rotate(-6 150 84)">
+                <rect x="118" y="70" width="64" height="42" rx="3" fill="#F6F6F3"/>
+                <rect x="126" y="80" width="46" height="3.5" rx="1.75" fill="#8B93A0"/>
+                <rect x="126" y="89" width="38" height="3.5" rx="1.75" fill="#8B93A0"/>
+                <rect x="126" y="98" width="42" height="3.5" rx="1.75" fill="#C2402A"/>
+              </g>
+              <path d="M330 118 h34 v32 h-8 v-24 h-18 v24 h-8 z" fill="#10151C"/>
+            </svg>
+            <div class="inner">
+              <span class="kicker">Consequência</span>
+              <div class="narr">
+                <p>Segunda-feira, 6h. O tio Marcos saiu sem falar com ninguém. Na mesa, um bilhete: "cada um cuida da sua parte".</p>
+                <p>Sua mãe lê, dobra o papel em silêncio e liga para o trabalho. Vai faltar de novo.</p>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <span class="kicker">Onde o argumento falhou</span>
+            Você apelou para o cansaço da sua mãe, mas não mostrou <em>por que</em> cuidar é trabalho. Sem um critério concreto (tempo, esforço, valor econômico), o tio manteve a definição dele.
+          </div>
+          <div class="card">
+            <span class="kicker">Dica de repertório</span>
+            Existe um nome para isso: <span class="hl">economia do cuidado</span>. Procure dados sobre horas de trabalho não remunerado no Brasil.
+          </div>
+          <div class="spacer"></div>
+          <button class="btn btn-primary">Cena de recuperação: tentar reverter</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 07 PROGRESSO -->
+    <div class="shot">
+      <p class="shot-label"><b>07</b>Progresso</p>
+      <div class="phone">
+        <div class="statusbar"><span>9:41</span><span>5G &middot; 100%</span></div>
+        <div class="screen">
+          <div class="appbar"><span class="title">Seu progresso</span><span class="chip">lente ENEM</span></div>
+          <div class="streak-hero">
+            <div class="num"><em>7</em> dias</div>
+            <span class="small">escrevendo sem falhar &middot; recorde: 12</span>
+          </div>
+          <div class="card">
+            <span class="kicker">Evolução por dimensão &middot; últimos 30 dias</span>
+            <div class="spark-row"><span>Norma culta</span><svg width="100%" height="22" viewBox="0 0 120 22" preserveAspectRatio="none" role="img" aria-label="evolução de norma culta"><polyline points="0,18 20,16 40,17 60,12 80,10 100,7 120,5" fill="none" stroke="#2149C4" stroke-width="2"/><circle cx="120" cy="5" r="2.5" fill="#2149C4"/></svg><span class="delta">96&rarr;128</span></div>
+            <div class="spark-row"><span>Coesão</span><svg width="100%" height="22" viewBox="0 0 120 22" preserveAspectRatio="none" role="img" aria-label="evolução de coesão"><polyline points="0,16 20,14 40,15 60,10 80,8 100,8 120,4" fill="none" stroke="#2149C4" stroke-width="2"/><circle cx="120" cy="4" r="2.5" fill="#2149C4"/></svg><span class="delta">110&rarr;150</span></div>
+            <div class="spark-row"><span>Coerência</span><svg width="100%" height="22" viewBox="0 0 120 22" preserveAspectRatio="none" role="img" aria-label="evolução de coerência"><polyline points="0,14 20,13 40,11 60,11 80,9 100,7 120,6" fill="none" stroke="#2149C4" stroke-width="2"/><circle cx="120" cy="6" r="2.5" fill="#2149C4"/></svg><span class="delta">122&rarr;148</span></div>
+            <div class="spark-row"><span>Repertório</span><svg width="100%" height="22" viewBox="0 0 120 22" preserveAspectRatio="none" role="img" aria-label="evolução de repertório"><polyline points="0,19 20,18 40,14 60,13 80,9 100,5 120,3" fill="none" stroke="#2149C4" stroke-width="2"/><circle cx="120" cy="3" r="2.5" fill="#2149C4"/></svg><span class="delta">90&rarr;164</span></div>
+            <div class="spark-row" style="margin-bottom:0"><span>Persuasão</span><svg width="100%" height="22" viewBox="0 0 120 22" preserveAspectRatio="none" role="img" aria-label="evolução de persuasão"><polyline points="0,18 20,15 40,16 60,12 80,11 100,8 120,7" fill="none" stroke="#2149C4" stroke-width="2"/><circle cx="120" cy="7" r="2.5" fill="#2149C4"/></svg><span class="delta">55&rarr;80</span></div>
+          </div>
+          <div class="card">
+            <span class="kicker">Marcos</span>
+            <div class="anot-list">
+              <div class="item"><span class="chip ok">Feito</span><span>O Grêmio concluída</span></div>
+              <div class="item"><span class="chip ok">Feito</span><span>Primeiro repertório bem explicado</span></div>
+              <div class="item"><span class="chip">A caminho</span><span>Primeira redação-chefe</span></div>
+            </div>
+          </div>
+          <div class="tab-hint"><span>Trilha</span><span class="on">Progresso</span><span>Conta</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="colo">Argumenta &middot; design v2 (visual novel) &middot; telas Entrada, Trilha, Cena, Editor, Correção, Consequência e Progresso &middot; faltam para v3: onboarding (escolha do vestibular), redação-chefe e configurações &middot; ilustrações em SVG são guia de direção de arte</footer>
+</div>

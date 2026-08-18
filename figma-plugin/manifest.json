@@ -1,0 +1,8 @@
+{
+  "name": "Argumenta UI Builder",
+  "id": "argumenta-ui-builder-dev",
+  "api": "1.0.0",
+  "main": "code.js",
+  "editorType": ["figma"],
+  "networkAccess": { "allowedDomains": ["none"] }
+}
