@@ -1,0 +1,55 @@
+.hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  text-align: center;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(2.5rem, 8vw, 4rem);
+  color: var(--color-ink);
+}
+
+.highlight {
+  background: linear-gradient(transparent 55%, var(--color-marca-texto) 55%, var(--color-marca-texto) 92%, transparent 92%);
+  color: inherit;
+}
+
+.tagline {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--color-muted);
+  max-width: 26rem;
+}
+
+.cta {
+  border: 0;
+  cursor: pointer;
+  padding: 0.85rem 1.4rem;
+  border-radius: var(--radius-button);
+  background: var(--color-caneta);
+  color: var(--color-card);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.note {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}

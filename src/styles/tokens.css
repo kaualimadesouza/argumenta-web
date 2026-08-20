@@ -1,0 +1,34 @@
+/* Argumenta design tokens.
+   Source of truth: design/ui-mockups.html (design system v2, "papel e caneta"). */
+:root {
+  /* color */
+  --color-paper: #f6f6f3;
+  --color-card: #ffffff;
+  --color-ink: #1d2530;
+  --color-muted: #61707a;
+  --color-caneta: #2149c4;
+  --color-caneta-soft: #e8edfb;
+  --color-marca-texto: #ffe45c;
+  --color-corretor: #c2402a;
+  --color-corretor-soft: #f9e9e5;
+  --color-aprovado: #2e7d5b;
+  --color-aprovado-soft: #e4f1ea;
+  --color-line: #e5e4dc;
+  --color-noite: #232d3b;
+  --color-noite-inner: #26303f;
+  --color-track: #ecebe4;
+  --color-luz: #f3f1e8;
+
+  /* type */
+  --font-display: 'Bricolage Grotesque', 'Inter', system-ui, sans-serif;
+  --font-serif: 'Source Serif 4', 'Source Serif Pro', Georgia, serif;
+  --font-mono: 'IBM Plex Mono', 'Roboto Mono', monospace;
+
+  /* shape */
+  --radius-card: 14px;
+  --radius-button: 10px;
+  --radius-chip: 999px;
+
+  /* layout */
+  --content-max: 42rem;
+}
