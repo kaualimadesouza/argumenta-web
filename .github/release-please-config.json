@@ -1,0 +1,12 @@
+{
+  "packages": {
+    ".": {
+      "release-type": "node",
+      "package-name": "argumenta-web",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true,
+      "versioning-strategy": "always-bump-patch",
+      "include-v-in-tag": false
+    }
+  }
+}

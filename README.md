@@ -24,6 +24,15 @@ npm test           # vitest
 npm run build      # tsc -b && vite build
 ```
 
+## Releases
+
+Versionamento e changelog automáticos via
+[Release Please](https://github.com/googleapis/release-please): merges na main
+com conventional commits alimentam um PR de release; mergear esse PR cria a tag
+semver, a GitHub Release e o `CHANGELOG.md`, propagando a versão para
+`package.json`. PRs são squash-merged com título convencional (validado pelo
+workflow de título).
+
 ## Design system
 
 Fonte da verdade visual: [design/ui-mockups.html](design/ui-mockups.html)
