@@ -17,6 +17,10 @@ skill first; do not improvise the workflow from memory.
 
 ## Non-negotiables
 
+- **Typed objects, never loose dicts/objects** (owner decision): every function
+  input/output shape is a named TypeScript interface or type; no `any`, no
+  anonymous object shapes crossing module boundaries.
+
 - **No assistant attribution anywhere**: no `Co-Authored-By`, no "Generated with"
   footers, in commits, PRs, issues or comments. Owner decision, permanent.
 - **GitHub account**: `kaualimadesouza` only. `gh auth status` before gh/git
