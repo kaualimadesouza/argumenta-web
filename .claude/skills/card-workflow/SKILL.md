@@ -28,6 +28,9 @@ argumenta-mobile.
 2. Branch from main: `feat/<slug>` (or `fix/`, `chore/`, `ci/`).
 3. Implement; `npm run lint && npm run typecheck && npm test` must pass locally.
 4. PR to main titled as a conventional commit, body with `Closes #<n>`.
+   Before opening (or at latest before merging), run the
+   `thermo-nuclear-code-quality-review` skill over the branch diff and apply
+   or explicitly answer every structural finding. No PR merges unreviewed.
 5. CI green, squash-merge, delete branch, move the card to **Done**.
 
 ## Board operations
