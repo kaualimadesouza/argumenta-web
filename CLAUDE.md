@@ -17,6 +17,9 @@ skill first; do not improvise the workflow from memory.
 
 ## Non-negotiables
 
+- **TDD, always** (owner decision): write the tests (Vitest + Testing Library)
+  BEFORE the implementation, derived from the card's acceptance criteria;
+  red first, then implement until green, then refactor.
 - **Typed objects, never loose dicts/objects** (owner decision): every function
   input/output shape is a named TypeScript interface or type; no `any`, no
   anonymous object shapes crossing module boundaries.
