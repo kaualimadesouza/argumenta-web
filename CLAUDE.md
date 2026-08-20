@@ -12,6 +12,7 @@ skill first; do not improvise the workflow from memory.
 | If the task involves... | Invoke |
 |---|---|
 | Starting/finishing an issue, opening a PR, the kanban board | `card-workflow` |
+| Writing ANY code (tests come first) | `tdd` |
 | Reviewing a PR/diff before merge (mandatory for EVERY PR) | `thermo-nuclear-code-quality-review` |
 | Building or styling any screen/component, colors, fonts | `design-tokens` |
 
