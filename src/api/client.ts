@@ -6,6 +6,7 @@ import type {
   MeResponse,
   RegisterRequest,
   TargetResponse,
+  TrackResponse,
   UpdateMeRequest,
   UserResponse,
 } from './types'
@@ -30,6 +31,7 @@ export interface ArgumentaApi {
   addTarget(body: AddTargetRequest): Promise<TargetResponse>
   removeTarget(targetId: string): Promise<void>
   activateTarget(targetId: string): Promise<void>
+  track(): Promise<TrackResponse>
 }
 
 async function send(path: string, init: RequestInit): Promise<Response> {
@@ -65,5 +67,6 @@ export function createHttpApi(): ArgumentaApi {
     addTarget: (body) => request('/me/targets', 'POST', body),
     removeTarget: (targetId) => request(`/me/targets/${targetId}`, 'DELETE'),
     activateTarget: (targetId) => request(`/me/targets/${targetId}/activate`, 'PUT'),
+    track: () => request('/track', 'GET'),
   }
 }

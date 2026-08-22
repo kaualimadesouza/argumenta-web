@@ -1,4 +1,11 @@
-import type { Exam, MeResponse, TargetResponse, UserResponse } from '../api/types'
+import type {
+  Exam,
+  MeResponse,
+  TargetResponse,
+  TrackResponse,
+  TrackStoryResponse,
+  UserResponse,
+} from '../api/types'
 
 export const A_PASSWORD = 'correct-horse-9'
 
@@ -18,4 +25,31 @@ export function aTarget(overrides: Partial<TargetResponse> = {}): TargetResponse
 
 export function aMe(overrides: Partial<MeResponse> = {}): MeResponse {
   return { user: aUser(), targets: [aTarget()], ...overrides }
+}
+
+export function aTrackStory(overrides: Partial<TrackStoryResponse> = {}): TrackStoryResponse {
+  return {
+    id: 'story-1',
+    slug: 'o-gremio',
+    title: 'O Grêmio',
+    synopsis: 'A primeira discussão que você precisa ganhar.',
+    position: 1,
+    is_tutorial: true,
+    cover_asset: null,
+    state: 'available',
+    chapters_passed: 0,
+    chapters_total: 3,
+    current_chapter: { id: 'chapter-1', order: 1, status: 'available' },
+    ...overrides,
+  }
+}
+
+export function aTrack(overrides: Partial<TrackResponse> = {}): TrackResponse {
+  return {
+    stories: [aTrackStory()],
+    streak_days: 7,
+    submissions_today: 2,
+    daily_limit: 3,
+    ...overrides,
+  }
 }
