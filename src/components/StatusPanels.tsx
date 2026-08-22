@@ -1,7 +1,7 @@
-import { Button } from '../components/Button'
+import { Button } from './Button'
 import styles from './StatusPanels.module.css'
 
-/** Whole-screen states of the route guard: still asking the API, or unable to. */
+/** Whole-screen states of anything that has to ask the API first. */
 export function LoadingPanel() {
   return (
     <div className={styles.panel}>
@@ -12,12 +12,16 @@ export function LoadingPanel() {
   )
 }
 
-export function UnavailablePanel({ onRetry }: { onRetry: () => void }) {
+interface RetryPanelProps {
+  message: string
+  onRetry: () => void
+}
+
+export function RetryPanel({ message, onRetry }: RetryPanelProps) {
   return (
     <div className={styles.panel}>
       <p className={styles.text} role="alert">
-        Não conseguimos falar com o Argumenta. Sua sessão continua de pé: verifique a internet e
-        tente de novo.
+        {message}
       </p>
       <Button variant="ghost" onClick={onRetry}>
         Tentar de novo

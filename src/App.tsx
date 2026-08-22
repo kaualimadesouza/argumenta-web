@@ -4,6 +4,7 @@ import { CriarConta } from './pages/entrada/CriarConta'
 import { Entrada } from './pages/entrada/Entrada'
 import { EntrarEmail } from './pages/entrada/EntrarEmail'
 import { GoogleCallback } from './pages/entrada/GoogleCallback'
+import { NotFound } from './pages/notfound/NotFound'
 import { Onboarding } from './pages/onboarding/Onboarding'
 import { Trilha } from './pages/trilha/Trilha'
 import { Privacidade, Termos } from './pages/legal'
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="/trilha" element={<Trilha />} />
         </Route>
       </Route>
+      <Route path="*" element={<NotFound />} />
     </Routes>
   )
 }

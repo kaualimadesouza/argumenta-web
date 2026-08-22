@@ -1,7 +1,7 @@
 import { ApiError } from '../api/ApiError'
 import type { ArgumentaApi } from '../api/client'
-import type { MeResponse, TargetResponse, UserResponse } from '../api/types'
-import { A_PASSWORD, aUser } from './fixtures'
+import type { MeResponse, TargetResponse, TrackResponse, UserResponse } from '../api/types'
+import { A_PASSWORD, aTrack, aUser } from './fixtures'
 
 interface Account {
   user: UserResponse
@@ -12,6 +12,8 @@ interface Account {
 interface FakeApiSeed {
   /** Already signed in, as if the cookie were there. */
   me?: MeResponse
+  /** What GET /track answers; defaults to the fixture track. */
+  track?: TrackResponse
   /** Registered but signed out, so a login test has someone to log in as. */
   account?: MeResponse
   password?: string
@@ -121,6 +123,11 @@ export function createFakeApi(seed: FakeApiSeed = {}): ArgumentaApi {
       targetOf(account, targetId)
       account.targets = account.targets.filter((target) => target.id !== targetId)
       return Promise.resolve()
+    },
+
+    track: () => {
+      session()
+      return Promise.resolve(seed.track ?? aTrack())
     },
 
     activateTarget: (targetId) => {
