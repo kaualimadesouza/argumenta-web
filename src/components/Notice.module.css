@@ -1,0 +1,19 @@
+.notice {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  line-height: 1.45;
+  border-radius: var(--radius-button);
+  padding: 0.7rem 0.9rem;
+}
+
+.error {
+  background: var(--color-corretor-soft);
+  color: var(--color-corretor);
+  border: 1px solid var(--color-corretor);
+}
+
+.ok {
+  background: var(--color-aprovado-soft);
+  color: var(--color-aprovado);
+  border: 1px solid var(--color-aprovado);
+}
