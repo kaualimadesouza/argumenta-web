@@ -89,3 +89,34 @@ export interface HabitSummary {
 export interface TrackResponse extends HabitSummary {
   stories: TrackStoryResponse[]
 }
+
+export type BeatType = 'narration' | 'dialogue' | 'objective' | 'hint'
+
+export type Branch = 'main' | 'consequence' | 'recovery'
+
+export type ChapterKind = 'confronto' | 'chefe'
+
+export interface BeatResponse {
+  beat_type: BeatType
+  body: string
+  character_name: string | null
+  character_portrait: string | null
+  illustration_asset: string | null
+}
+
+export interface ChapterResponse {
+  id: string
+  story_id: string
+  position: number
+  kind: ChapterKind
+  title: string
+  objective: string
+  min_words: number
+  max_words: number
+  antagonist_name: string
+  antagonist_portrait: string | null
+  status: ChapterStatus
+  branch: Branch
+  draft_body: string | null
+  beats: BeatResponse[]
+}

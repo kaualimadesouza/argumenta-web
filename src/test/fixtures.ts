@@ -1,4 +1,6 @@
 import type {
+  BeatResponse,
+  ChapterResponse,
   Exam,
   MeResponse,
   TargetResponse,
@@ -50,6 +52,48 @@ export function aTrack(overrides: Partial<TrackResponse> = {}): TrackResponse {
     streak_days: 7,
     submissions_today: 2,
     daily_limit: 3,
+    ...overrides,
+  }
+}
+
+export function aBeat(overrides: Partial<BeatResponse> = {}): BeatResponse {
+  return {
+    beat_type: 'narration',
+    body: 'Domingo à noite. A pia ainda cheia, a vó já dormindo.',
+    character_name: null,
+    character_portrait: null,
+    illustration_asset: null,
+    ...overrides,
+  }
+}
+
+export function aChapter(overrides: Partial<ChapterResponse> = {}): ChapterResponse {
+  return {
+    id: 'chapter-1',
+    story_id: 'story-1',
+    position: 2,
+    kind: 'confronto',
+    title: 'A pia cheia',
+    objective: 'Convencer o tio Marcos de que o cuidado com a vó é trabalho de verdade.',
+    min_words: 120,
+    max_words: 250,
+    antagonist_name: 'Tio Marcos',
+    antagonist_portrait: null,
+    status: 'available',
+    branch: 'main',
+    draft_body: null,
+    beats: [
+      aBeat(),
+      aBeat({
+        beat_type: 'dialogue',
+        body: 'Cuidar da vó nem é trabalho de verdade.',
+        character_name: 'Tio Marcos',
+      }),
+      aBeat({
+        beat_type: 'objective',
+        body: 'Convencer o tio Marcos de que o cuidado com a vó é trabalho de verdade.',
+      }),
+    ],
     ...overrides,
   }
 }

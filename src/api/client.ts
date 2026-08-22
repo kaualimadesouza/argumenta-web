@@ -1,6 +1,7 @@
 import { apiErrorFrom } from './ApiError'
 import type {
   AddTargetRequest,
+  ChapterResponse,
   GoogleLoginRequest,
   LoginRequest,
   MeResponse,
@@ -32,6 +33,7 @@ export interface ArgumentaApi {
   removeTarget(targetId: string): Promise<void>
   activateTarget(targetId: string): Promise<void>
   track(): Promise<TrackResponse>
+  chapter(chapterId: string): Promise<ChapterResponse>
 }
 
 async function send(path: string, init: RequestInit): Promise<Response> {
@@ -68,5 +70,6 @@ export function createHttpApi(): ArgumentaApi {
     removeTarget: (targetId) => request(`/me/targets/${targetId}`, 'DELETE'),
     activateTarget: (targetId) => request(`/me/targets/${targetId}/activate`, 'PUT'),
     track: () => request('/track', 'GET'),
+    chapter: (chapterId) => request(`/chapters/${chapterId}`, 'GET'),
   }
 }
