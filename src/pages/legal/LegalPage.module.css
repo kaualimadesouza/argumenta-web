@@ -1,0 +1,74 @@
+.page {
+  width: 100%;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 4rem;
+}
+
+.back {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  text-decoration: none;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.75rem, 6vw, 2.4rem);
+  letter-spacing: -0.01em;
+  margin: 1.25rem 0 0.75rem;
+}
+
+.summary {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  line-height: 1.65;
+  margin: 0 0 0.75rem;
+}
+
+.updated {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  margin: 0 0 2rem;
+}
+
+.section {
+  margin-bottom: 2rem;
+}
+
+.heading {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin: 0 0 0.6rem;
+}
+
+.paragraph {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  line-height: 1.7;
+  margin: 0 0 0.8rem;
+}
+
+.list {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  line-height: 1.7;
+  margin: 0 0 0.8rem;
+  padding-left: 1.2rem;
+}
+
+.footer {
+  border-top: 1px solid var(--color-line);
+  padding-top: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.footer a {
+  color: var(--color-caneta);
+}
