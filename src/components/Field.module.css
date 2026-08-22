@@ -1,0 +1,36 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.input {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--color-ink);
+  background: var(--color-card);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-button);
+  padding: 0.7rem 0.85rem;
+  width: 100%;
+}
+
+.input:focus-visible {
+  outline: none;
+  border-color: var(--color-caneta);
+  box-shadow: 0 0 0 3px var(--color-caneta-soft);
+}
+
+.hint {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  color: var(--color-muted);
+}

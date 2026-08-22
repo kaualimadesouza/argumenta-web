@@ -1,0 +1,18 @@
+.wordmark {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin: 0;
+}
+
+.highlight {
+  background: linear-gradient(
+    transparent 42%,
+    var(--color-marca-texto) 42%,
+    var(--color-marca-texto) 92%,
+    transparent 92%
+  );
+  padding: 0 0.1em;
+  color: inherit;
+}
