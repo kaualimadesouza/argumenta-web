@@ -10,6 +10,9 @@ const MESSAGES: Record<string, string> = {
   ExamTargetAlreadyExistsError: 'Esse vestibular já está na sua lista.',
   ExamTargetNotFoundError: 'Esse vestibular não está mais na sua lista.',
   AccountNotFoundError: 'Essa conta não existe mais.',
+  ChapterNotFoundError: 'Esse capítulo não existe.',
+  ChapterLockedError: 'Esse capítulo ainda está trancado. Termine o anterior para abrir este.',
+  ChapterNotWritableError: 'Esse capítulo não está esperando texto agora.',
   ValidationError: 'Confira os campos: algo aí não está no formato esperado.',
 }
 

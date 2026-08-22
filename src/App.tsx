@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 
+import { Cena } from './pages/cena/Cena'
 import { CriarConta } from './pages/entrada/CriarConta'
 import { Entrada } from './pages/entrada/Entrada'
 import { EntrarEmail } from './pages/entrada/EntrarEmail'
@@ -24,6 +25,7 @@ export default function App() {
         <Route element={<RequireTargets />}>
           <Route index element={<Navigate to="/trilha" replace />} />
           <Route path="/trilha" element={<Trilha />} />
+          <Route path="/capitulos/:chapterId" element={<Cena />} />
         </Route>
       </Route>
       <Route path="*" element={<NotFound />} />

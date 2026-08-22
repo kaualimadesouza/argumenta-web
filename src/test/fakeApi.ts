@@ -1,7 +1,13 @@
 import { ApiError } from '../api/ApiError'
 import type { ArgumentaApi } from '../api/client'
-import type { MeResponse, TargetResponse, TrackResponse, UserResponse } from '../api/types'
-import { A_PASSWORD, aTrack, aUser } from './fixtures'
+import type {
+  ChapterResponse,
+  MeResponse,
+  TargetResponse,
+  TrackResponse,
+  UserResponse,
+} from '../api/types'
+import { A_PASSWORD, aChapter, aTrack, aUser } from './fixtures'
 
 interface Account {
   user: UserResponse
@@ -14,6 +20,8 @@ interface FakeApiSeed {
   me?: MeResponse
   /** What GET /track answers; defaults to the fixture track. */
   track?: TrackResponse
+  /** What GET /chapters/{id} answers; defaults to the fixture chapter. */
+  chapter?: ChapterResponse
   /** Registered but signed out, so a login test has someone to log in as. */
   account?: MeResponse
   password?: string
@@ -128,6 +136,13 @@ export function createFakeApi(seed: FakeApiSeed = {}): ArgumentaApi {
     track: () => {
       session()
       return Promise.resolve(seed.track ?? aTrack())
+    },
+
+    chapter: (chapterId) => {
+      session()
+      const chapter = seed.chapter ?? aChapter()
+      if (chapter.id !== chapterId) return Promise.reject(new ApiError(404, 'ChapterNotFoundError'))
+      return Promise.resolve(chapter)
     },
 
     activateTarget: (targetId) => {
