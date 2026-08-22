@@ -15,6 +15,7 @@ skill first; do not improvise the workflow from memory.
 | Writing ANY code (tests come first) | `tdd` |
 | Reviewing a PR/diff before merge (mandatory for EVERY PR) | `thermo-nuclear-code-quality-review` |
 | Building or styling any screen/component, colors, fonts | `design-tokens` |
+| Writing ANY Portuguese the student reads (copy, labels, empty states) | `portuguese-copy` |
 
 ## Non-negotiables
 
@@ -32,6 +33,11 @@ skill first; do not improvise the workflow from memory.
 - One card = one PR to main, titled as a conventional commit, body `Closes #<n>`.
 - Code, identifiers, comments, commit messages and PR descriptions in English.
   UI copy is pt-BR.
+- **Correct pt-BR in every string the student reads** (owner decision, details in
+  the `portuguese-copy` skill): full accentuation, crase and hyphenation in copy,
+  labels, empty states and error messages. A product that grades spelling cannot
+  ship `"Voce e presidente do gremio"`. Route paths, enum values and identifiers
+  stay unaccented ASCII on purpose.
 - Never hardcode colors or font families: use the CSS variables from
   `src/styles/tokens.css` (see `design-tokens`).
 - `npm run lint && npm run typecheck && npm test` must pass before every push;
