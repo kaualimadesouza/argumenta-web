@@ -120,3 +120,122 @@ export interface ChapterResponse {
   draft_body: string | null
   beats: BeatResponse[]
 }
+
+export type Verdict = 'approved' | 'failed_technical' | 'failed_persuasion'
+
+export type Dimension =
+  | 'norma_culta'
+  | 'coesao'
+  | 'coerencia'
+  | 'repertorio'
+  | 'persuasao'
+  | 'proposta_intervencao'
+
+export type AnnotationType =
+  | 'spelling'
+  | 'accentuation'
+  | 'punctuation'
+  | 'grammar'
+  | 'cohesion'
+  | 'coherence'
+  | 'repertoire_alert'
+  | 'repertoire_praise'
+  | 'persuasion'
+
+export type Severity = 'error' | 'warning' | 'praise'
+
+/** Who owns the total: the exam board, or our own aggregation. */
+export type ScaleSource = 'board' | 'argumenta'
+
+export interface ScoreResponse {
+  dimension: Dimension
+  score: number
+  evidence: string
+  passed_floor: boolean
+}
+
+export interface AnnotationResponse {
+  span_start: number
+  span_end: number
+  type: AnnotationType
+  severity: Severity
+  message: string
+  suggestion: string | null
+  priority: number
+}
+
+export interface LensCriterionResponse {
+  code: string
+  label: string
+  score: number
+  scale_max: number
+  is_argumenta_extra: boolean
+}
+
+export interface LensResponse {
+  exam: Exam
+  version: string
+  criteria: LensCriterionResponse[]
+  total: number | null
+  total_max: number | null
+  scale_source: ScaleSource
+}
+
+export interface SubmissionResponse {
+  submission_id: string
+  attempt_number: number
+  verdict: Verdict
+  average_score: number
+  floor_value: number
+  min_average: number
+  chapter_status: ChapterStatus
+  scores: ScoreResponse[]
+  annotations: AnnotationResponse[]
+  para_passar: AnnotationResponse[]
+  lens: LensResponse
+}
+
+export interface SubmissionRequest {
+  body: string
+  typing_ms?: number
+  paste_count?: number
+}
+
+export interface DraftRequest {
+  body: string
+}
+
+interface TelemetryEventBase {
+  /** Client clock, offset required: the API refuses a naive timestamp. */
+  occurred_at: string
+  submission_id?: string
+}
+
+export interface PasteEvent extends TelemetryEventBase {
+  event_type: 'paste'
+  chars: number
+  words?: number
+}
+
+export interface TypingStatsEvent extends TelemetryEventBase {
+  event_type: 'typing_stats'
+  ms: number
+  keystrokes: number
+  backspaces?: number
+}
+
+export interface ScreenViewEvent extends TelemetryEventBase {
+  event_type: 'screen_view'
+  screen: string
+}
+
+export type TelemetryEvent = PasteEvent | TypingStatsEvent | ScreenViewEvent
+
+export interface TelemetryBatchRequest {
+  events: TelemetryEvent[]
+}
+
+export interface TelemetryBatchResponse {
+  recorded: number
+  dropped: number
+}

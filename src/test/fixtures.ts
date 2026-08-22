@@ -1,8 +1,12 @@
 import type {
+  AnnotationResponse,
   BeatResponse,
   ChapterResponse,
   Exam,
+  LensResponse,
   MeResponse,
+  ScoreResponse,
+  SubmissionResponse,
   TargetResponse,
   TrackResponse,
   TrackStoryResponse,
@@ -94,6 +98,61 @@ export function aChapter(overrides: Partial<ChapterResponse> = {}): ChapterRespo
         body: 'Convencer o tio Marcos de que o cuidado com a vó é trabalho de verdade.',
       }),
     ],
+    ...overrides,
+  }
+}
+
+export function aScore(overrides: Partial<ScoreResponse> = {}): ScoreResponse {
+  return {
+    dimension: 'norma_culta',
+    score: 72,
+    evidence: 'Dois desvios de acentuação em quinze linhas.',
+    passed_floor: true,
+    ...overrides,
+  }
+}
+
+export function anAnnotation(overrides: Partial<AnnotationResponse> = {}): AnnotationResponse {
+  return {
+    span_start: 0,
+    span_end: 4,
+    type: 'accentuation',
+    severity: 'error',
+    message: 'Falta o acento: "vô" é o avô, "vó" é a avó.',
+    suggestion: 'vó',
+    priority: 1,
+    ...overrides,
+  }
+}
+
+export function aLens(overrides: Partial<LensResponse> = {}): LensResponse {
+  return {
+    exam: 'enem' as Exam,
+    version: 'enem-2026.1',
+    criteria: [
+      { code: 'c1', label: 'Domínio da norma culta', score: 160, scale_max: 200, is_argumenta_extra: false },
+      { code: 'c4', label: 'Coesão textual', score: 120, scale_max: 200, is_argumenta_extra: false },
+    ],
+    total: 280,
+    total_max: 400,
+    scale_source: 'board',
+    ...overrides,
+  }
+}
+
+export function aSubmission(overrides: Partial<SubmissionResponse> = {}): SubmissionResponse {
+  return {
+    submission_id: 'submission-1',
+    attempt_number: 1,
+    verdict: 'approved',
+    average_score: 68.5,
+    floor_value: 40,
+    min_average: 50,
+    chapter_status: 'in_consequence',
+    scores: [aScore(), aScore({ dimension: 'persuasao', score: 65 })],
+    annotations: [anAnnotation()],
+    para_passar: [anAnnotation()],
+    lens: aLens(),
     ...overrides,
   }
 }
