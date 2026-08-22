@@ -2,11 +2,16 @@ import { apiErrorFrom } from './ApiError'
 import type {
   AddTargetRequest,
   ChapterResponse,
+  DraftRequest,
   GoogleLoginRequest,
   LoginRequest,
   MeResponse,
   RegisterRequest,
+  SubmissionRequest,
+  SubmissionResponse,
   TargetResponse,
+  TelemetryBatchRequest,
+  TelemetryBatchResponse,
   TrackResponse,
   UpdateMeRequest,
   UserResponse,
@@ -34,6 +39,9 @@ export interface ArgumentaApi {
   activateTarget(targetId: string): Promise<void>
   track(): Promise<TrackResponse>
   chapter(chapterId: string): Promise<ChapterResponse>
+  saveDraft(chapterId: string, body: DraftRequest): Promise<void>
+  submit(chapterId: string, body: SubmissionRequest): Promise<SubmissionResponse>
+  recordTelemetry(batch: TelemetryBatchRequest): Promise<TelemetryBatchResponse>
 }
 
 async function send(path: string, init: RequestInit): Promise<Response> {
@@ -71,5 +79,8 @@ export function createHttpApi(): ArgumentaApi {
     activateTarget: (targetId) => request(`/me/targets/${targetId}/activate`, 'PUT'),
     track: () => request('/track', 'GET'),
     chapter: (chapterId) => request(`/chapters/${chapterId}`, 'GET'),
+    saveDraft: (chapterId, body) => request(`/chapters/${chapterId}/draft`, 'PUT', body),
+    submit: (chapterId, body) => request(`/chapters/${chapterId}/submissions`, 'POST', body),
+    recordTelemetry: (batch) => request('/telemetry/events', 'POST', batch),
   }
 }

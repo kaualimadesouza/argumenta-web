@@ -3,11 +3,14 @@ import type { ArgumentaApi } from '../api/client'
 import type {
   ChapterResponse,
   MeResponse,
+  SubmissionResponse,
   TargetResponse,
+  TelemetryEvent,
   TrackResponse,
   UserResponse,
 } from '../api/types'
-import { A_PASSWORD, aChapter, aTrack, aUser } from './fixtures'
+import { countWords } from '../api/words'
+import { A_PASSWORD, aChapter, aSubmission, aTrack, aUser } from './fixtures'
 
 interface Account {
   user: UserResponse
@@ -22,16 +25,25 @@ interface FakeApiSeed {
   track?: TrackResponse
   /** What GET /chapters/{id} answers; defaults to the fixture chapter. */
   chapter?: ChapterResponse
+  /** What POST /chapters/{id}/submissions answers; defaults to an approval. */
+  submission?: SubmissionResponse
   /** Registered but signed out, so a login test has someone to log in as. */
   account?: MeResponse
   password?: string
 }
 
+export interface FakeApi extends ArgumentaApi {
+  /** What the client actually reported, so a test can assert the collection
+   *  without reaching into fetch. */
+  readonly telemetry: TelemetryEvent[]
+}
+
+
 /** In-memory stand-in for argumenta-api: it enforces the rules the screens
  *  actually depend on (first target becomes the active lens, a duplicate target
  *  conflicts, /me is 401 without a session), so page tests never assert against
  *  a contract the backend does not have. */
-export function createFakeApi(seed: FakeApiSeed = {}): ArgumentaApi {
+export function createFakeApi(seed: FakeApiSeed = {}): FakeApi {
   const start = seed.me ?? seed.account
   const accounts = new Map<string, Account>()
   if (start) {
@@ -43,6 +55,9 @@ export function createFakeApi(seed: FakeApiSeed = {}): ArgumentaApi {
   }
   let signedIn: string | null = seed.me ? seed.me.user.email : null
   let sequence = 0
+  let track = seed.track ?? aTrack()
+  let chapter = seed.chapter ?? aChapter()
+  const telemetry: TelemetryEvent[] = []
 
   function nextId(prefix: string): string {
     sequence += 1
@@ -61,7 +76,15 @@ export function createFakeApi(seed: FakeApiSeed = {}): ArgumentaApi {
     return target
   }
 
+  function openChapter(chapterId: string): ChapterResponse {
+    session()
+    if (chapter.id !== chapterId) throw new ApiError(404, 'ChapterNotFoundError')
+    return chapter
+  }
+
   return {
+    telemetry,
+
     register: (body) => {
       if (accounts.has(body.email)) {
         return Promise.reject(new ApiError(409, 'EmailAlreadyRegisteredError'))
@@ -135,14 +158,50 @@ export function createFakeApi(seed: FakeApiSeed = {}): ArgumentaApi {
 
     track: () => {
       session()
-      return Promise.resolve(seed.track ?? aTrack())
+      return Promise.resolve({ ...track })
     },
 
     chapter: (chapterId) => {
+      try {
+        return Promise.resolve({ ...openChapter(chapterId) })
+      } catch (error) {
+        return Promise.reject(error)
+      }
+    },
+
+    saveDraft: (chapterId, body) => {
+      try {
+        chapter = { ...openChapter(chapterId), draft_body: body.body, status: 'drafting' }
+        return Promise.resolve()
+      } catch (error) {
+        return Promise.reject(error)
+      }
+    },
+
+    submit: (chapterId, body) => {
+      let open: ChapterResponse
+      try {
+        open = openChapter(chapterId)
+      } catch (error) {
+        return Promise.reject(error)
+      }
+      const words = countWords(body.body)
+      if (words < open.min_words || words > open.max_words) {
+        return Promise.reject(new ApiError(422, 'WordCountOutOfRangeError'))
+      }
+      if (track.submissions_today >= track.daily_limit) {
+        return Promise.reject(new ApiError(429, 'DailyLimitReachedError'))
+      }
+      track = { ...track, submissions_today: track.submissions_today + 1 }
+      const answer = seed.submission ?? aSubmission()
+      chapter = { ...open, draft_body: body.body, status: answer.chapter_status }
+      return Promise.resolve(answer)
+    },
+
+    recordTelemetry: (batch) => {
       session()
-      const chapter = seed.chapter ?? aChapter()
-      if (chapter.id !== chapterId) return Promise.reject(new ApiError(404, 'ChapterNotFoundError'))
-      return Promise.resolve(chapter)
+      telemetry.push(...batch.events)
+      return Promise.resolve({ recorded: batch.events.length, dropped: 0 })
     },
 
     activateTarget: (targetId) => {

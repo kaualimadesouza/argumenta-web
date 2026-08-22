@@ -1,0 +1,150 @@
+import { useCallback, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+
+import { Loaded } from '../../api/Loaded'
+import { useApi } from '../../api/context'
+import { messageFor } from '../../api/messages'
+import type { ChapterResponse, ChapterStatus, TelemetryEvent, TrackResponse } from '../../api/types'
+import { useResource } from '../../api/useResource'
+import { countWords } from '../../api/words'
+import { Button, RouteButton } from '../../components/Button'
+import { Card, Kicker } from '../../components/Card'
+import { Chip } from '../../components/Chip'
+import { Notice } from '../../components/Notice'
+import { CharacterPortrait } from '../../components/art/CharacterPortrait'
+import styles from './Editor.module.css'
+import { blockerOf } from './limits'
+import { AUTOSAVE_LABEL, useAutosave } from './useAutosave'
+import { useWritingSignals } from './useWritingSignals'
+
+/** What every chapter asks for; the evaluator looks for these three. */
+const REQUIREMENTS = ['Tese', 'Justificativa', 'Repertório explicado']
+
+/** The same statuses the scene offers the CTA for: the URL is not a shortcut. */
+const WRITABLE: ChapterStatus[] = ['available', 'drafting', 'in_recovery']
+
+interface Desk {
+  chapter: ChapterResponse
+  track: TrackResponse
+}
+
+export function Editor() {
+  const api = useApi()
+  const { chapterId = '' } = useParams()
+  const load = useCallback(async (): Promise<Desk> => {
+    const [chapter, track] = await Promise.all([api.chapter(chapterId), api.track()])
+    return { chapter, track }
+  }, [api, chapterId])
+  const { state, reload } = useResource(load)
+
+  return (
+    <Loaded resource={state} onRetry={reload}>
+      {(desk) =>
+        WRITABLE.includes(desk.chapter.status) ? (
+          <Writing chapter={desk.chapter} track={desk.track} />
+        ) : (
+          <Closed chapter={desk.chapter} />
+        )
+      }
+    </Loaded>
+  )
+}
+
+function Closed({ chapter }: { chapter: ChapterResponse }) {
+  return (
+    <main className={styles.page}>
+      <h1 className={styles.closedTitle}>{chapter.title}</h1>
+      <p className={styles.objective}>Este capítulo não está esperando texto agora.</p>
+      <RouteButton to={`/capitulos/${chapter.id}`}>Voltar para a cena</RouteButton>
+    </main>
+  )
+}
+
+function Writing({ chapter, track }: Desk) {
+  const api = useApi()
+  const navigate = useNavigate()
+  const signals = useWritingSignals()
+  const [body, setBody] = useState(chapter.draft_body ?? '')
+  const [sending, setSending] = useState(false)
+  const [failure, setFailure] = useState<string | null>(null)
+
+  // fire and forget: nothing the anti-cheat reports may reach the student
+  const report = useCallback(
+    (events: TelemetryEvent[]) => void api.recordTelemetry({ events }).catch(() => undefined),
+    [api],
+  )
+  const save = useCallback(
+    (text: string) => api.saveDraft(chapter.id, { body: text }),
+    [api, chapter.id],
+  )
+  const autosave = useAutosave({ body, stored: chapter.draft_body ?? '', save })
+
+  const words = countWords(body)
+  const blocker = blockerOf(words, chapter, track)
+
+  async function send() {
+    setSending(true)
+    setFailure(null)
+    try {
+      const submission = await api.submit(chapter.id, { body, ...signals.summary() })
+      const typing = signals.typingEvent(submission.submission_id)
+      if (typing !== null) report([typing])
+      // `sending` stays set: the screen is leaving, so there is nothing to reset
+      navigate(`/capitulos/${chapter.id}/correcao`, { state: { submission } })
+    } catch (error) {
+      setFailure(messageFor(error))
+      setSending(false)
+    }
+  }
+
+  return (
+    <main className={styles.page}>
+      <h1 className="sr-only">{`Escrever: ${chapter.title}`}</h1>
+      <header className={styles.bar}>
+        <Link to={`/capitulos/${chapter.id}`} className={styles.back}>
+          ← Cena
+        </Link>
+        <Chip>{`${track.submissions_today}/${track.daily_limit} envios hoje`}</Chip>
+      </header>
+
+      <Card className={styles.brief}>
+        <div className={styles.who}>
+          <CharacterPortrait name={chapter.antagonist_name} asset={chapter.antagonist_portrait} small />
+          <Kicker>{`Convença ${chapter.antagonist_name}`}</Kicker>
+        </div>
+        <p className={styles.objective}>{chapter.objective}</p>
+        <div className={styles.requirements}>
+          {REQUIREMENTS.map((requirement) => (
+            <Chip key={requirement}>{requirement}</Chip>
+          ))}
+        </div>
+      </Card>
+
+      <label className="sr-only" htmlFor="argumento">
+        Seu argumento
+      </label>
+      <textarea
+        id="argumento"
+        className={styles.editor}
+        value={body}
+        onChange={(event) => setBody(event.target.value)}
+        onKeyDown={signals.onKeyDown}
+        onPaste={(event) => {
+          const pasted = signals.onPaste(event)
+          if (pasted !== null) report([pasted])
+        }}
+        placeholder={`Escreva para ${chapter.antagonist_name}.`}
+      />
+      <p className={styles.foot}>
+        <span>{`${words} / ${chapter.max_words} palavras`}</span>
+        <span>{AUTOSAVE_LABEL[autosave]}</span>
+      </p>
+
+      {failure === null ? null : <Notice tone="error">{failure}</Notice>}
+      {blocker === null ? null : <p className={styles.blocker}>{blocker}</p>}
+      <Button onClick={() => void send()} disabled={blocker !== null || sending}>
+        {sending ? 'Enviando…' : `Enviar para ${chapter.antagonist_name}`}
+      </Button>
+    </main>
+  )
+}
