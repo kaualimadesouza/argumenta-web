@@ -1,19 +1,19 @@
 .notice {
-  font-family: var(--font-display);
-  font-size: 0.85rem;
-  line-height: 1.45;
+  font-size: var(--text-body);
+  line-height: 1.55;
   border-radius: var(--radius-button);
-  padding: 0.7rem 0.9rem;
+  padding: 0.75rem 0.9375rem;
+  margin: 0;
 }
 
 .error {
   background: var(--color-corretor-soft);
-  color: var(--color-corretor);
+  color: var(--color-corretor-ink);
   border: 1px solid var(--color-corretor);
 }
 
 .ok {
   background: var(--color-aprovado-soft);
-  color: var(--color-aprovado);
+  color: var(--color-aprovado-ink);
   border: 1px solid var(--color-aprovado);
 }

@@ -2,19 +2,20 @@
   background: var(--color-card);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
-  padding: 1rem 1.1rem;
+  padding: 1.125rem;
 }
 
+/* elevation is declared once: the card the student is meant to act on gets a
+   heavier border, never a border plus a shadow */
 .active {
   border: 1.5px solid var(--color-caneta);
 }
 
+/* a functional label naming what the block is, not a decorative eyebrow */
 .kicker {
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--color-muted);
+  font-size: var(--text-meta);
+  font-weight: 700;
+  color: var(--color-caneta);
   display: block;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.5rem;
 }

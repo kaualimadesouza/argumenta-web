@@ -11,6 +11,8 @@ body {
   background: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-display);
+  font-size: var(--text-body);
+  letter-spacing: var(--tracking-body);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -20,7 +22,43 @@ body {
   flex-direction: column;
 }
 
-/* for headings a screen reader needs and the mockup does not draw */
+/* the surfaces the browser draws for us still belong to the design */
+::selection {
+  background: var(--color-marca-texto);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-caneta);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+input,
+textarea {
+  caret-color: var(--color-caneta);
+}
+
+a {
+  color: var(--color-caneta);
+  text-underline-offset: 3px;
+}
+
+/* every number the student compares is tabular: a score that shifts width
+   between attempts reads as a different score */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+@supports (scrollbar-color: auto) {
+  * {
+    scrollbar-color: var(--color-line-strong) transparent;
+    scrollbar-width: thin;
+  }
+}
+
+/* for headings a screen reader needs and the layout does not draw */
 .sr-only {
   position: absolute;
   width: 1px;

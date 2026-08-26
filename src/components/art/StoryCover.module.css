@@ -1,13 +1,34 @@
 .cover {
-  width: 74px;
-  height: 74px;
+  width: 3.25rem;
+  height: 3.25rem;
   flex: none;
-  border-radius: 12px;
-  overflow: hidden;
+  border-radius: var(--radius-tile);
+  background: var(--color-noite);
+  color: var(--color-luz);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.done {
+  background: var(--color-aprovado-soft);
+  color: var(--color-aprovado);
+}
+
+.locked {
+  background: var(--color-paper);
+  color: var(--color-muted);
 }
 
 .cover svg {
   display: block;
-  width: 100%;
-  height: 100%;
+  width: 1.375rem;
+  height: 1.375rem;
+}
+
+.position {
+  font-weight: 800;
+  font-size: var(--text-lead);
+  letter-spacing: var(--tracking-title);
+  font-variant-numeric: tabular-nums;
 }

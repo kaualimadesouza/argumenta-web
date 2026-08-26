@@ -8,10 +8,9 @@ import type { ChapterResponse, ChapterStatus, TelemetryEvent, TrackResponse } fr
 import { useResource } from '../../api/useResource'
 import { countWords } from '../../api/words'
 import { Button, RouteButton } from '../../components/Button'
-import { Card, Kicker } from '../../components/Card'
+import { Card } from '../../components/Card'
 import { Chip } from '../../components/Chip'
 import { Notice } from '../../components/Notice'
-import { CharacterPortrait } from '../../components/art/CharacterPortrait'
 import styles from './Editor.module.css'
 import { blockerOf } from './limits'
 import { AUTOSAVE_LABEL, useAutosave } from './useAutosave'
@@ -99,7 +98,6 @@ function Writing({ chapter, track }: Desk) {
 
   return (
     <main className={styles.page}>
-      <h1 className="sr-only">{`Escrever: ${chapter.title}`}</h1>
       <header className={styles.bar}>
         <Link to={`/capitulos/${chapter.id}`} className={styles.back}>
           ← Cena
@@ -107,11 +105,9 @@ function Writing({ chapter, track }: Desk) {
         <Chip>{`${track.submissions_today}/${track.daily_limit} envios hoje`}</Chip>
       </header>
 
+      <h1 className={styles.title}>{`Convença ${chapter.antagonist_name}`}</h1>
+
       <Card className={styles.brief}>
-        <div className={styles.who}>
-          <CharacterPortrait name={chapter.antagonist_name} asset={chapter.antagonist_portrait} small />
-          <Kicker>{`Convença ${chapter.antagonist_name}`}</Kicker>
-        </div>
         <p className={styles.objective}>{chapter.objective}</p>
         <div className={styles.requirements}>
           {REQUIREMENTS.map((requirement) => (

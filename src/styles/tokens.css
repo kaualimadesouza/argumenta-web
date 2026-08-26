@@ -1,34 +1,70 @@
 /* Argumenta design tokens.
-   Source of truth: design/ui-mockups.html (design system v2, "papel e caneta"). */
+   Source of truth: the "Novo Argumenta" canvas (design system v3, Inter).
+   Elevation is a border, never a shadow; the one shadow in the system is the
+   3px press step under a primary action. */
 :root {
-  /* color */
-  --color-paper: #f6f6f3;
+  /* surfaces */
+  --color-paper: #f4f5f7;
   --color-card: #ffffff;
-  --color-ink: #1d2530;
-  --color-muted: #61707a;
-  --color-caneta: #2149c4;
-  --color-caneta-soft: #e8edfb;
-  --color-marca-texto: #ffe45c;
-  --color-corretor: #c2402a;
-  --color-corretor-soft: #f9e9e5;
-  --color-aprovado: #2e7d5b;
-  --color-aprovado-soft: #e4f1ea;
-  --color-line: #e5e4dc;
-  --color-noite: #232d3b;
-  --color-noite-inner: #26303f;
-  --color-track: #ecebe4;
-  --color-luz: #f3f1e8;
+  --color-line: #e4e7eb;
+  --color-line-strong: #d3d8de;
+  --color-track: #eceef1;
 
-  /* type */
-  --font-display: 'Bricolage Grotesque', 'Inter', system-ui, sans-serif;
-  --font-serif: 'Source Serif 4', 'Source Serif Pro', Georgia, serif;
-  --font-mono: 'IBM Plex Mono', 'Roboto Mono', monospace;
+  /* ink: every value below is at least 4.5:1 on paper and on card */
+  --color-ink: #101418;
+  --color-ink-2: #54606c;
+  --color-muted: #6b7683;
+  --color-disabled: #c9cfd6;
+
+  /* caneta: the single action colour */
+  --color-caneta: #2649e5;
+  --color-caneta-press: #1932a8;
+  --color-caneta-soft: #edf0fe;
+
+  /* verdicts */
+  --color-aprovado: #0e9f6e;
+  --color-aprovado-ink: #07784f;
+  --color-aprovado-soft: #e7f6f0;
+  --color-corretor: #d92d20;
+  --color-corretor-ink: #a81c1c;
+  --color-corretor-soft: #fdecea;
+
+  /* habit */
+  --color-streak: #e8891a;
+  --color-streak-ink: #a35c08;
+  --color-streak-soft: #fbf0e2;
+
+  /* repertoire mark, and the page's own text selection */
+  --color-marca-texto: #ffe9a8;
+
+  /* night: scene panels and consequence */
+  --color-noite: #111722;
+  --color-noite-inner: #1b2432;
+  --color-luz: #e6eaf0;
+  --color-luz-muted: #9aa6b6;
+
+  /* type: one family, four steps plus a micro step for the tab bar */
+  --font-display: 'Inter', -apple-system, 'Segoe UI', Roboto, system-ui, sans-serif;
+
+  --text-title: 1.5rem;
+  --text-lead: 1.1875rem;
+  --text-body: 0.9375rem;
+  --text-meta: 0.8125rem;
+  --text-micro: 0.6875rem;
+
+  --tracking-title: -0.03em;
+  --tracking-lead: -0.02em;
+  --tracking-body: -0.011em;
 
   /* shape */
   --radius-card: 14px;
-  --radius-button: 10px;
+  --radius-button: 12px;
+  --radius-tile: 10px;
   --radius-chip: 999px;
 
-  /* layout */
-  --content-max: 42rem;
+  /* the one shadow */
+  --press: 0 3px 0 var(--color-caneta-press);
+
+  /* layout: a reading column of roughly 70 characters at --text-body */
+  --content-max: 34rem;
 }
