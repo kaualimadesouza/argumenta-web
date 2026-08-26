@@ -28,10 +28,11 @@ body {
   color: var(--color-ink);
 }
 
+/* the outline follows the element's own radius: setting one here would snap a
+   focused button's corners from 12px to 4px */
 :focus-visible {
   outline: 2px solid var(--color-caneta);
   outline-offset: 2px;
-  border-radius: 4px;
 }
 
 input,
