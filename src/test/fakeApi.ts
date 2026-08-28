@@ -30,6 +30,8 @@ interface FakeApiSeed {
   chapter?: ChapterResponse
   /** What POST /chapters/{id}/submissions answers; defaults to an approval. */
   submission?: SubmissionResponse
+  /** A verdict sequence, for a test that walks the whole loop; the last repeats. */
+  submissions?: SubmissionResponse[]
   /** What GET /progress answers; defaults to the fixture progress. */
   progress?: ProgressResponse
   /** The character line POST /submissions/{id}/reaction answers. */
@@ -65,11 +67,19 @@ export function createFakeApi(seed: FakeApiSeed = {}): FakeApi {
   let track = seed.track ?? aTrack()
   let chapter = seed.chapter ?? aChapter()
   let lastVerdict: Verdict | null = null
+  let queue = seed.submissions ? [...seed.submissions] : null
   const telemetry: TelemetryEvent[] = []
 
   function nextId(prefix: string): string {
     sequence += 1
     return `${prefix}-${sequence}`
+  }
+
+  function nextSubmission(): SubmissionResponse {
+    if (queue === null || queue.length === 0) return seed.submission ?? aSubmission()
+    const [head, ...rest] = queue
+    if (rest.length > 0) queue = rest
+    return head
   }
 
   function session(): Account {
@@ -201,7 +211,7 @@ export function createFakeApi(seed: FakeApiSeed = {}): FakeApi {
         return Promise.reject(new ApiError(429, 'DailyLimitReachedError'))
       }
       track = { ...track, submissions_today: track.submissions_today + 1 }
-      const answer = seed.submission ?? aSubmission()
+      const answer = nextSubmission()
       lastVerdict = answer.verdict
       chapter = { ...open, draft_body: body.body, status: answer.chapter_status }
       return Promise.resolve(answer)
