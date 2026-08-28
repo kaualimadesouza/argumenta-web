@@ -339,3 +339,57 @@
   gap: 0.625rem;
   margin-top: 0.25rem;
 }
+
+/* Desktop: the student's text keeps a reading column and the scoreboard moves to
+   a rail beside it. Both wrappers are `display: contents` below this width, so
+   the phone order (placar, text, legend, para passar) is untouched. */
+.side,
+.main {
+  display: contents;
+}
+
+@media (min-width: 75rem) {
+  .page {
+    max-width: var(--page-max);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--rail);
+    align-items: start;
+    gap: 1.25rem;
+    padding: 2rem 2rem 3rem;
+  }
+
+  .bar,
+  .headline {
+    grid-column: 1 / -1;
+  }
+
+  .main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    grid-column: 1;
+  }
+
+  .side {
+    display: block;
+    grid-column: 2;
+  }
+
+  .headlineTitle {
+    font-size: var(--text-display);
+  }
+
+  /* the text is read at arm's length now: one step up the same ramp */
+  .text {
+    font-size: var(--text-lead);
+    line-height: 1.9;
+  }
+
+  .actions {
+    flex-direction: row;
+  }
+
+  .actions > * {
+    flex: 1;
+  }
+}

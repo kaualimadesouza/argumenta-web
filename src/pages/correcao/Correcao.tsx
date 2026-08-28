@@ -121,17 +121,24 @@ function Sheet({ handoff, judged }: { handoff: CorrecaoHandoff; judged: Judged }
 
       {reaction === null ? null : <Reaction reaction={reaction} />}
 
-      <Scoreboard lens={submission.lens} floor={submission.floor_value} />
+      {/* two wrappers that are `display: contents` until the desktop grid needs
+          them, so the phone keeps the order it has: placar, then the text, then
+          the legend that explains the marks in it */}
+      <div className={styles.side}>
+        <Scoreboard lens={submission.lens} floor={submission.floor_value} />
+      </div>
 
-      <Text segments={segments} />
+      <div className={styles.main}>
+        <Text segments={segments} />
 
-      {marks.length === 0 ? null : <Legend marks={marks} />}
+        {marks.length === 0 ? null : <Legend marks={marks} />}
 
-      {submission.para_passar.length === 0 ? null : (
-        <ParaPassar priorities={submission.para_passar} />
-      )}
+        {submission.para_passar.length === 0 ? null : (
+          <ParaPassar priorities={submission.para_passar} />
+        )}
 
-      <Actions verdict={submission.verdict} chapterId={chapter.id} />
+        <Actions verdict={submission.verdict} chapterId={chapter.id} />
+      </div>
     </main>
   )
 }

@@ -14,6 +14,7 @@ import { Onboarding } from './pages/onboarding/Onboarding'
 import { Progresso } from './pages/progresso/Progresso'
 import { Trilha } from './pages/trilha/Trilha'
 import { Privacidade, Termos } from './pages/legal'
+import { AppShell } from './layout/AppShell'
 import { RequireSession, RequireTargets } from './session/RouteGuards'
 
 export default function App() {
@@ -27,11 +28,17 @@ export default function App() {
       <Route path="/termos" element={<Termos />} />
       <Route element={<RequireSession />}>
         <Route path="/onboarding" element={<Onboarding />} />
-        <Route path="/conta" element={<Conta />} />
+        {/* the home screens share the app chrome */}
+        <Route element={<AppShell />}>
+          <Route path="/conta" element={<Conta />} />
+          <Route element={<RequireTargets />}>
+            <Route index element={<Navigate to="/trilha" replace />} />
+            <Route path="/trilha" element={<Trilha />} />
+            <Route path="/progresso" element={<Progresso />} />
+          </Route>
+        </Route>
+        {/* the writing flow does not: it is focused mode */}
         <Route element={<RequireTargets />}>
-          <Route index element={<Navigate to="/trilha" replace />} />
-          <Route path="/trilha" element={<Trilha />} />
-          <Route path="/progresso" element={<Progresso />} />
           <Route path="/capitulos/:chapterId" element={<Cena />} />
           <Route path="/capitulos/:chapterId/escrever" element={<Editor />} />
           <Route path="/capitulos/:chapterId/correcao" element={<Correcao />} />

@@ -100,11 +100,59 @@
 /* the desk gets the wide screen: a comfortable column and a taller sheet */
 @media (min-width: 48rem) {
   .page {
-    max-width: 38rem;
+    max-width: var(--content-max-wide);
     padding: 2rem 1.5rem 3rem;
   }
 
   .editor {
     min-height: 22rem;
+  }
+}
+
+/* Desktop: the objective stays in view while the student writes, which is the
+   one thing the phone cannot do. Both wrappers are `display: contents` below
+   this width, so nothing about the phone layout changes. */
+.side,
+.desk {
+  display: contents;
+}
+
+@media (min-width: 75rem) {
+  .page {
+    max-width: var(--page-max);
+    display: grid;
+    grid-template-columns: var(--rail) minmax(0, 1fr);
+    align-items: start;
+    gap: 1.5rem;
+    padding: 2rem 2rem 3rem;
+  }
+
+  .bar,
+  .title {
+    grid-column: 1 / -1;
+  }
+
+  .side {
+    display: block;
+    grid-column: 1;
+    position: sticky;
+    top: 2rem;
+  }
+
+  .desk {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+    grid-column: 2;
+  }
+
+  .title {
+    font-size: var(--text-display);
+  }
+
+  .editor {
+    min-height: 26rem;
+    font-size: var(--text-lead);
+    line-height: 1.75;
   }
 }

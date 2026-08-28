@@ -37,7 +37,7 @@ function Streak({ progress }: { progress: ProgressResponse }) {
   const days = progress.streak_days === 1 ? '1 dia seguido' : `${progress.streak_days} dias seguidos`
 
   return (
-    <section className={styles.card}>
+    <section className={[styles.card, styles.streakCard].join(' ')}>
       <div className={styles.streakHead}>
         <h2 className={styles.streakDays}>{days}</h2>
         <span className={styles.record}>{`Seu recorde é ${progress.longest_streak_days} dias`}</span>
@@ -85,7 +85,7 @@ function Trends({ dimensions }: { dimensions: DimensionTrendResponse[] }) {
   const window = Math.max(0, ...dimensions.map((trend) => trend.points.length))
 
   return (
-    <section aria-labelledby={heading} className={styles.card}>
+    <section aria-labelledby={heading} className={[styles.card, styles.trendsCard].join(' ')}>
       <div className={styles.cardHead}>
         <h2 id={heading} className={styles.cardTitle}>
           Como cada competência anda
@@ -152,7 +152,7 @@ function Milestones({ progress }: { progress: ProgressResponse }) {
   const storiesDone = progress.stories_completed === progress.stories_total
 
   return (
-    <section aria-labelledby={heading} className={styles.card}>
+    <section aria-labelledby={heading} className={[styles.card, styles.milestonesCard].join(' ')}>
       <h2 id={heading} className={styles.cardTitle}>
         Marcos
       </h2>
