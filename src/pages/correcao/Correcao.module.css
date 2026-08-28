@@ -116,6 +116,15 @@
   gap: 0.5rem;
 }
 
+.code {
+  flex: none;
+  font-size: var(--text-meta);
+  font-weight: 700;
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
 .label,
 .labelBelow {
   font-size: var(--text-meta);
