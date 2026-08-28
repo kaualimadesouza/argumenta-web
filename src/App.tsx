@@ -10,6 +10,7 @@ import { EntrarEmail } from './pages/entrada/EntrarEmail'
 import { GoogleCallback } from './pages/entrada/GoogleCallback'
 import { NotFound } from './pages/notfound/NotFound'
 import { Onboarding } from './pages/onboarding/Onboarding'
+import { Progresso } from './pages/progresso/Progresso'
 import { Trilha } from './pages/trilha/Trilha'
 import { Privacidade, Termos } from './pages/legal'
 import { RequireSession, RequireTargets } from './session/RouteGuards'
@@ -28,6 +29,7 @@ export default function App() {
         <Route element={<RequireTargets />}>
           <Route index element={<Navigate to="/trilha" replace />} />
           <Route path="/trilha" element={<Trilha />} />
+          <Route path="/progresso" element={<Progresso />} />
           <Route path="/capitulos/:chapterId" element={<Cena />} />
           <Route path="/capitulos/:chapterId/escrever" element={<Editor />} />
           <Route path="/capitulos/:chapterId/correcao" element={<Correcao />} />
