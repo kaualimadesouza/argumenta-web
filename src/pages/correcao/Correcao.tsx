@@ -1,4 +1,4 @@
-import { useCallback, useId, useState } from 'react'
+import { useCallback, useId } from 'react'
 import { Navigate, useLocation, useParams } from 'react-router-dom'
 
 import { Loaded } from '../../api/Loaded'
@@ -6,19 +6,17 @@ import { useApi } from '../../api/context'
 import type {
   AnnotationResponse,
   ChapterResponse,
-  LensCriterionResponse,
-  LensResponse,
   ReactionResponse,
   SubmissionResponse,
   Verdict,
 } from '../../api/types'
 import { useResource } from '../../api/useResource'
 import { RouteButton } from '../../components/Button'
-import { ProgressBar } from '../../components/ProgressBar'
-import { ANNOTATION_LABEL } from '../../copy/labels'
 import { Reaction } from '../../components/Reaction'
 import styles from './Correcao.module.css'
-import { annotate, type Mark } from './spans'
+import { Legend, MarkedText } from './MarkedText'
+import { Scoreboard } from './Scoreboard'
+import { annotate } from './spans'
 
 /** What the editor hands over: the judged submission and the exact text that was
  *  judged, because the annotation offsets belong to that text and no other. */
@@ -129,9 +127,9 @@ function Sheet({ handoff, judged }: { handoff: CorrecaoHandoff; judged: Judged }
       </div>
 
       <div className={styles.main}>
-        <Text segments={segments} />
+        <MarkedText segments={segments} />
 
-        {marks.length === 0 ? null : <Legend marks={marks} />}
+          {marks.length === 0 ? null : <Legend marks={marks} />}
 
         {submission.para_passar.length === 0 ? null : (
           <ParaPassar priorities={submission.para_passar} />
@@ -140,141 +138,6 @@ function Sheet({ handoff, judged }: { handoff: CorrecaoHandoff; judged: Judged }
         <Actions verdict={submission.verdict} chapterId={chapter.id} />
       </div>
     </main>
-  )
-}
-
-function Scoreboard({ lens, floor }: { lens: LensResponse; floor: number }) {
-  const heading = useId()
-  return (
-    <section aria-labelledby={heading} className={styles.card}>
-      <h2 id={heading} className={styles.cardTitle}>
-        Placar
-      </h2>
-      <div className={styles.rows}>
-        {lens.criteria.map((criterion) => (
-          <Criterion key={criterion.code} criterion={criterion} floor={floor} />
-        ))}
-      </div>
-      {lens.total === null || lens.total_max === null ? null : (
-        <div className={styles.total}>
-          <div className={styles.totalText}>
-            <span className={styles.totalLabel}>Soma dos critérios</span>
-            {lens.scale_source === 'argumenta' ? (
-              <span className={styles.disclaimer}>
-                Estimativa Argumenta, não é nota oficial do vestibular
-              </span>
-            ) : null}
-          </div>
-          <span className={styles.totalScore}>{`${lens.total}/${lens.total_max}`}</span>
-        </div>
-      )}
-    </section>
-  )
-}
-
-/** The criterion's own aggregate on the internal 0-100 scale, which is what the
- *  floor is measured on: the wire never maps a criterion back to its dimensions. */
-function percentOf(criterion: LensCriterionResponse): number {
-  return Math.round((criterion.score / criterion.scale_max) * 100)
-}
-
-function Criterion({
-  criterion,
-  floor,
-}: {
-  criterion: LensCriterionResponse
-  floor: number
-}) {
-  const percent = percentOf(criterion)
-  const below = percent < floor
-  return (
-    <div className={styles.row}>
-      <div className={styles.rowHead}>
-        <span className={styles.code}>{criterion.code}</span>
-        <span className={below ? styles.labelBelow : styles.label}>{criterion.label}</span>
-        {criterion.is_argumenta_extra ? (
-          <span className={styles.extra}>critério Argumenta</span>
-        ) : null}
-        <span className={below ? styles.scoreBelow : styles.score}>
-          {`${criterion.score}/${criterion.scale_max}`}
-        </span>
-      </div>
-      <ProgressBar
-        percent={percent}
-        floor={floor}
-        tone={below ? 'alert' : 'caneta'}
-        label={below ? `${criterion.label}, abaixo do piso` : criterion.label}
-      />
-    </div>
-  )
-}
-
-function Text({ segments }: { segments: ReturnType<typeof annotate>['segments'] }) {
-  const heading = useId()
-  const explanation = useId()
-  const [open, setOpen] = useState<number | null>(null)
-  const openMark = segments.find((segment) => segment.mark === open && segment.annotation !== null)
-
-  return (
-    <section aria-labelledby={heading} className={styles.card}>
-      <h2 id={heading} className={styles.cardTitle}>
-        Seu texto, corrigido
-      </h2>
-      <p className={styles.text}>
-        {segments.map((segment, index) =>
-          segment.annotation === null ? (
-            <span key={index}>{segment.text}</span>
-          ) : (
-            <button
-              key={index}
-              type="button"
-              data-mark={segment.mark}
-              className={
-                segment.annotation.severity === 'praise' ? styles.praise : styles.slip
-              }
-              aria-label={`${segment.text}: ${segment.annotation.message}`}
-              aria-expanded={open === segment.mark}
-              aria-controls={explanation}
-              onClick={() => setOpen(open === segment.mark ? null : segment.mark)}
-            >
-              {segment.text}
-            </button>
-          ),
-        )}
-      </p>
-      <p id={explanation} className={styles.explanation} aria-live="polite">
-        {openMark?.annotation?.message ?? ''}
-      </p>
-    </section>
-  )
-}
-
-function Legend({ marks }: { marks: Mark[] }) {
-  const heading = useId()
-  return (
-    <section aria-labelledby={heading} className={styles.card}>
-      <h2 id={heading} className={styles.cardTitle}>
-        As marcações
-      </h2>
-      <ol className={styles.legend}>
-        {marks.map(({ number, annotation }) => (
-          <li key={number} className={styles.legendItem}>
-            <span
-              className={
-                annotation.severity === 'praise' ? styles.badgePraise : styles.badgeSlip
-              }
-              aria-hidden="true"
-            >
-              {number}
-            </span>
-            <p className={styles.legendText}>
-              <strong className={styles.legendKind}>{`${ANNOTATION_LABEL[annotation.type]}.`}</strong>{' '}
-              <span>{annotation.message}</span>
-            </p>
-          </li>
-        ))}
-      </ol>
-    </section>
   )
 }
 
