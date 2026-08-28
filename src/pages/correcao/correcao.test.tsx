@@ -8,6 +8,7 @@ import {
   aLens,
   aMe,
   aReaction,
+  aScore,
   aSubmission,
   anAnnotation,
 } from '../../test/fixtures'
@@ -240,5 +241,30 @@ describe('a lente é a do vestibular do aluno', () => {
 
     const placar = await screen.findByRole('region', { name: /placar/i })
     expect(within(placar).getByText(/critério argumenta/i)).toBeVisible()
+  })
+})
+
+describe('Correção entrega a consequência (bug encontrado no E2E)', () => {
+  test('"Ver o que aconteceu" leva o envio julgado para a consequência', async () => {
+    const submission = aSubmission({
+      verdict: 'failed_persuasion',
+      chapter_status: 'in_consequence',
+      scores: [aScore({ dimension: 'persuasao', score: 38, passed_floor: false })],
+    })
+    const view = renderApp({
+      api: createFakeApi({
+        me: aMe(),
+        chapter: aChapter({ status: 'in_consequence', branch: 'consequence' }),
+        submission,
+      }),
+      path: '/capitulos/chapter-1/correcao',
+      state: { submission, body: BODY },
+    })
+
+    await view.user.click(await screen.findByRole('link', { name: /ver o que aconteceu/i }))
+
+    // without the route state the card is dead code: the only path here is this link
+    expect(await screen.findByText(/onde o argumento parou/i)).toBeInTheDocument()
+    expect(screen.getByText('38/100')).toBeInTheDocument()
   })
 })

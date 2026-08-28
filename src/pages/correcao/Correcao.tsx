@@ -8,7 +8,6 @@ import type {
   ChapterResponse,
   ReactionResponse,
   SubmissionResponse,
-  Verdict,
 } from '../../api/types'
 import { useResource } from '../../api/useResource'
 import { RouteButton } from '../../components/Button'
@@ -117,7 +116,11 @@ function Sheet({ handoff, judged }: { handoff: CorrecaoHandoff; judged: Judged }
         <p className={styles.headlineLine}>{headline.line}</p>
       </div>
 
-      {reaction === null ? null : <Reaction reaction={reaction} />}
+      {reaction === null ? null : (
+        <div className={styles.line}>
+          <Reaction reaction={reaction} />
+        </div>
+      )}
 
       {/* two wrappers that are `display: contents` until the desktop grid needs
           them, so the phone keeps the order it has: placar, then the text, then
@@ -135,7 +138,7 @@ function Sheet({ handoff, judged }: { handoff: CorrecaoHandoff; judged: Judged }
           <ParaPassar priorities={submission.para_passar} />
         )}
 
-        <Actions verdict={submission.verdict} chapterId={chapter.id} />
+        <Actions submission={submission} chapterId={chapter.id} />
       </div>
     </main>
   )
@@ -161,7 +164,14 @@ function ParaPassar({ priorities }: { priorities: AnnotationResponse[] }) {
   )
 }
 
-function Actions({ verdict, chapterId }: { verdict: Verdict; chapterId: string }) {
+function Actions({
+  submission,
+  chapterId,
+}: {
+  submission: SubmissionResponse
+  chapterId: string
+}) {
+  const { verdict } = submission
   if (verdict === 'approved') {
     return (
       <div className={styles.actions}>
@@ -172,7 +182,11 @@ function Actions({ verdict, chapterId }: { verdict: Verdict; chapterId: string }
   if (verdict === 'failed_persuasion') {
     return (
       <div className={styles.actions}>
-        <RouteButton to={`/capitulos/${chapterId}/consequencia`}>Ver o que aconteceu</RouteButton>
+        {/* the consequence card needs the judged scores, and this link is the
+            only way in: without the state it renders without them */}
+        <RouteButton to={`/capitulos/${chapterId}/consequencia`} state={{ submission }}>
+          Ver o que aconteceu
+        </RouteButton>
       </div>
     )
   }

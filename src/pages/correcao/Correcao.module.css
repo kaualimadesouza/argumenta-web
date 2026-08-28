@@ -353,7 +353,8 @@
    a rail beside it. Both wrappers are `display: contents` below this width, so
    the phone order (placar, text, legend, para passar) is untouched. */
 .side,
-.main {
+.main,
+.line {
   display: contents;
 }
 
@@ -362,14 +363,23 @@
     max-width: var(--page-max);
     display: grid;
     grid-template-columns: minmax(0, 1fr) var(--rail);
+    /* dense so the text column backfills the row the rail opened: the rail is
+       taller than the character line, and sparse flow leaves a hole under it */
+    grid-auto-flow: row dense;
     align-items: start;
     gap: 1.25rem;
     padding: 2rem 2rem 3rem;
   }
 
   .bar,
-  .headline {
+  .headline,
+  .line {
     grid-column: 1 / -1;
+  }
+
+  /* only the wrapper needs a box here: .bar and .headline are already flex */
+  .line {
+    display: block;
   }
 
   .main {
