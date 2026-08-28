@@ -239,3 +239,53 @@ export interface TelemetryBatchResponse {
   recorded: number
   dropped: number
 }
+
+export type Milestone =
+  | 'tutorial_completed'
+  | 'first_repertoire_praise'
+  | 'first_boss_essay'
+  | 'week_without_missing'
+
+export interface TrendPointResponse {
+  /** ISO date, no clock: the series is one point per day. */
+  day: string
+  score: number
+}
+
+export interface DimensionTrendResponse {
+  dimension: Dimension
+  /** How the student's lens names the dimension; null when it hides it. */
+  criterion_code: string | null
+  criterion_label: string | null
+  points: TrendPointResponse[]
+}
+
+export interface MilestoneResponse {
+  code: Milestone
+  done: boolean
+}
+
+export interface ProgressResponse extends HabitSummary {
+  exam: Exam
+  lens_version: string
+  longest_streak_days: number
+  stories_completed: number
+  stories_total: number
+  dimensions: DimensionTrendResponse[]
+  milestones: MilestoneResponse[]
+}
+
+export type ReactionBeat = 'rebuttal' | 'convinced' | 'consequence_intro' | 'recovery_prompt'
+
+export interface ReactionResponse {
+  beat: ReactionBeat
+  character_name: string
+  body: string
+  /** The authored fallback, not the AI line: asking again may return the real one. */
+  provisional: boolean
+}
+
+export interface AccountDeletionResponse {
+  requested_at: string
+  purge_scheduled_for: string
+}
