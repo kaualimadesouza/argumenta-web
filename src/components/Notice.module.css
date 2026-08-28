@@ -17,3 +17,9 @@
   color: var(--color-aprovado-ink);
   border: 1px solid var(--color-aprovado);
 }
+
+.warn {
+  background: var(--color-streak-soft);
+  color: var(--color-streak-ink);
+  border: 1px solid var(--color-streak);
+}

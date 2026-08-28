@@ -4,9 +4,7 @@ import { Loaded } from '../../api/Loaded'
 import { useApi } from '../../api/context'
 import type { TrackStoryResponse } from '../../api/types'
 import { useResource } from '../../api/useResource'
-import { Button } from '../../components/Button'
 import { HabitChips } from '../../components/HabitChips'
-import { useSession } from '../../session/context'
 import { StoryCard } from './StoryCard'
 import styles from './Trilha.module.css'
 
@@ -18,7 +16,6 @@ function blockerOf(stories: TrackStoryResponse[], index: number): string | null 
 
 export function Trilha() {
   const api = useApi()
-  const { signOut } = useSession()
   const { state, reload } = useResource(useCallback(() => api.track(), [api]))
 
   return (
@@ -29,10 +26,6 @@ export function Trilha() {
             <h1 className={styles.title}>Sua trilha</h1>
             <div className={styles.chips}>
               <HabitChips habit={track} />
-              {/* leaves with the account screen (#18), which owns this action */}
-              <Button variant="quiet" onClick={() => void signOut()}>
-                Sair
-              </Button>
             </div>
           </header>
           {track.stories.length === 0 ? (
