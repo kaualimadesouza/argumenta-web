@@ -190,6 +190,7 @@ function Criterion({
   return (
     <div className={styles.row}>
       <div className={styles.rowHead}>
+        <span className={styles.code}>{criterion.code}</span>
         <span className={below ? styles.labelBelow : styles.label}>{criterion.label}</span>
         {criterion.is_argumenta_extra ? (
           <span className={styles.extra}>critério Argumenta</span>

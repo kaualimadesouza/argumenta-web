@@ -156,3 +156,28 @@
     line-height: 1.75;
   }
 }
+
+/* the boss essay: the proposal is the brief, so it gets a heading of its own */
+.proposal {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.proposalTitle {
+  margin: 0;
+  font-size: var(--text-meta);
+  font-weight: 700;
+  color: var(--color-caneta);
+}
+
+/* 450 words need room to breathe before the student scrolls */
+.essay {
+  min-height: 18rem;
+}
+
+@media (min-width: 75rem) {
+  .essay {
+    min-height: 32rem;
+  }
+}

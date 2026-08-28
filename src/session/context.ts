@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react'
 
-import type { TargetResponse, UserResponse } from '../api/types'
+import type { Exam, TargetResponse, UserResponse } from '../api/types'
 
 /** `unavailable` is not `anonymous`: a network glitch must never log a student
  *  out, and the two need different screens. */
@@ -37,4 +37,11 @@ export function useStudent(): AuthenticatedSession {
     throw new Error('useStudent used outside of RequireSession')
   }
   return session
+}
+
+/** The lens the student's correction is measured in. Mirrors the API, which
+ *  falls back to the same default when no target is active. */
+export function useLens(): Exam {
+  const { targets } = useStudent()
+  return targets.find((target) => target.is_active)?.exam ?? 'enem'
 }
