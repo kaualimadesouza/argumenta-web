@@ -1,4 +1,4 @@
-import type { AnnotationType, Exam, Milestone } from '../api/types'
+import type { AnnotationType, Dimension, Exam, Milestone } from '../api/types'
 
 /** pt-BR display copy for the API enums. The API sends codes; the screens show
  *  these, so the wire never carries copy. */
@@ -30,4 +30,14 @@ export const MILESTONE_LABEL: Record<Milestone, string> = {
   first_repertoire_praise: 'Primeiro repertório elogiado',
   week_without_missing: 'Uma semana sem faltar',
   first_boss_essay: 'Primeira redação-chefe',
+}
+
+/** Fallback for a dimension the student's lens does not name. */
+export const DIMENSION_LABEL: Record<Dimension, string> = {
+  norma_culta: 'Norma culta',
+  coesao: 'Coesão',
+  coerencia: 'Coerência',
+  repertorio: 'Repertório',
+  persuasao: 'Persuasão',
+  proposta_intervencao: 'Proposta de intervenção',
 }
