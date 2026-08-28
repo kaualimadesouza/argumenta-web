@@ -89,7 +89,8 @@ function Writing({ chapter, track }: Desk) {
       const typing = signals.typingEvent(submission.submission_id)
       if (typing !== null) report([typing])
       // `sending` stays set: the screen is leaving, so there is nothing to reset
-      navigate(`/capitulos/${chapter.id}/correcao`, { state: { submission } })
+      // the annotation offsets belong to the text that was judged, so it travels
+      navigate(`/capitulos/${chapter.id}/correcao`, { state: { submission, body } })
     } catch (error) {
       setFailure(messageFor(error))
       setSending(false)

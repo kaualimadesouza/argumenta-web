@@ -2,9 +2,12 @@ import type {
   AnnotationResponse,
   BeatResponse,
   ChapterResponse,
+  DimensionTrendResponse,
   Exam,
   LensResponse,
   MeResponse,
+  ProgressResponse,
+  ReactionResponse,
   ScoreResponse,
   SubmissionResponse,
   TargetResponse,
@@ -153,6 +156,63 @@ export function aSubmission(overrides: Partial<SubmissionResponse> = {}): Submis
     annotations: [anAnnotation()],
     para_passar: [anAnnotation()],
     lens: aLens(),
+    ...overrides,
+  }
+}
+
+export function aTrend(overrides: Partial<DimensionTrendResponse> = {}): DimensionTrendResponse {
+  return {
+    dimension: 'norma_culta',
+    criterion_code: 'C1',
+    criterion_label: 'Domínio da norma culta',
+    points: [
+      { day: '2026-08-20', score: 62 },
+      { day: '2026-08-22', score: 58 },
+      { day: '2026-08-25', score: 50 },
+    ],
+    ...overrides,
+  }
+}
+
+export function aProgress(overrides: Partial<ProgressResponse> = {}): ProgressResponse {
+  return {
+    exam: 'enem' as Exam,
+    lens_version: 'lens-v1.0',
+    streak_days: 7,
+    longest_streak_days: 12,
+    submissions_today: 2,
+    daily_limit: 3,
+    stories_completed: 1,
+    stories_total: 3,
+    dimensions: [
+      aTrend(),
+      aTrend({
+        dimension: 'repertorio',
+        criterion_code: 'C2',
+        criterion_label: 'Compreensão da proposta e repertório',
+        points: [
+          { day: '2026-08-20', score: 68 },
+          { day: '2026-08-22', score: 74 },
+          { day: '2026-08-25', score: 80 },
+        ],
+      }),
+    ],
+    milestones: [
+      { code: 'tutorial_completed', done: true },
+      { code: 'first_repertoire_praise', done: true },
+      { code: 'week_without_missing', done: true },
+      { code: 'first_boss_essay', done: false },
+    ],
+    ...overrides,
+  }
+}
+
+export function aReaction(overrides: Partial<ReactionResponse> = {}): ReactionResponse {
+  return {
+    beat: 'consequence_intro',
+    character_name: 'Tio Marcos',
+    body: 'Recebi o seu texto. Se cuidar é trabalho, me diz quanto custa e quem paga.',
+    provisional: false,
     ...overrides,
   }
 }

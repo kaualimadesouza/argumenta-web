@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 
 import { Cena } from './pages/cena/Cena'
+import { Correcao } from './pages/correcao/Correcao'
 import { Editor } from './pages/editor/Editor'
 import { CriarConta } from './pages/entrada/CriarConta'
 import { Entrada } from './pages/entrada/Entrada'
@@ -28,6 +29,7 @@ export default function App() {
           <Route path="/trilha" element={<Trilha />} />
           <Route path="/capitulos/:chapterId" element={<Cena />} />
           <Route path="/capitulos/:chapterId/escrever" element={<Editor />} />
+          <Route path="/capitulos/:chapterId/correcao" element={<Correcao />} />
         </Route>
       </Route>
       <Route path="*" element={<NotFound />} />

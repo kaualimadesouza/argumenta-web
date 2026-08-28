@@ -1,0 +1,341 @@
+.page {
+  width: 100%;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 1.125rem 1.25rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.chapter {
+  font-size: var(--text-body);
+  font-weight: 700;
+  letter-spacing: var(--tracking-lead);
+}
+
+.attempt {
+  flex: none;
+  font-size: var(--text-meta);
+  font-weight: 600;
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* the verdict, coloured by what happened: elevation is the border, never a shadow */
+.headline {
+  border-radius: var(--radius-card);
+  padding: 1.125rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5625rem;
+}
+
+.ok {
+  background: var(--color-aprovado-soft);
+  border: 1.5px solid var(--color-aprovado);
+}
+
+.alert {
+  background: var(--color-corretor-soft);
+  border: 1.5px solid var(--color-corretor);
+}
+
+.warn {
+  background: var(--color-streak-soft);
+  border: 1.5px solid var(--color-streak);
+}
+
+.headlineTitle {
+  margin: 0;
+  font-size: var(--text-title);
+  font-weight: 800;
+  letter-spacing: var(--tracking-title);
+  line-height: 1.18;
+  text-wrap: pretty;
+}
+
+.ok .headlineTitle {
+  color: var(--color-aprovado-ink);
+}
+
+.alert .headlineTitle {
+  color: var(--color-corretor-ink);
+}
+
+.warn .headlineTitle {
+  color: var(--color-streak-ink);
+}
+
+.headlineLine {
+  margin: 0;
+  font-size: var(--text-body);
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.card {
+  background: var(--color-card);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  padding: 1.125rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: var(--text-lead);
+  font-weight: 700;
+  letter-spacing: var(--tracking-lead);
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4375rem;
+}
+
+.rowHead {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.label,
+.labelBelow {
+  font-size: var(--text-meta);
+  font-weight: 600;
+}
+
+.labelBelow {
+  color: var(--color-corretor-ink);
+}
+
+.extra {
+  font-size: var(--text-meta);
+  font-weight: 500;
+  color: var(--color-muted);
+}
+
+.score,
+.scoreBelow {
+  margin-left: auto;
+  flex: none;
+  font-size: var(--text-meta);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.scoreBelow {
+  color: var(--color-corretor-ink);
+}
+
+.total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.625rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--color-track);
+}
+
+.totalText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.totalLabel {
+  font-size: var(--text-meta);
+  font-weight: 700;
+}
+
+.disclaimer {
+  font-size: var(--text-micro);
+  font-weight: 500;
+  color: var(--color-muted);
+}
+
+.totalScore {
+  flex: none;
+  font-size: var(--text-lead);
+  font-weight: 800;
+  letter-spacing: var(--tracking-lead);
+  font-variant-numeric: tabular-nums;
+}
+
+/* the student's own text, wide-leaded so the marks have room to sit */
+.text {
+  margin: 0;
+  font-size: var(--text-body);
+  line-height: 1.85;
+  letter-spacing: -0.008em;
+}
+
+/* a mark is a button because the explanation opens on tap; the number is drawn
+   by CSS so it never lands in the text the student (or a test) reads */
+.slip,
+.praise {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.slip {
+  text-decoration: underline wavy var(--color-corretor);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+}
+
+.praise {
+  background: var(--color-marca-texto);
+  padding: 0 2px;
+}
+
+.slip::after,
+.praise::after {
+  content: attr(data-mark);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  margin: 0 1px 0 2px;
+  border-radius: var(--radius-chip);
+  vertical-align: super;
+  font-size: 9.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  color: var(--color-card);
+  text-decoration: none;
+}
+
+.slip::after {
+  background: var(--color-corretor);
+}
+
+.praise::after {
+  background: var(--color-caneta);
+}
+
+.explanation {
+  margin: 0;
+  font-size: var(--text-meta);
+  line-height: 1.55;
+  color: var(--color-ink-2);
+  background: var(--color-track);
+  border-radius: var(--radius-tile);
+  padding: 0.625rem 0.75rem;
+}
+
+.explanation:empty {
+  display: none;
+}
+
+.legend,
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.legendItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6875rem;
+}
+
+.badgeSlip,
+.badgePraise {
+  flex: none;
+  margin-top: 0.125rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: var(--radius-chip);
+  font-size: 9.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-card);
+}
+
+.badgeSlip {
+  background: var(--color-corretor);
+}
+
+.badgePraise {
+  background: var(--color-caneta);
+}
+
+.legendText {
+  margin: 0;
+  font-size: var(--text-meta);
+  line-height: 1.55;
+  color: var(--color-ink-2);
+}
+
+.legendKind {
+  color: var(--color-ink);
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6875rem;
+  font-size: var(--text-body);
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+/* the arrow of the mockup, drawn instead of an icon file */
+.arrow {
+  flex: none;
+  margin-top: 0.5rem;
+  width: 0.8125rem;
+  height: 1px;
+  background: var(--color-caneta);
+  position: relative;
+}
+
+.arrow::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: -3px;
+  width: 6px;
+  height: 6px;
+  border-top: 1.5px solid var(--color-caneta);
+  border-right: 1.5px solid var(--color-caneta);
+  transform: rotate(45deg);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin-top: 0.25rem;
+}
