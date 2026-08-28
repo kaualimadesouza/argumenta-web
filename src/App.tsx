@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 
 import { Cena } from './pages/cena/Cena'
+import { Conta } from './pages/conta/Conta'
 import { Consequencia } from './pages/consequencia/Consequencia'
 import { Correcao } from './pages/correcao/Correcao'
 import { Editor } from './pages/editor/Editor'
@@ -26,6 +27,7 @@ export default function App() {
       <Route path="/termos" element={<Termos />} />
       <Route element={<RequireSession />}>
         <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/conta" element={<Conta />} />
         <Route element={<RequireTargets />}>
           <Route index element={<Navigate to="/trilha" replace />} />
           <Route path="/trilha" element={<Trilha />} />

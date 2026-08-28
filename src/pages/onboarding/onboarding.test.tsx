@@ -10,7 +10,7 @@ function onboarding(targets = aMe({ targets: [] })) {
 }
 
 async function addTarget(user: ReturnType<typeof onboarding>['user'], exam: string, year: string) {
-  await user.selectOptions(await screen.findByLabelText(/vestibular/i), exam)
+  await user.selectOptions(await screen.findByLabelText(/^vestibular$/i), exam)
   await user.selectOptions(screen.getByLabelText(/ano/i), year)
   await user.click(screen.getByRole('button', { name: /adicionar/i }))
 }
