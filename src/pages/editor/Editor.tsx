@@ -108,15 +108,20 @@ function Writing({ chapter, track }: Desk) {
 
       <h1 className={styles.title}>{`Convença ${chapter.antagonist_name}`}</h1>
 
-      <Card className={styles.brief}>
-        <p className={styles.objective}>{chapter.objective}</p>
-        <div className={styles.requirements}>
-          {REQUIREMENTS.map((requirement) => (
-            <Chip key={requirement}>{requirement}</Chip>
-          ))}
-        </div>
-      </Card>
+      {/* two wrappers that are `display: contents` until the desktop grid needs
+          them, so the phone layout is byte for byte the same order */}
+      <div className={styles.side}>
+        <Card className={styles.brief}>
+          <p className={styles.objective}>{chapter.objective}</p>
+          <div className={styles.requirements}>
+            {REQUIREMENTS.map((requirement) => (
+              <Chip key={requirement}>{requirement}</Chip>
+            ))}
+          </div>
+        </Card>
+      </div>
 
+      <div className={styles.desk}>
       <label className="sr-only" htmlFor="argumento">
         Seu argumento
       </label>
@@ -142,6 +147,7 @@ function Writing({ chapter, track }: Desk) {
       <Button onClick={() => void send()} disabled={blocker !== null || sending}>
         {sending ? 'Enviando…' : `Enviar para ${chapter.antagonist_name}`}
       </Button>
+      </div>
     </main>
   )
 }

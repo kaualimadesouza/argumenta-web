@@ -76,3 +76,20 @@
 .cta {
   margin-top: 0.25rem;
 }
+
+/* Tablet and desktop: the same single reading column, wider, and the reading
+   sizes step up once on the ramp because the screen is further from the eye. */
+@media (min-width: 48rem) {
+  .page {
+    max-width: var(--content-max-wide);
+    padding: 2rem 1.5rem 3rem;
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 75rem) {
+  .page {
+    padding: 2.5rem 1.5rem 3.5rem;
+  }
+
+}

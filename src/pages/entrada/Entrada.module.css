@@ -49,7 +49,7 @@
 }
 
 /* the wide screen: the brand on the night panel, the form on the paper side */
-@media (min-width: 73.75rem) {
+@media (min-width: 75rem) {
   .page {
     flex-direction: row;
   }

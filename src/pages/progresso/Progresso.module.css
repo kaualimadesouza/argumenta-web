@@ -252,3 +252,45 @@
 .tickPending {
   border: 1.75px dashed var(--color-line-strong);
 }
+
+@media (min-width: 48rem) {
+  .page {
+    max-width: var(--content-max-wide);
+    padding: 1.75rem 1.5rem 3rem;
+  }
+}
+
+/* Desktop: the streak keeps the full width (its week strip wants it) and the two
+   lists sit side by side. Every child is placed explicitly, so an empty list
+   never shifts the other one. */
+@media (min-width: 75rem) {
+  .page {
+    max-width: var(--page-max);
+    padding: 2.25rem 2rem 3rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--rail);
+    align-items: start;
+    gap: 1.25rem;
+  }
+
+  .bar,
+  .streakCard {
+    grid-column: 1 / -1;
+  }
+
+  .trendsCard {
+    grid-column: 1;
+  }
+
+  .milestonesCard {
+    grid-column: 2;
+  }
+
+  .title {
+    font-size: var(--text-display);
+  }
+
+  .box {
+    height: 3rem;
+  }
+}

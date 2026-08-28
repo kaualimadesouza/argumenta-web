@@ -47,3 +47,10 @@
   font-weight: 700;
   color: var(--color-ink-2);
 }
+
+@media (min-width: 75rem) {
+  .speech {
+    font-size: var(--text-title);
+    line-height: 1.45;
+  }
+}

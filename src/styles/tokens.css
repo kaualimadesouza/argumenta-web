@@ -46,6 +46,8 @@
   /* type: one family, four steps plus a micro step for the tab bar */
   --font-display: 'Inter', -apple-system, 'Segoe UI', Roboto, system-ui, sans-serif;
 
+  /* the desktop step of the screen title, one notch up the same ramp */
+  --text-display: 1.875rem;
   --text-title: 1.5rem;
   --text-lead: 1.1875rem;
   --text-body: 0.9375rem;
@@ -67,4 +69,12 @@
 
   /* layout: a reading column of roughly 70 characters at --text-body */
   --content-max: 34rem;
+  /* the same column with the desktop reading step, still ~70 characters */
+  --content-max-wide: 42rem;
+  /* two-column screens: reading column plus a rail that fits a scoreboard */
+  --page-max: 66rem;
+  --rail: 22rem;
+
+  /* Breakpoints live in the media queries (custom properties cannot be used
+     there): 48rem is the tablet step, 75rem the desktop one. */
 }
