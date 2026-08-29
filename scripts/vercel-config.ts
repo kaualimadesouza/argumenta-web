@@ -23,22 +23,23 @@ export interface VercelConfig {
   rewrites: VercelRewrite[]
 }
 
-/** path-to-regexp sources: `:path+` needs at least one segment (bare /auth
- *  stays with the SPA), `:path*` also matches the bare segment (/me). */
-function proxyRewrite(route: ApiRoute, origin: string): VercelRewrite {
+/** path-to-regexp sources, never `:path*`: on its bare match (empty path)
+ *  Vercel answers 307 to the external destination instead of proxying, which
+ *  breaks same-origin calls (verified live on /me and /health, issue #32).
+ *  `prefix` therefore splits into an exact rewrite plus a `:path+` one. */
+function proxyRewrites(route: ApiRoute, origin: string): VercelRewrite[] {
+  const exact = { source: `/${route.segment}`, destination: `${origin}/${route.segment}` }
+  const children = {
+    source: `/${route.segment}/:path+`,
+    destination: `${origin}/${route.segment}/:path+`,
+  }
   switch (route.match) {
     case 'exact':
-      return { source: `/${route.segment}`, destination: `${origin}/${route.segment}` }
+      return [exact]
     case 'prefix':
-      return {
-        source: `/${route.segment}/:path*`,
-        destination: `${origin}/${route.segment}/:path*`,
-      }
+      return [exact, children]
     case 'children':
-      return {
-        source: `/${route.segment}/:path+`,
-        destination: `${origin}/${route.segment}/:path+`,
-      }
+      return [children]
   }
 }
 
@@ -49,7 +50,7 @@ export function vercelConfig(apiOrigin: string): VercelConfig {
     $schema: 'https://openapi.vercel.sh/vercel.json',
     git: { deploymentEnabled: false },
     rewrites: [
-      ...API_ROUTES.map((route) => proxyRewrite(route, origin)),
+      ...API_ROUTES.flatMap((route) => proxyRewrites(route, origin)),
       { source: '/(.*)', destination: '/index.html' },
     ],
   }
