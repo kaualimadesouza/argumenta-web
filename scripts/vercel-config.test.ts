@@ -21,9 +21,16 @@ describe('vercelConfig', () => {
     const { rewrites } = vercelConfig(ORIGIN)
     const sources = rewrites.map((rewrite) => rewrite.source)
 
-    expect(sources).toContain('/me/:path*')
+    expect(sources).toContain('/me')
+    expect(sources).toContain('/me/:path+')
     expect(sources).toContain('/auth/:path+')
+    expect(sources).not.toContain('/auth')
     expect(sources).toContain('/track')
+  })
+
+  it('never emits :path* sources: Vercel answers 307 instead of proxying on their bare match', () => {
+    const { rewrites } = vercelConfig(ORIGIN)
+    expect(rewrites.filter((rewrite) => rewrite.source.includes(':path*'))).toEqual([])
   })
 
   it('disables git-triggered deploys so the CLI is the only deploy path', () => {
