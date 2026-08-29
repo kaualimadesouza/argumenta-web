@@ -16,3 +16,21 @@
 .done {
   background: var(--color-aprovado);
 }
+
+.alert {
+  background: var(--color-corretor);
+}
+
+.streak {
+  background: var(--color-streak);
+}
+
+/* the pass floor, inside the track so the rounded corners still clip it */
+.floor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--color-ink);
+  opacity: 0.35;
+}

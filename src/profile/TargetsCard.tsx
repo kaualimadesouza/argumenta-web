@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 
 import { useApi } from '../api/context'
 import { messageFor } from '../api/messages'
@@ -19,8 +19,20 @@ function upcomingYears(): number[] {
   return Array.from({ length: YEARS_AHEAD }, (_, offset) => current + offset)
 }
 
-export function TargetsCard() {
+/** Without a target the API falls back to its default lens, and the app asks for
+ *  one again: worth saying before the student loses the last one. */
+const LAST_TARGET_WARNING =
+  'Sem nenhum vestibular, a sua correção volta para a lente padrão (ENEM) e o Argumenta vai pedir um alvo de novo.'
+
+interface TargetsCardProps {
+  /** The account screen asks before the student loses the last lens; the
+   *  onboarding does not, because it is the screen already asking for one. */
+  warnOnLastRemoval?: boolean
+}
+
+export function TargetsCard({ warnOnLastRemoval = false }: TargetsCardProps = {}) {
   const api = useApi()
+  const heading = useId()
   const { reload } = useSession()
   const { targets } = useStudent()
   const years = upcomingYears()
@@ -28,6 +40,7 @@ export function TargetsCard() {
   const [year, setYear] = useState(years[0])
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [confirming, setConfirming] = useState<string | null>(null)
 
   async function run(action: () => Promise<unknown>) {
     setBusy(true)
@@ -42,11 +55,22 @@ export function TargetsCard() {
     }
   }
 
+  function remove(targetId: string) {
+    if (warnOnLastRemoval && targets.length === 1 && confirming !== targetId) {
+      setConfirming(targetId)
+      return
+    }
+    setConfirming(null)
+    void run(() => api.removeTarget(targetId))
+  }
+
   return (
     <Card>
       <div className={styles.card}>
         <Kicker>A lente da sua correção</Kicker>
-        <h2 className={styles.heading}>Seus vestibulares</h2>
+        <h2 id={heading} className={styles.heading}>
+          Seus vestibulares
+        </h2>
         <div className={styles.row}>
           <Select
             label="Vestibular"
@@ -76,7 +100,7 @@ export function TargetsCard() {
             escala a sua correção aparece.
           </p>
         ) : (
-          <ul className={styles.list}>
+          <ul className={styles.list} aria-labelledby={heading}>
             {targets.map((target) => {
               const name = targetLabel(target.exam, target.year)
               return (
@@ -97,10 +121,23 @@ export function TargetsCard() {
                     variant="quiet"
                     aria-label={`Remover ${name}`}
                     disabled={busy}
-                    onClick={() => void run(() => api.removeTarget(target.id))}
+                    onClick={() => remove(target.id)}
                   >
                     Remover
                   </Button>
+                  {confirming === target.id ? (
+                    <div className={styles.confirm}>
+                      <Notice tone="warn">{LAST_TARGET_WARNING}</Notice>
+                      <div className={styles.confirmRow}>
+                        <Button variant="danger" disabled={busy} onClick={() => remove(target.id)}>
+                          Remover mesmo assim
+                        </Button>
+                        <Button variant="ghost" onClick={() => setConfirming(null)}>
+                          Manter
+                        </Button>
+                      </div>
+                    </div>
+                  ) : null}
                 </li>
               )
             })}

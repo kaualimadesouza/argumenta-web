@@ -61,3 +61,15 @@
   width: auto;
   flex: none;
 }
+
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.confirmRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}

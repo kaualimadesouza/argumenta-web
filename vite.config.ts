@@ -13,9 +13,10 @@ const API_ROUTES = [
   '^/me(/|$)',
   '^/track$',
   '^/chapters/',
+  '^/submissions/',
   '^/progress$',
   '^/telemetry/',
-  '^/health$',
+  '^/health(/|$)',
 ]
 
 export default defineConfig({

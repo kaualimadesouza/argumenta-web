@@ -1,0 +1,33 @@
+/* One shell, three shapes. The ladder is deliberate: the tab bar lives at the
+   bottom on a phone, becomes a top bar on a tablet (where a narrow icon rail
+   would need a logo mark the brand does not have), and becomes a left rail on a
+   desktop. Breakpoints: 48rem (768px) and 75rem (1200px). */
+.shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+  /* room for the fixed tab bar, plus the phone's own home indicator */
+  padding-bottom: 5rem;
+}
+
+@media (min-width: 48rem) {
+  .content {
+    padding-bottom: 2rem;
+  }
+}
+
+@media (min-width: 75rem) {
+  .shell {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .content {
+    padding-bottom: 2rem;
+  }
+}

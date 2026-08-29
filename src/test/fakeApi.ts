@@ -3,14 +3,17 @@ import type { ArgumentaApi } from '../api/client'
 import type {
   ChapterResponse,
   MeResponse,
+  ProgressResponse,
+  ReactionResponse,
   SubmissionResponse,
   TargetResponse,
   TelemetryEvent,
   TrackResponse,
   UserResponse,
+  Verdict,
 } from '../api/types'
 import { countWords } from '../api/words'
-import { A_PASSWORD, aChapter, aSubmission, aTrack, aUser } from './fixtures'
+import { A_PASSWORD, aChapter, aProgress, aReaction, aSubmission, aTrack, aUser } from './fixtures'
 
 interface Account {
   user: UserResponse
@@ -27,6 +30,12 @@ interface FakeApiSeed {
   chapter?: ChapterResponse
   /** What POST /chapters/{id}/submissions answers; defaults to an approval. */
   submission?: SubmissionResponse
+  /** A verdict sequence, for a test that walks the whole loop; the last repeats. */
+  submissions?: SubmissionResponse[]
+  /** What GET /progress answers; defaults to the fixture progress. */
+  progress?: ProgressResponse
+  /** The character line POST /submissions/{id}/reaction answers. */
+  reaction?: ReactionResponse
   /** Registered but signed out, so a login test has someone to log in as. */
   account?: MeResponse
   password?: string
@@ -57,11 +66,20 @@ export function createFakeApi(seed: FakeApiSeed = {}): FakeApi {
   let sequence = 0
   let track = seed.track ?? aTrack()
   let chapter = seed.chapter ?? aChapter()
+  let lastVerdict: Verdict | null = null
+  let queue = seed.submissions ? [...seed.submissions] : null
   const telemetry: TelemetryEvent[] = []
 
   function nextId(prefix: string): string {
     sequence += 1
     return `${prefix}-${sequence}`
+  }
+
+  function nextSubmission(): SubmissionResponse {
+    if (queue === null || queue.length === 0) return seed.submission ?? aSubmission()
+    const [head, ...rest] = queue
+    if (rest.length > 0) queue = rest
+    return head
   }
 
   function session(): Account {
@@ -193,9 +211,46 @@ export function createFakeApi(seed: FakeApiSeed = {}): FakeApi {
         return Promise.reject(new ApiError(429, 'DailyLimitReachedError'))
       }
       track = { ...track, submissions_today: track.submissions_today + 1 }
-      const answer = seed.submission ?? aSubmission()
+      const answer = nextSubmission()
+      lastVerdict = answer.verdict
       chapter = { ...open, draft_body: body.body, status: answer.chapter_status }
       return Promise.resolve(answer)
+    },
+
+    progress: () => {
+      session()
+      return Promise.resolve({ ...(seed.progress ?? aProgress()) })
+    },
+
+    startRecovery: (chapterId) => {
+      let open: ChapterResponse
+      try {
+        open = openChapter(chapterId)
+      } catch (error) {
+        return Promise.reject(error)
+      }
+      if (open.status !== 'in_consequence' && open.status !== 'in_recovery') {
+        return Promise.reject(new ApiError(409, 'ChapterNotWritableError'))
+      }
+      chapter = { ...open, status: 'in_recovery', branch: 'recovery' }
+      return Promise.resolve({ ...chapter })
+    },
+
+    // 204 on failed_technical: that verdict earns corrections, not drama
+    reaction: () => {
+      session()
+      if (lastVerdict === 'failed_technical') return Promise.resolve(null)
+      return Promise.resolve(seed.reaction ?? aReaction())
+    },
+
+    deleteAccount: () => {
+      const account = session()
+      accounts.delete(account.user.email)
+      signedIn = null
+      return Promise.resolve({
+        requested_at: '2026-08-28T12:00:00Z',
+        purge_scheduled_for: '2026-09-04T12:00:00Z',
+      })
     },
 
     recordTelemetry: (batch) => {
