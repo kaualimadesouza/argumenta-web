@@ -1,0 +1,107 @@
+name: Deploy Web
+
+# Mirrors the argumenta-api deploy model: DEV (Vercel Preview) on every push to
+# main, PROD (Vercel Production) on release. Deploys go through the Vercel CLI
+# only; the git integration stays off (vercel.json is generated at deploy time
+# with git.deploymentEnabled=false and the same-origin API proxy rewrites).
+on:
+  push:
+    branches:
+      - main
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to deploy to"
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+  # release-please chains this workflow for the prod deploy: its release is
+  # created with GITHUB_TOKEN, whose events never trigger other workflows
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+
+concurrency:
+  group: deploy-web-${{ inputs.environment || (github.event_name == 'release' && 'prod') || 'dev' }}
+  cancel-in-progress: false
+
+env:
+  ENV_NAME: ${{ inputs.environment || (github.event_name == 'release' && 'prod') || 'dev' }}
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  # Deploys stay dormant until the Vercel project exists: without the secrets
+  # and vars the workflow must skip cleanly, not fail every push to main.
+  # (job-level `if` cannot read the secrets context, hence this indirection)
+  preflight:
+    runs-on: ubuntu-latest
+    outputs:
+      ready: ${{ steps.check.outputs.ready }}
+    steps:
+      - id: check
+        run: echo "ready=${{ secrets.VERCEL_TOKEN != '' && secrets.VERCEL_ORG_ID != '' && secrets.VERCEL_PROJECT_ID != '' && vars.API_ORIGIN_DEV != '' && vars.API_ORIGIN_PROD != '' }}" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    needs: [ci, preflight]
+    if: needs.preflight.outputs.ready == 'true'
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Resolve environment
+        run: |
+          if [ "$ENV_NAME" = "prod" ]; then
+            {
+              echo "API_ORIGIN=${{ vars.API_ORIGIN_PROD }}"
+              echo "VERCEL_ENV=production"
+              echo "PROD_FLAG=--prod"
+            } >> "$GITHUB_ENV"
+          else
+            {
+              echo "API_ORIGIN=${{ vars.API_ORIGIN_DEV }}"
+              echo "VERCEL_ENV=preview"
+              echo "PROD_FLAG="
+            } >> "$GITHUB_ENV"
+          fi
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Vercel CLI
+        run: npm i -g vercel@latest
+
+      - name: Generate vercel.json (API proxy + SPA fallback)
+        run: npm run vercel:config
+
+      - name: Pull Vercel project settings
+        run: vercel pull --yes --environment="$VERCEL_ENV"
+
+      - name: Build
+        run: vercel build $PROD_FLAG
+
+      - name: Deploy
+        run: |
+          URL=$(vercel deploy --prebuilt $PROD_FLAG)
+          if [ "$ENV_NAME" != "prod" ]; then
+            vercel alias set "$URL" "${{ vars.VERCEL_DEV_ALIAS || 'argumenta-dev.vercel.app' }}"
+          fi
+          echo "Deployed $ENV_NAME: $URL" >> "$GITHUB_STEP_SUMMARY"

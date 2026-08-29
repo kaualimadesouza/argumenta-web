@@ -9,3 +9,7 @@ dist/
 .DS_Store
 .idea/
 .vscode/
+
+# generated at deploy time by scripts/vercel-config.ts
+vercel.json
+.vercel/
