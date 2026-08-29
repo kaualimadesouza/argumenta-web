@@ -1,10 +1,12 @@
 .button {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: var(--text-body);
+  letter-spacing: var(--tracking-body);
   border-radius: var(--radius-button);
-  padding: 0.75rem 1.2rem;
   border: none;
+  min-height: 3.125rem;
+  padding: 0.5rem 1.25rem;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -14,37 +16,57 @@
   text-decoration: none;
 }
 
-.button:focus-visible {
-  outline: 3px solid var(--color-marca-texto);
-  outline-offset: 2px;
+/* the press step is the only shadow in the system, so it only ever sits under
+   an action the student can take */
+.primary,
+.danger {
+  color: var(--color-card);
+  transition: transform 80ms ease-out;
 }
 
-.button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.primary:active:not(:disabled),
+.danger:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: none;
 }
 
 .primary {
   background: var(--color-caneta);
-  color: var(--color-card);
-}
-
-.ghost {
-  background: var(--color-card);
-  color: var(--color-ink);
-  border: 1.5px solid var(--color-ink);
+  box-shadow: var(--press);
 }
 
 .danger {
   background: var(--color-corretor);
-  color: var(--color-card);
+  box-shadow: 0 3px 0 var(--color-corretor-ink);
+}
+
+.ghost {
+  background: var(--color-card);
+  color: var(--color-ink-2);
+  border: 1px solid var(--color-line-strong);
+  font-weight: 600;
+  min-height: 2.75rem;
 }
 
 .quiet {
   background: none;
   color: var(--color-caneta);
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  padding: 0.4rem 0.6rem;
+  font-size: var(--text-meta);
+  font-weight: 600;
+  min-height: auto;
+  padding: 0.4rem 0.5rem;
   width: auto;
+}
+
+.button:disabled {
+  background: var(--color-disabled);
+  color: var(--color-card);
+  border-color: var(--color-disabled);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.quiet:disabled {
+  background: none;
+  color: var(--color-disabled);
 }

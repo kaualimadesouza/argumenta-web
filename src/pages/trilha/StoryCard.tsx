@@ -61,7 +61,7 @@ export function StoryCard({ story, blockedBy }: StoryCardProps) {
           .join(' ')}
       >
         <div className={styles.top}>
-          <StoryCover slug={story.slug} asset={story.cover_asset} />
+          <StoryCover position={story.position} state={story.state} />
           <div className={styles.body}>
             <div className={styles.titleRow}>
               <h2 className={styles.storyTitle}>{story.title}</h2>

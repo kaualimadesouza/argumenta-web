@@ -2,7 +2,11 @@
 
 Responsive web frontend of Argumenta (Vite + React 19 + TypeScript strict).
 Product decisions live in the argumenta-api repo (`docs/PRD.md`); the visual
-source of truth is [design/ui-mockups.html](design/ui-mockups.html).
+source of truth is the **Novo Argumenta** canvas (design system v3, Inter),
+<https://claude.ai/code/artifact/1a60ff06-7705-4edf-b24a-ecd5d894b263>, with the
+tokens in `src/styles/tokens.css`. [design/ui-mockups.html](design/ui-mockups.html)
+is the superseded v2 art: still the reference for what each screen has to say,
+no longer for how it looks.
 
 ## Skills: check these BEFORE acting
 
