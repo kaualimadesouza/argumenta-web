@@ -315,3 +315,14 @@ export interface AccountDeletionResponse {
   requested_at: string
   purge_scheduled_for: string
 }
+
+export interface PastSubmissionResponse {
+  submission_id: string
+  attempt_number: number
+  body: string
+  verdict: Verdict
+  average_score: number
+  floor_value: number
+  lens: LensResponse
+  created_at: string
+}

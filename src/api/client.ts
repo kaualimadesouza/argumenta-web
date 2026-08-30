@@ -1,5 +1,7 @@
 import { apiErrorFrom } from './ApiError'
 import type {
+  PastSubmissionResponse,
+  SubmissionResponse,
   AccountDeletionResponse,
   AddTargetRequest,
   ChapterResponse,
@@ -54,6 +56,7 @@ export interface ArgumentaApi {
   submit(chapterId: string, body: SubmissionRequest): Promise<PendingSubmissionResponse>
   submission(submissionId: string): Promise<SubmissionStateResponse>
   latestSubmission(chapterId: string): Promise<SubmissionResponse | null>
+  chapterSubmissions(chapterId: string): Promise<PastSubmissionResponse[]>
   recordTelemetry(batch: TelemetryBatchRequest): Promise<TelemetryBatchResponse>
 }
 
@@ -103,6 +106,7 @@ export function createHttpApi(): ArgumentaApi {
     saveDraft: (chapterId, body) => request(`/chapters/${chapterId}/draft`, 'PUT', body),
     submit: (chapterId, body) => request(`/chapters/${chapterId}/submissions`, 'POST', body),
     submission: (submissionId) => request(`/submissions/${submissionId}`, 'GET'),
+    chapterSubmissions: (chapterId) => request(`/chapters/${chapterId}/submissions`, 'GET'),
     latestSubmission: async (chapterId) => {
       try {
         return await request(`/chapters/${chapterId}/submissions/latest`, 'GET')

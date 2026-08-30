@@ -154,3 +154,15 @@
     line-height: 1.45;
   }
 }
+
+.history {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.historyLink {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--color-muted);
+  text-decoration: underline;
+}
