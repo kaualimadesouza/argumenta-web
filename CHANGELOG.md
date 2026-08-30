@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.0](https://github.com/kaualimadesouza/argumenta-web/compare/v1.1.0...v1.2.0) (2026-08-30)
+
+
+### Features
+
+* adicionar historico de tentativas anteriores na cena ([#43](https://github.com/kaualimadesouza/argumenta-web/issues/43)) ([eb0df9a](https://github.com/kaualimadesouza/argumenta-web/commit/eb0df9a746417d1ac06eb1dc1f8959a84e03cda9)), closes [#40](https://github.com/kaualimadesouza/argumenta-web/issues/40)
+
+
+### Bug Fixes
+
+* handle in_consequence status and recover missing handoff state ([#41](https://github.com/kaualimadesouza/argumenta-web/issues/41)) ([ec8002f](https://github.com/kaualimadesouza/argumenta-web/commit/ec8002f7fdc91a51f6f1073053b04ebeb78426a4)), closes [#39](https://github.com/kaualimadesouza/argumenta-web/issues/39)
+
 ## [1.1.0](https://github.com/kaualimadesouza/argumenta-web/compare/v1.0.0...v1.1.0) (2026-08-30)
 
 
