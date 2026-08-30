@@ -155,6 +155,36 @@ describe('o envio', () => {
     )
   })
 
+  test('espera a correção quando o veredito demora, dizendo quem está lendo', async () => {
+    const api = createFakeApi({
+      me: aMe(),
+      chapter: aChapter({ draft_body: words(130) }),
+      evaluatingPolls: 1,
+    })
+    const { user, path } = renderApp({ api, path: '/capitulos/chapter-1/escrever' })
+
+    await user.click(await screen.findByRole('button', { name: /enviar para/i }))
+
+    expect(await screen.findByRole('button', { name: /corrigindo/i })).toBeDisabled()
+    expect(screen.getByText(/está lendo o seu texto/i)).toBeVisible()
+    await waitFor(() => expect(path()).toBe('/capitulos/chapter-1/correcao'), { timeout: 4000 })
+  })
+
+  test('correção que falhou vira recado recuperável, e o texto continua ali', async () => {
+    const api = createFakeApi({
+      me: aMe(),
+      chapter: aChapter({ draft_body: words(130) }),
+      evaluationFailure: true,
+    })
+    const { user } = renderApp({ api, path: '/capitulos/chapter-1/escrever' })
+
+    await user.click(await screen.findByRole('button', { name: /enviar para/i }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/correção falhou/i)
+    expect(await draftBox()).toHaveValue(words(130))
+    expect(sendButton()).toBeEnabled()
+  })
+
   test('a recusa da API vira recado, e o texto continua ali', async () => {
     const api = createFakeApi({ me: aMe(), chapter: aChapter({ draft_body: words(130) }) })
     vi.spyOn(api, 'submit').mockRejectedValue(new ApiError(503, 'LlmBudgetExceededError'))

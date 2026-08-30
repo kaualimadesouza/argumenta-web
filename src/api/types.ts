@@ -181,9 +181,19 @@ export interface LensResponse {
   scale_source: ScaleSource
 }
 
-export interface SubmissionResponse {
+/** Lifecycle of the async correction (API issue #68): failed is recoverable,
+ *  the student may resubmit at no daily-limit cost. */
+export type SubmissionStatus = 'evaluating' | 'evaluated' | 'failed'
+
+/** What POST /chapters/{id}/submissions answers: the correction runs out of
+ *  band, and the verdict arrives by polling GET /submissions/{id}. */
+export interface PendingSubmissionResponse {
   submission_id: string
   attempt_number: number
+  status: SubmissionStatus
+}
+
+export interface CorrectionResponse {
   verdict: Verdict
   average_score: number
   floor_value: number
@@ -193,6 +203,22 @@ export interface SubmissionResponse {
   annotations: AnnotationResponse[]
   para_passar: AnnotationResponse[]
   lens: LensResponse
+}
+
+/** One polling answer: result is present exactly when status is evaluated. */
+export interface SubmissionStateResponse {
+  submission_id: string
+  chapter_id: string
+  attempt_number: number
+  status: SubmissionStatus
+  result: CorrectionResponse | null
+}
+
+/** The correction as the screens consume it, assembled by awaitVerdict once
+ *  the polling ends: the pending ids plus the evaluated result. */
+export interface SubmissionResponse extends CorrectionResponse {
+  submission_id: string
+  attempt_number: number
 }
 
 export interface SubmissionRequest {
