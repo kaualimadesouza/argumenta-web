@@ -12,7 +12,10 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # only PR pushes cancel a superseded run: when this workflow is CALLED by a
+  # deploy, the group is the caller's name + main, and an unconditional true
+  # lets any two concurrent deploys kill each other (seen live on the api repo)
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
