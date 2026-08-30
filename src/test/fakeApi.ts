@@ -36,6 +36,10 @@ interface FakeApiSeed {
   progress?: ProgressResponse
   /** The character line POST /submissions/{id}/reaction answers. */
   reaction?: ReactionResponse
+  /** How many GET /submissions/{id} polls answer evaluating before the verdict. */
+  evaluatingPolls?: number
+  /** The evaluation fails: GET answers failed and no verdict ever lands. */
+  evaluationFailure?: boolean
   /** Registered but signed out, so a login test has someone to log in as. */
   account?: MeResponse
   password?: string
@@ -68,6 +72,8 @@ export function createFakeApi(seed: FakeApiSeed = {}): FakeApi {
   let chapter = seed.chapter ?? aChapter()
   let lastVerdict: Verdict | null = null
   let queue = seed.submissions ? [...seed.submissions] : null
+  const corrections = new Map<string, SubmissionResponse>()
+  let pollsLeft = seed.evaluatingPolls ?? 0
   const telemetry: TelemetryEvent[] = []
 
   function nextId(prefix: string): string {
@@ -212,9 +218,36 @@ export function createFakeApi(seed: FakeApiSeed = {}): FakeApi {
       }
       track = { ...track, submissions_today: track.submissions_today + 1 }
       const answer = nextSubmission()
-      lastVerdict = answer.verdict
-      chapter = { ...open, draft_body: body.body, status: answer.chapter_status }
-      return Promise.resolve(answer)
+      corrections.set(answer.submission_id, answer)
+      if (!seed.evaluationFailure) {
+        lastVerdict = answer.verdict
+        chapter = { ...open, draft_body: body.body, status: answer.chapter_status }
+      }
+      return Promise.resolve({
+        submission_id: answer.submission_id,
+        attempt_number: answer.attempt_number,
+        status: 'evaluating' as const,
+      })
+    },
+
+    submission: (submissionId) => {
+      try {
+        session()
+      } catch (error) {
+        return Promise.reject(error)
+      }
+      const stored = corrections.get(submissionId)
+      if (!stored) return Promise.reject(new ApiError(404, 'SubmissionNotFoundError'))
+      const { submission_id, attempt_number, ...result } = stored
+      const state = { submission_id, attempt_number, chapter_id: chapter.id }
+      if (seed.evaluationFailure) {
+        return Promise.resolve({ ...state, status: 'failed' as const, result: null })
+      }
+      if (pollsLeft > 0) {
+        pollsLeft -= 1
+        return Promise.resolve({ ...state, status: 'evaluating' as const, result: null })
+      }
+      return Promise.resolve({ ...state, status: 'evaluated' as const, result })
     },
 
     progress: () => {

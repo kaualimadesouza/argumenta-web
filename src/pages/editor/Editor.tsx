@@ -7,6 +7,7 @@ import { useLens } from '../../session/context'
 import { messageFor } from '../../api/messages'
 import type { ChapterResponse, ChapterStatus, TelemetryEvent, TrackResponse } from '../../api/types'
 import { useResource } from '../../api/useResource'
+import { awaitVerdict } from '../../api/verdict'
 import { countWords } from '../../api/words'
 import { Button, RouteButton } from '../../components/Button'
 import { Card } from '../../components/Card'
@@ -27,6 +28,10 @@ const INTERVENTION = 'Proposta de intervenção'
 
 /** The same statuses the scene offers the CTA for: the URL is not a shortcut. */
 const WRITABLE: ChapterStatus[] = ['available', 'drafting', 'in_recovery']
+
+/** The API refunded the daily tick on failure, so "tente de novo" is honest. */
+const EVALUATION_FAILED =
+  'A correção falhou aqui do nosso lado. Seu envio de hoje foi devolvido, tente de novo.'
 
 interface Desk {
   chapter: ChapterResponse
@@ -95,12 +100,20 @@ function Writing({ chapter, track }: Desk) {
     setSending(true)
     setFailure(null)
     try {
-      const submission = await api.submit(chapter.id, { body, ...signals.summary() })
-      const typing = signals.typingEvent(submission.submission_id)
+      const pending = await api.submit(chapter.id, { body, ...signals.summary() })
+      const typing = signals.typingEvent(pending.submission_id)
       if (typing !== null) report([typing])
+      const outcome = await awaitVerdict(api, pending)
+      if (outcome.status === 'failed') {
+        setFailure(EVALUATION_FAILED)
+        setSending(false)
+        return
+      }
       // `sending` stays set: the screen is leaving, so there is nothing to reset
       // the annotation offsets belong to the text that was judged, so it travels
-      navigate(`/capitulos/${chapter.id}/correcao`, { state: { submission, body } })
+      navigate(`/capitulos/${chapter.id}/correcao`, {
+        state: { submission: outcome.submission, body },
+      })
     } catch (error) {
       setFailure(messageFor(error))
       setSending(false)
@@ -174,11 +187,16 @@ function Writing({ chapter, track }: Desk) {
         <span>{AUTOSAVE_LABEL[autosave]}</span>
       </p>
 
+      {sending ? (
+        <Notice tone="ok">
+          {`${chapter.antagonist_name} está lendo o seu texto. Isso pode levar um minuto.`}
+        </Notice>
+      ) : null}
       {failure === null ? null : <Notice tone="error">{failure}</Notice>}
       {blocker === null ? null : <p className={styles.blocker}>{blocker}</p>}
       <Button onClick={() => void send()} disabled={blocker !== null || sending}>
         {sending
-          ? 'Enviando…'
+          ? 'Corrigindo…'
           : boss
             ? 'Entregar a redação'
             : `Enviar para ${chapter.antagonist_name}`}

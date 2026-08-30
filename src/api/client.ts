@@ -7,11 +7,12 @@ import type {
   GoogleLoginRequest,
   LoginRequest,
   MeResponse,
+  PendingSubmissionResponse,
   ProgressResponse,
   ReactionResponse,
   RegisterRequest,
   SubmissionRequest,
-  SubmissionResponse,
+  SubmissionStateResponse,
   TargetResponse,
   TelemetryBatchRequest,
   TelemetryBatchResponse,
@@ -49,7 +50,9 @@ export interface ArgumentaApi {
   /** null when the verdict earns corrections instead of drama (204). */
   reaction(submissionId: string): Promise<ReactionResponse | null>
   saveDraft(chapterId: string, body: DraftRequest): Promise<void>
-  submit(chapterId: string, body: SubmissionRequest): Promise<SubmissionResponse>
+  /** 202: the correction runs out of band, poll `submission` for the verdict. */
+  submit(chapterId: string, body: SubmissionRequest): Promise<PendingSubmissionResponse>
+  submission(submissionId: string): Promise<SubmissionStateResponse>
   recordTelemetry(batch: TelemetryBatchRequest): Promise<TelemetryBatchResponse>
 }
 
@@ -98,6 +101,7 @@ export function createHttpApi(): ArgumentaApi {
       )) ?? null,
     saveDraft: (chapterId, body) => request(`/chapters/${chapterId}/draft`, 'PUT', body),
     submit: (chapterId, body) => request(`/chapters/${chapterId}/submissions`, 'POST', body),
+    submission: (submissionId) => request(`/submissions/${submissionId}`, 'GET'),
     recordTelemetry: (batch) => request('/telemetry/events', 'POST', batch),
   }
 }
