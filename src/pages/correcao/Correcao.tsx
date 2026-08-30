@@ -41,8 +41,33 @@ export function Correcao() {
   const { chapterId = '' } = useParams()
   const { state } = useLocation()
 
-  if (!isHandoff(state)) return <Navigate to={`/capitulos/${chapterId}`} replace />
-  return <Loading chapterId={chapterId} handoff={state} />
+  if (isHandoff(state)) {
+    return <Loading chapterId={chapterId} handoff={state} />
+  }
+
+  return <RecoverHandoff chapterId={chapterId} />
+}
+
+function RecoverHandoff({ chapterId }: { chapterId: string }) {
+  const api = useApi()
+  const load = useCallback(async () => {
+    const [submission, chapter] = await Promise.all([
+      api.latestSubmission(chapterId),
+      api.chapter(chapterId),
+    ])
+    if (!submission || !chapter.draft_body) return null
+    return { submission, body: chapter.draft_body }
+  }, [api, chapterId])
+  const { state, reload } = useResource(load)
+
+  return (
+    <Loaded resource={state} onRetry={reload}>
+      {(handoff) => {
+        if (!handoff) return <Navigate to={`/capitulos/${chapterId}`} replace />
+        return <Loading chapterId={chapterId} handoff={handoff} />
+      }}
+    </Loaded>
+  )
 }
 
 function Loading({ chapterId, handoff }: { chapterId: string; handoff: CorrecaoHandoff }) {

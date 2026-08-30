@@ -53,6 +53,7 @@ export interface ArgumentaApi {
   /** 202: the correction runs out of band, poll `submission` for the verdict. */
   submit(chapterId: string, body: SubmissionRequest): Promise<PendingSubmissionResponse>
   submission(submissionId: string): Promise<SubmissionStateResponse>
+  latestSubmission(chapterId: string): Promise<SubmissionResponse | null>
   recordTelemetry(batch: TelemetryBatchRequest): Promise<TelemetryBatchResponse>
 }
 
@@ -102,6 +103,14 @@ export function createHttpApi(): ArgumentaApi {
     saveDraft: (chapterId, body) => request(`/chapters/${chapterId}/draft`, 'PUT', body),
     submit: (chapterId, body) => request(`/chapters/${chapterId}/submissions`, 'POST', body),
     submission: (submissionId) => request(`/submissions/${submissionId}`, 'GET'),
+    latestSubmission: async (chapterId) => {
+      try {
+        return await request(`/chapters/${chapterId}/submissions/latest`, 'GET')
+      } catch (e) {
+        if (e && typeof e === 'object' && 'status' in e && e.status === 404) return null
+        throw e
+      }
+    },
     recordTelemetry: (batch) => request('/telemetry/events', 'POST', batch),
   }
 }

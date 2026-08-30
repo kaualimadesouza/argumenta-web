@@ -202,6 +202,15 @@ export function createFakeApi(seed: FakeApiSeed = {}): FakeApi {
       }
     },
 
+    latestSubmission: (chapterId) => {
+      try {
+        openChapter(chapterId)
+      } catch (error) {
+        return Promise.reject(error)
+      }
+      if (!lastVerdict) return Promise.resolve(null)
+      return Promise.resolve(seed.submission ?? aSubmission())
+    },
     submit: (chapterId, body) => {
       let open: ChapterResponse
       try {
