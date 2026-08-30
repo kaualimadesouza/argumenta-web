@@ -202,6 +202,27 @@ export function createFakeApi(seed: FakeApiSeed = {}): FakeApi {
       }
     },
 
+    chapterSubmissions: (chapterId) => {
+      try {
+        openChapter(chapterId)
+      } catch (error) {
+        return Promise.reject(error)
+      }
+      if (!queue && !seed.submission) return Promise.resolve([])
+      const subs = queue ? [...queue] : [seed.submission!]
+      return Promise.resolve(
+        subs.map((sub) => ({
+          submission_id: sub.submission_id,
+          attempt_number: sub.attempt_number,
+          body: 'Texto da tentativa ' + sub.attempt_number,
+          verdict: sub.verdict,
+          average_score: sub.average_score,
+          floor_value: sub.floor_value,
+          lens: sub.lens,
+          created_at: '2026-08-30T00:00:00Z',
+        }))
+      )
+    },
     latestSubmission: (chapterId) => {
       try {
         openChapter(chapterId)

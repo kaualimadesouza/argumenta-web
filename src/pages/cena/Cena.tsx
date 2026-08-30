@@ -16,11 +16,17 @@ const WRITABLE: ChapterStatus[] = ['available', 'drafting', 'in_recovery']
 export function Cena() {
   const api = useApi()
   const { chapterId = '' } = useParams()
-  const { state, reload } = useResource(useCallback(() => api.chapter(chapterId), [api, chapterId]))
+  const { state, reload } = useResource(useCallback(async () => {
+    const [chapter, submissions] = await Promise.all([
+      api.chapter(chapterId),
+      api.chapterSubmissions(chapterId).catch(() => [])
+    ])
+    return { chapter, submissions }
+  }, [api, chapterId]))
 
   return (
     <Loaded resource={state} onRetry={reload}>
-      {(chapter) => {
+      {({ chapter, submissions }) => {
         if (chapter.status === 'in_consequence') {
           return <Navigate to={`/capitulos/${chapter.id}/consequencia`} replace />
         }
@@ -38,6 +44,13 @@ export function Cena() {
           ))}
           {chapter.status === 'passed' ? (
             <p className={styles.done}>Você já venceu este capítulo.</p>
+          ) : null}
+          {submissions.length > 1 ? (
+            <div className={styles.history}>
+              <Link to={`/capitulos/${chapter.id}/historico`} className={styles.historyLink}>
+                Ver minhas tentativas anteriores
+              </Link>
+            </div>
           ) : null}
           {WRITABLE.includes(chapter.status) ? (
             <RouteButton to={`/capitulos/${chapter.id}/escrever`} className={styles.cta}>
