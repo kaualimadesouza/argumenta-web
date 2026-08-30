@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
 
 import type { ArgumentaApi } from '../../api/client'
@@ -99,5 +99,18 @@ describe('quando o capítulo não abre', () => {
     renderApp({ api, path: '/capitulos/chapter-1' })
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/ainda está trancado/i)
+  })
+})
+
+describe('redirecionamento de status', () => {
+  test('status in_consequence redireciona para /consequencia', async () => {
+    const api = createFakeApi({
+      me: aMe(),
+      chapter: aChapter({ status: 'in_consequence', branch: 'consequence' }),
+    })
+    const view = renderApp({ api, path: '/capitulos/chapter-1' })
+    
+    // O mock do renderApp e memory router, entao podemos checar a localizacao
+    await waitFor(() => expect(view.path()).toBe('/capitulos/chapter-1/consequencia'))
   })
 })

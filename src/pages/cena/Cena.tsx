@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, Navigate, useParams } from 'react-router-dom'
 
 import { Loaded } from '../../api/Loaded'
 import { useApi } from '../../api/context'
@@ -20,7 +20,11 @@ export function Cena() {
 
   return (
     <Loaded resource={state} onRetry={reload}>
-      {(chapter) => (
+      {(chapter) => {
+        if (chapter.status === 'in_consequence') {
+          return <Navigate to={`/capitulos/${chapter.id}/consequencia`} replace />
+        }
+        return (
         <main className={styles.page}>
           <h1 className="sr-only">{chapter.title}</h1>
           <header className={styles.bar}>
@@ -41,7 +45,8 @@ export function Cena() {
             </RouteButton>
           ) : null}
         </main>
-      )}
+        )
+      }}
     </Loaded>
   )
 }

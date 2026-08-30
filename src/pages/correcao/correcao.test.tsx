@@ -268,3 +268,25 @@ describe('Correção entrega a consequência (bug encontrado no E2E)', () => {
     expect(screen.getByText('38/100')).toBeInTheDocument()
   })
 })
+
+describe('recuperação de estado (bug issue 39)', () => {
+  test('sem handoff, busca a submissão mais recente e renderiza em vez de redirecionar', async () => {
+    const submission = aSubmission({ verdict: 'failed_technical', annotations: [] })
+    renderApp({
+      api: {
+        ...createFakeApi({
+          me: aMe(),
+          chapter: aChapter({ status: 'drafting', draft_body: 'Recuperado da API.' }),
+        }),
+        latestSubmission: () => Promise.resolve(submission),
+      },
+      path: '/capitulos/chapter-1/correcao',
+      // Sem state (simula reload/navegação direta)
+    })
+
+    const text = await screen.findByRole('region', { name: /seu texto, corrigido/i })
+    expect(within(text).getByText('Recuperado da API.')).toBeVisible()
+  })
+
+
+})
