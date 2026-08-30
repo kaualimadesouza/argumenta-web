@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/kaualimadesouza/argumenta-web/compare/v1.0.0...v1.1.0) (2026-08-30)
+
+
+### Features
+
+* poll the async submission verdict instead of reading it from the POST ([#37](https://github.com/kaualimadesouza/argumenta-web/issues/37)) ([12352d6](https://github.com/kaualimadesouza/argumenta-web/commit/12352d613840a4921fc38160c8a15b39504de521))
+
 ## 1.0.0 (2026-08-29)
 
 
