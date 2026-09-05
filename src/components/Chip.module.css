@@ -26,3 +26,9 @@
   color: var(--color-streak-ink);
   font-weight: 700;
 }
+
+/* a tag that carries no verdict: an exam, a year, a kind */
+.neutral {
+  background: var(--color-track);
+  color: var(--color-ink-2);
+}

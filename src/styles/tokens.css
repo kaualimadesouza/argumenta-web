@@ -75,6 +75,30 @@
   --page-max: 66rem;
   --rail: 22rem;
 
+  /* landing page: the marketing ramp above the screen title, stepping up at
+     the same breakpoints as the screens (redefined below) */
+  --text-hero: 2.5rem;
+  --text-headline: 2rem;
+  --text-stat: 2.25rem;
+  --text-quote: 1.875rem;
+  --landing-max: 75rem;
+  --marquee-duration: 70s;
+
   /* Breakpoints live in the media queries (custom properties cannot be used
      there): 48rem is the tablet step, 75rem the desktop one. */
+}
+
+@media (min-width: 48rem) {
+  :root {
+    --text-hero: 3.375rem;
+  }
+}
+
+@media (min-width: 75rem) {
+  :root {
+    --text-hero: 4.125rem;
+    --text-headline: 2.875rem;
+    --text-stat: 2.75rem;
+    --text-quote: 3rem;
+  }
 }
