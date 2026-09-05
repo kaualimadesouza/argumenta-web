@@ -1,9 +1,10 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Route, Routes } from 'react-router-dom'
 
 import { Cena } from './pages/cena/Cena'
 import { Conta } from './pages/conta/Conta'
 import { Consequencia } from './pages/consequencia/Consequencia'
 import { Historico } from './pages/historico/Historico'
+import { Home } from './pages/landing/Home'
 import { Correcao } from './pages/correcao/Correcao'
 import { Editor } from './pages/editor/Editor'
 import { CriarConta } from './pages/entrada/CriarConta'
@@ -21,6 +22,8 @@ import { RequireSession, RequireTargets } from './session/RouteGuards'
 export default function App() {
   return (
     <Routes>
+      {/* the landing for a visitor; a student with a session is sent on to the trilha */}
+      <Route path="/" element={<Home />} />
       <Route path="/entrar" element={<Entrada />} />
       <Route path="/entrar/email" element={<EntrarEmail />} />
       <Route path="/entrar/google" element={<GoogleCallback />} />
@@ -33,7 +36,6 @@ export default function App() {
         <Route element={<AppShell />}>
           <Route path="/conta" element={<Conta />} />
           <Route element={<RequireTargets />}>
-            <Route index element={<Navigate to="/trilha" replace />} />
             <Route path="/trilha" element={<Trilha />} />
             <Route path="/progresso" element={<Progresso />} />
           </Route>
