@@ -5,7 +5,7 @@ import { Chip } from '../../components/Chip'
 import { PenMark } from '../../components/art/PenMark'
 import { Wordmark } from '../../components/art/Wordmark'
 import { ChapterMarquee } from './ChapterMarquee'
-import { CLOSING_FACTS, DIMENSIONS, FACTS, FAQ, HERO_SCENE, HERO_TAGLINE } from './content'
+import { CLOSING_FACTS, DIMENSIONS, FACTS, FAQ, HERO_SCENE, HERO_TAGLINE, type LandingFact } from './content'
 import { HowItWorks } from './HowItWorks'
 import { Plans } from './Plans'
 import { Reveal } from './Reveal'
@@ -23,6 +23,29 @@ const NAV: NavEntry[] = [
   { href: '#planos', label: 'Planos' },
   { href: '#perguntas', label: 'Perguntas' },
 ]
+
+function SectionHead({ id, title, sub }: { id: string; title: string; sub?: string }) {
+  return (
+    <Reveal className={styles.sectionHead}>
+      <h2 id={id} className={styles.h2}>
+        {title}
+      </h2>
+      {sub ? <p className={styles.sub}>{sub}</p> : null}
+    </Reveal>
+  )
+}
+
+function Fact({ fact, small = false }: { fact: LandingFact; small?: boolean }) {
+  return (
+    <div className={styles.fact}>
+      <span className={[styles.factNumber, small ? styles.factNumberSmall : undefined].filter(Boolean).join(' ')}>
+        {fact.number}
+      </span>
+      <span className={styles.factLabel}>{fact.label}</span>
+      <p className={styles.factNote}>{fact.note}</p>
+    </div>
+  )
+}
 
 /** The promotional page a visitor reads before signing up. One action, repeated
  *  down the page: start for free. */
@@ -94,26 +117,18 @@ export function Landing() {
         <section className={styles.wrap} aria-label="Em números">
           <Reveal className={styles.facts}>
             {FACTS.map((fact) => (
-              <div key={fact.label} className={styles.fact}>
-                <span className={styles.factNumber}>{fact.number}</span>
-                <span className={styles.factLabel}>{fact.label}</span>
-                <p className={styles.factNote}>{fact.note}</p>
-              </div>
+              <Fact key={fact.label} fact={fact} />
             ))}
           </Reveal>
         </section>
 
         <section className={styles.section} id="historias" aria-labelledby="historias-titulo">
           <div className={styles.wrap}>
-            <Reveal className={styles.sectionHead}>
-              <h2 id="historias-titulo" className={styles.h2}>
-                Cada capítulo é uma discussão que você precisa vencer.
-              </h2>
-              <p className={styles.sub}>
-                Três histórias no beta. Cada uma embrulha um tema que já caiu de verdade no ENEM ou na
-                FUVEST, e termina com a redação completa no formato da prova.
-              </p>
-            </Reveal>
+            <SectionHead
+              id="historias-titulo"
+              title="Cada capítulo é uma discussão que você precisa vencer."
+              sub="Três histórias no beta. Cada uma embrulha um tema que já caiu de verdade no ENEM ou na FUVEST, e termina com a redação completa no formato da prova."
+            />
           </div>
           <ChapterMarquee />
         </section>
@@ -124,12 +139,11 @@ export function Landing() {
           aria-labelledby="como-funciona-titulo"
         >
           <div className={styles.wrap}>
-            <Reveal className={styles.sectionHead}>
-              <h2 id="como-funciona-titulo" className={styles.h2}>
-                Como funciona
-              </h2>
-              <p className={styles.sub}>Você escreve. O personagem responde. A história segue, ou não.</p>
-            </Reveal>
+            <SectionHead
+              id="como-funciona-titulo"
+              title="Como funciona"
+              sub="Você escreve. O personagem responde. A história segue, ou não."
+            />
             <Reveal>
               <HowItWorks />
             </Reveal>
@@ -155,15 +169,11 @@ export function Landing() {
 
         <section className={styles.section} aria-labelledby="criterios-titulo">
           <div className={styles.wrap}>
-            <Reveal className={styles.sectionHead}>
-              <h2 id="criterios-titulo" className={styles.h2}>
-                Corrigido com a régua da banca, explicado como um professor explicaria.
-              </h2>
-              <p className={styles.sub}>
-                Um motor único avalia cinco dimensões. ENEM e FUVEST são lentes: mudam como a nota
-                aparece, nunca o veredito.
-              </p>
-            </Reveal>
+            <SectionHead
+              id="criterios-titulo"
+              title="Corrigido com a régua da banca, explicado como um professor explicaria."
+              sub="Um motor único avalia cinco dimensões. ENEM e FUVEST são lentes: mudam como a nota aparece, nunca o veredito."
+            />
             <Reveal className={styles.dimensions}>
               {DIMENSIONS.map((dimension) => (
                 <article key={dimension.number} className={styles.dimension}>
@@ -189,15 +199,11 @@ export function Landing() {
           aria-labelledby="planos-titulo"
         >
           <div className={styles.wrap}>
-            <Reveal className={styles.sectionHead}>
-              <h2 id="planos-titulo" className={styles.h2}>
-                Comece de graça. Pague só quando o hábito pegar.
-              </h2>
-              <p className={styles.sub}>
-                O beta é gratuito, com limite diário de correções. Os planos pagos vão ampliar o limite e
-                abrir a sua evolução por dimensão.
-              </p>
-            </Reveal>
+            <SectionHead
+              id="planos-titulo"
+              title="Comece de graça. Pague só quando o hábito pegar."
+              sub="O beta é gratuito, com limite diário de correções. Os planos pagos vão ampliar o limite e abrir a sua evolução por dimensão."
+            />
             <Reveal>
               <Plans />
             </Reveal>
@@ -213,11 +219,7 @@ export function Landing() {
           aria-labelledby="perguntas-titulo"
         >
           <div className={styles.wrap}>
-            <Reveal className={styles.sectionHead}>
-              <h2 id="perguntas-titulo" className={styles.h2}>
-                As três perguntas que todo mundo faz
-              </h2>
-            </Reveal>
+            <SectionHead id="perguntas-titulo" title="As três perguntas que todo mundo faz" />
             <Reveal className={styles.faq}>
               {FAQ.map((entry) => (
                 <div key={entry.number} className={styles.question}>
@@ -243,13 +245,7 @@ export function Landing() {
             <p className={styles.note}>Entre com Google ou crie uma conta com e-mail.</p>
             <div className={styles.closingFacts}>
               {CLOSING_FACTS.map((fact) => (
-                <div key={fact.label} className={styles.fact}>
-                  <span className={[styles.factNumber, styles.factNumberSmall].join(' ')}>
-                    {fact.number}
-                  </span>
-                  <span className={styles.factLabel}>{fact.label}</span>
-                  <p className={styles.factNote}>{fact.note}</p>
-                </div>
+                <Fact key={fact.label} fact={fact} small />
               ))}
             </div>
           </Reveal>
