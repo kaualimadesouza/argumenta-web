@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/kaualimadesouza/argumenta-web/compare/v1.2.0...v1.3.0) (2026-09-05)
+
+
+### Features
+
+* add promotional landing page at the root route ([#45](https://github.com/kaualimadesouza/argumenta-web/issues/45)) ([2f4abb3](https://github.com/kaualimadesouza/argumenta-web/commit/2f4abb3dea28c2b3fa3cffc4447489f87f65030f))
+
 ## [1.2.0](https://github.com/kaualimadesouza/argumenta-web/compare/v1.1.0...v1.2.0) (2026-08-30)
 
 
