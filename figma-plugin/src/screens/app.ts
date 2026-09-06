@@ -1,9 +1,9 @@
 import { screenFrame, settle, storyCover } from '../chrome'
 import type { Device } from '../devices'
-import { applyBorder, fill, grow, rect, stack, text } from '../nodes'
+import { applyBorder, fill, grow, rect, room, stack, text } from '../nodes'
 import { MILESTONES, TRACK, TRENDS, WEEK, type StorySample } from '../samples'
 import { COLORS, LAYOUT, SHAPE, TRACKING, TYPE } from '../tokens'
-import { button, card, chip, progressBar, tick } from '../ui'
+import { button, card, cardInner, chip, progressBar, tick } from '../ui'
 import { columns, screenTitle } from './layout'
 import { dangerCard, nicknameCard, targetsCard } from './profile'
 
@@ -31,11 +31,11 @@ export function storyCard(options: StoryCardOptions): FrameNode {
     direction: lying ? 'HORIZONTAL' : 'VERTICAL',
     gap: 14,
     align: lying ? 'CENTER' : 'MIN',
-    width: width - 36,
+    width: cardInner(width),
   })
   const top = stack({ name: 'top', direction: 'HORIZONTAL', gap: 14, align: 'MIN' })
   top.appendChild(storyCover(story.position, story.state))
-  const bodyWidth = (lying ? width - 36 - 220 : width - 36) - 66
+  const bodyWidth = room(inner) - (lying ? 220 : 0) - 66
   const body = stack({ name: 'body', gap: 8, width: bodyWidth })
   const titleRow = stack({
     name: 'titleRow',
@@ -177,7 +177,7 @@ export function trilha(device: Device): FrameNode {
 /* ------------------------------- progresso ----------------------------- */
 
 function streakCard(width: number, device: Device): FrameNode {
-  const inner = width - 36
+  const inner = cardInner(width)
   const shell = card({ gap: 16, width, name: 'card/sequencia' })
   const head = stack({ name: 'head', gap: 4, width: inner })
   head.appendChild(text('7 dias seguidos', { size: TYPE.title, weight: 800, tracking: TRACKING.title }))
@@ -202,7 +202,7 @@ function streakCard(width: number, device: Device): FrameNode {
 }
 
 function trendsCard(width: number): FrameNode {
-  const inner = width - 36
+  const inner = cardInner(width)
   const shell = card({ gap: 16, width, name: 'card/competencias' })
   const head = stack({ name: 'head', gap: 3, width: inner })
   head.appendChild(
@@ -238,7 +238,7 @@ function trendsCard(width: number): FrameNode {
 }
 
 function milestonesCard(width: number): FrameNode {
-  const inner = width - 36
+  const inner = cardInner(width)
   const shell = card({ gap: 16, width, name: 'card/marcos' })
   shell.appendChild(text('Marcos', { size: TYPE.lead, weight: 700, tracking: TRACKING.lead }))
   const list = stack({ name: 'milestones', gap: 14, width: inner })

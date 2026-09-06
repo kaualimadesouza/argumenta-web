@@ -45,7 +45,6 @@ export function entrada(device: Device): FrameNode {
   const frame = deviceFrame(device, {
     name: 'Entrada',
     axis: wide ? 'HORIZONTAL' : 'VERTICAL',
-    height: 'device',
   })
 
   const brandWidth = wide ? Math.round(device.width * 0.52) : device.width

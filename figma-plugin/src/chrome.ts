@@ -1,5 +1,5 @@
 import { columnFor, type ColumnShape, type Device } from './devices'
-import { fill, grow, icon, paint, rect, setSize, settleSizing, stack, text } from './nodes'
+import { fill, grow, icon, paint, rect, room, setSize, settleSizing, stack, text } from './nodes'
 import { COLORS, SHAPE, TRACKING, TYPE, type ColorName } from './tokens'
 
 /* ------------------------------ wordmark ------------------------------ */
@@ -179,13 +179,14 @@ export interface Screen {
 export interface FrameSpec {
   name: string
   axis: 'VERTICAL' | 'HORIZONTAL'
-  /** `device` starts at the viewport height; `content` grows with the content. */
-  height: 'device' | 'content'
   align?: 'MIN' | 'CENTER'
 }
 
 /** The paper the viewport is drawn on. Every frame on the canvas starts here,
- *  so the sizing rules live in one place. */
+ *  so the sizing rules live in one place. The height hugs while the screen is
+ *  being written: a frame that states it before its content exists pins the
+ *  children that fill it, and then the page ends at the fold. `fitToDevice`
+ *  states it once, at the end, when there is something to measure. */
 export function deviceFrame(device: Device, spec: FrameSpec): FrameNode {
   const frame = figma.createFrame()
   frame.name = `${spec.name} · ${device.width}`
@@ -193,10 +194,7 @@ export function deviceFrame(device: Device, spec: FrameSpec): FrameNode {
   frame.clipsContent = false
   frame.layoutMode = spec.axis
   frame.counterAxisAlignItems = spec.align ?? 'MIN'
-  setSize(frame, {
-    width: device.width,
-    height: spec.height === 'content' ? undefined : device.height,
-  })
+  setSize(frame, { width: device.width })
   return frame
 }
 
@@ -207,7 +205,6 @@ export function screenFrame(device: Device, spec: ScreenSpec): Screen {
   const frame = deviceFrame(device, {
     name: spec.name,
     axis: device.nav === 'rail' && spec.shell ? 'HORIZONTAL' : 'VERTICAL',
-    height: 'device',
   })
 
   const body = stack({
@@ -289,7 +286,7 @@ export function nightPanel(body: string, options: NightOptions): FrameNode {
       color: 'luz',
       lineHeight: 1.62,
       tracking: TRACKING.body,
-      width: options.width - pad * 2,
+      width: room(frame),
     }),
   )
   return frame
@@ -318,7 +315,7 @@ export function speechRow(options: SpeechOptions): FrameNode {
     weight: 600,
     lineHeight: 1.48,
     tracking: TRACKING.lead,
-    width: options.width - 36,
+    width: room(frame),
   })
   quoted.setRangeFills(0, 1, paint('lineStrong'))
   quoted.setRangeFills(quoted.characters.length - 1, quoted.characters.length, paint('lineStrong'))

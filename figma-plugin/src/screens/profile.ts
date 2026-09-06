@@ -1,13 +1,13 @@
 /** The cards of src/profile, shared by the account screen and the onboarding. */
 import { fill, grow, stack, text } from '../nodes'
 import { TRACKING, TYPE } from '../tokens'
-import { button, card, chip, field, kicker } from '../ui'
+import { button, card, cardInner, chip, field, kicker } from '../ui'
 
 export function nicknameCard(width: number): FrameNode {
   const shell = card({ gap: 12, width, name: 'card/apelido' })
   shell.appendChild(kicker('Como quer ser chamado'))
-  const row = stack({ name: 'row', direction: 'HORIZONTAL', gap: 8, align: 'MAX', width: width - 36 })
-  const input = field({ label: 'Apelido', value: 'Kauã', width: width - 36 - 8 - 92 })
+  const row = stack({ name: 'row', direction: 'HORIZONTAL', gap: 8, align: 'MAX', width: cardInner(width) })
+  const input = field({ label: 'Apelido', value: 'Kauã', width: cardInner(width) - 8 - 92 })
   row.appendChild(grow(input))
   const save = button('Salvar', 'ghost')
   save.layoutSizingHorizontal = 'HUG'
@@ -17,7 +17,7 @@ export function nicknameCard(width: number): FrameNode {
 }
 
 export function targetsCard(width: number): FrameNode {
-  const inner = width - 36
+  const inner = cardInner(width)
   const shell = card({ gap: 12, width, name: 'card/vestibulares' })
   shell.appendChild(kicker('A lente da sua correção'))
   shell.appendChild(text('Seus vestibulares', { size: TYPE.lead, weight: 700, tracking: TRACKING.lead }))

@@ -4,7 +4,7 @@
 import { fill, fontOf, grow, paint, stack, text } from '../nodes'
 import { DRAFT, MARKS, PRAISE, SCORE_FLOOR, SCORE_MAX, SLIP, type ScoreRow } from '../samples'
 import { SHAPE, TRACKING, TYPE } from '../tokens'
-import { arrowBullet, card, markBadge, progressBar } from '../ui'
+import { arrowBullet, card, cardInner, markBadge, progressBar } from '../ui'
 
 /** The student's own text with the marks in place. Figma has no wavy underline
  *  and no background on a text range, so a slip is a straight corretor
@@ -70,18 +70,21 @@ export function scoreTotal(rows: ScoreRow[], width: number, disclaimer: string):
     width,
     border: { color: 'track', weight: 1, sides: ['top'] },
   })
-  const label = stack({ name: 'label', gap: 2 })
-  label.appendChild(text('Soma dos critérios', { size: TYPE.meta, weight: 700 }))
-  label.appendChild(text(disclaimer, { size: TYPE.micro, weight: 500, color: 'muted' }))
-  total.appendChild(label)
   const sum = rows.reduce((carried, row) => carried + row.score, 0)
-  total.appendChild(
-    text(`${sum}/${SCORE_MAX * rows.length}`, {
-      size: TYPE.lead,
-      weight: 800,
-      tracking: TRACKING.lead,
-    }),
+  const figure = text(`${sum}/${SCORE_MAX * rows.length}`, {
+    size: TYPE.lead,
+    weight: 800,
+    tracking: TRACKING.lead,
+  })
+  // the disclaimer wraps in what the figure leaves, as it does in the browser
+  const rest = width - figure.width - 10
+  const label = stack({ name: 'label', gap: 2, width: rest })
+  label.appendChild(fill(text('Soma dos critérios', { size: TYPE.meta, weight: 700, width: rest })))
+  label.appendChild(
+    fill(text(disclaimer, { size: TYPE.micro, weight: 500, color: 'muted', width: rest })),
   )
+  total.appendChild(label)
+  total.appendChild(figure)
   return total
 }
 
@@ -118,14 +121,14 @@ export function technicalVerdict(width: number, titleSize: number): FrameNode {
       color: 'corretorInk',
       tracking: TRACKING.title,
       lineHeight: 1.18,
-      width: width - 36,
+      width: cardInner(width),
     }),
   )
   frame.appendChild(
     fill(
       text(
         'O argumento convence Seu Tenório, mas 1 desvio de escrita derrubou a nota abaixo do piso. Corrija e reenvie: a história continua esperando.',
-        { size: TYPE.body, lineHeight: 1.55, width: width - 36 },
+        { size: TYPE.body, lineHeight: 1.55, width: cardInner(width) },
       ),
     ),
   )
@@ -133,7 +136,7 @@ export function technicalVerdict(width: number, titleSize: number): FrameNode {
 }
 
 export function legendCard(width: number): FrameNode {
-  const inner = width - 36
+  const inner = cardInner(width)
   const shell = card({ gap: 16, width, name: 'card/marcacoes' })
   shell.appendChild(text('As marcações', { size: TYPE.lead, weight: 700, tracking: TRACKING.lead }))
   const list = stack({ name: 'legend', gap: 14, width: inner })
@@ -161,7 +164,7 @@ export function legendCard(width: number): FrameNode {
 }
 
 export function paraPassarCard(width: number, steps: string[]): FrameNode {
-  const inner = width - 36
+  const inner = cardInner(width)
   const shell = card({ gap: 16, width, name: 'card/para-passar' })
   shell.appendChild(text('Para passar', { size: TYPE.lead, weight: 700, tracking: TRACKING.lead }))
   const list = stack({ name: 'steps', gap: 14, width: inner })

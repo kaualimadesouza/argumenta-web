@@ -1,18 +1,7 @@
 import { brandWordmark, nightPanel, speechRow, storyCover } from '../chrome'
 import { applyBorder, fill, grow, paint, rect, stack, text } from '../nodes'
 import { COLORS, SHAPE, TRACKING, TYPE, type ColorName } from '../tokens'
-import {
-  button,
-  card,
-  chip,
-  field,
-  kicker,
-  markBadge,
-  notice,
-  progressBar,
-  tick,
-  type ChipTone,
-} from '../ui'
+import { button, card, cardInner, chip, field, kicker, markBadge, notice, progressBar, tick, type ChipTone } from '../ui'
 
 const BOARD = 1240
 const INNER = BOARD - 96
@@ -187,7 +176,7 @@ function controls(): FrameNode {
         size: TYPE.body,
         color: 'ink2',
         lineHeight: 1.5,
-        width: 324,
+        width: cardInner(360),
       }),
     ),
   )
@@ -200,7 +189,7 @@ function controls(): FrameNode {
         size: TYPE.body,
         weight: 600,
         lineHeight: 1.5,
-        width: 324,
+        width: cardInner(360, true),
       }),
     ),
   )

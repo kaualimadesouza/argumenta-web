@@ -123,30 +123,52 @@ export function states(frame: FrameNode, dimension: Dimension): boolean {
   return primary ? frame.primaryAxisSizingMode === 'FIXED' : frame.counterAxisSizingMode === 'FIXED'
 }
 
-function isAutoLayout(node: SceneNode): node is FrameNode {
-  return node.type === 'FRAME' && node.layoutMode !== 'NONE'
+/** The content box of a frame: `box-sizing: border-box`, so an inside border
+ *  eats into it exactly as the padding does, in Figma as in the stylesheet. */
+export function room(frame: FrameNode, dimension: Dimension = 'width'): number {
+  const sideways = dimension === 'width'
+  const pad = sideways
+    ? frame.paddingLeft + frame.paddingRight
+    : frame.paddingTop + frame.paddingBottom
+  if (frame.strokes.length === 0 || frame.strokeAlign !== 'INSIDE') return frame[dimension] - pad
+  const sides = sideways
+    ? [frame.strokeLeftWeight, frame.strokeRightWeight]
+    : [frame.strokeTopWeight, frame.strokeBottomWeight]
+  const weight = typeof frame.strokeWeight === 'number' ? frame.strokeWeight : 0
+  const border = sides.reduce((carried, side) => carried + (side > 0 ? side : weight), 0)
+  return frame[dimension] - pad - border
 }
 
-/** `fill` and `grow` only mark the child, and Figma keeps the hug when a frame
- *  stretches an axis it also hugs: the button shrinks to its label. Which axis
- *  that is depends on the parent's direction, known only once the tree stands,
- *  so the marks are settled in one pass at the end of a build. */
+/** Every node an auto-layout frame can lay out and size. */
+export type Laid = SceneNode & AutoLayoutChildrenMixin & LayoutMixin
+
+export function laidOut(node: SceneNode): node is Laid {
+  return 'layoutAlign' in node && 'layoutSizingHorizontal' in node
+}
+
+/** The marks `fill` and `grow` left, applied. Which axis a mark lands on
+ *  depends on the parent's direction, and whether it can be honoured depends on
+ *  the parent's size, so both are only knowable once the tree stands. A parent
+ *  that hugs the axis has nothing to hand out, and the mark stays unapplied.
+ *  Parents settle before their children, since a child fills what its parent
+ *  has already decided. */
 export function settleSizing(frame: FrameNode): FrameNode {
-  const sideways = frame.layoutMode === 'HORIZONTAL'
+  const cross: Dimension = frame.layoutMode === 'HORIZONTAL' ? 'height' : 'width'
+  const main: Dimension = frame.layoutMode === 'HORIZONTAL' ? 'width' : 'height'
   for (const child of frame.children) {
+    const marks = laidOut(child) ? child.getPluginData(SIZING).split(' ') : []
+    if (laidOut(child)) {
+      if (marks.includes('fill') && states(frame, cross)) fillDimension(child, cross)
+      if (marks.includes('grow') && states(frame, main)) fillDimension(child, main)
+    }
     if (child.type === 'FRAME') settleSizing(child)
-    if (!isAutoLayout(child)) continue
-    const cross: Dimension = sideways ? 'height' : 'width'
-    const main: Dimension = sideways ? 'width' : 'height'
-    if (child.layoutAlign === 'STRETCH' && states(frame, cross)) fillDimension(child, cross)
-    if (child.layoutGrow === 1 && states(frame, main)) fillDimension(child, main)
   }
   return frame
 }
 
-function fillDimension(frame: FrameNode, dimension: Dimension): void {
-  if (dimension === 'width') frame.layoutSizingHorizontal = 'FILL'
-  else frame.layoutSizingVertical = 'FILL'
+function fillDimension(node: Laid, dimension: Dimension): void {
+  if (dimension === 'width') node.layoutSizingHorizontal = 'FILL'
+  else node.layoutSizingVertical = 'FILL'
 }
 
 export function applyBorder(node: FrameNode | RectangleNode, border: Border): void {
@@ -200,15 +222,27 @@ export function text(content: string, options: TextOptions): TextNode {
   return node
 }
 
-/** The child fills its parent's cross axis, as a block element does. */
+/** The child spans its parent's cross axis, as a block element does. */
 export function fill<T extends SceneNode & AutoLayoutChildrenMixin>(node: T): T {
-  node.layoutAlign = 'STRETCH'
-  return node
+  return mark(node, 'fill')
 }
 
 /** The child takes the slack on its parent's main axis. */
 export function grow<T extends SceneNode & AutoLayoutChildrenMixin>(node: T): T {
-  node.layoutGrow = 1
+  return mark(node, 'grow')
+}
+
+const SIZING = 'sizing'
+
+/** Both are recorded, not applied. Figma obeys `layoutGrow` the moment it is
+ *  set, even against a parent that is still hugging: the child collapses to the
+ *  parent it is filling, the parent measures that, and the page ends at the
+ *  fold with the content spilling below it. `settleSizing` applies the marks
+ *  once the tree stands and the parent's size is settled. */
+function mark<T extends SceneNode>(node: T, sizing: 'fill' | 'grow'): T {
+  const marks = new Set(node.getPluginData(SIZING).split(' ').filter(Boolean))
+  marks.add(sizing)
+  node.setPluginData(SIZING, [...marks].join(' '))
   return node
 }
 

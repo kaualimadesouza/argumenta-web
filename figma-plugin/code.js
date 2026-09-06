@@ -190,24 +190,34 @@
     const primary = dimension === (frame.layoutMode === "HORIZONTAL" ? "width" : "height");
     return primary ? frame.primaryAxisSizingMode === "FIXED" : frame.counterAxisSizingMode === "FIXED";
   }
-  function isAutoLayout(node) {
-    return node.type === "FRAME" && node.layoutMode !== "NONE";
+  function room(frame, dimension = "width") {
+    const sideways = dimension === "width";
+    const pad = sideways ? frame.paddingLeft + frame.paddingRight : frame.paddingTop + frame.paddingBottom;
+    if (frame.strokes.length === 0 || frame.strokeAlign !== "INSIDE") return frame[dimension] - pad;
+    const sides = sideways ? [frame.strokeLeftWeight, frame.strokeRightWeight] : [frame.strokeTopWeight, frame.strokeBottomWeight];
+    const weight = typeof frame.strokeWeight === "number" ? frame.strokeWeight : 0;
+    const border = sides.reduce((carried, side) => carried + (side > 0 ? side : weight), 0);
+    return frame[dimension] - pad - border;
+  }
+  function laidOut(node) {
+    return "layoutAlign" in node && "layoutSizingHorizontal" in node;
   }
   function settleSizing(frame) {
-    const sideways = frame.layoutMode === "HORIZONTAL";
+    const cross = frame.layoutMode === "HORIZONTAL" ? "height" : "width";
+    const main2 = frame.layoutMode === "HORIZONTAL" ? "width" : "height";
     for (const child of frame.children) {
+      const marks = laidOut(child) ? child.getPluginData(SIZING).split(" ") : [];
+      if (laidOut(child)) {
+        if (marks.includes("fill") && states(frame, cross)) fillDimension(child, cross);
+        if (marks.includes("grow") && states(frame, main2)) fillDimension(child, main2);
+      }
       if (child.type === "FRAME") settleSizing(child);
-      if (!isAutoLayout(child)) continue;
-      const cross = sideways ? "height" : "width";
-      const main2 = sideways ? "width" : "height";
-      if (child.layoutAlign === "STRETCH" && states(frame, cross)) fillDimension(child, cross);
-      if (child.layoutGrow === 1 && states(frame, main2)) fillDimension(child, main2);
     }
     return frame;
   }
-  function fillDimension(frame, dimension) {
-    if (dimension === "width") frame.layoutSizingHorizontal = "FILL";
-    else frame.layoutSizingVertical = "FILL";
+  function fillDimension(node, dimension) {
+    if (dimension === "width") node.layoutSizingHorizontal = "FILL";
+    else node.layoutSizingVertical = "FILL";
   }
   function applyBorder(node, border) {
     node.strokes = paint(border.color);
@@ -247,11 +257,16 @@
     return node;
   }
   function fill(node) {
-    node.layoutAlign = "STRETCH";
-    return node;
+    return mark(node, "fill");
   }
   function grow(node) {
-    node.layoutGrow = 1;
+    return mark(node, "grow");
+  }
+  var SIZING = "sizing";
+  function mark(node, sizing) {
+    const marks = new Set(node.getPluginData(SIZING).split(" ").filter(Boolean));
+    marks.add(sizing);
+    node.setPluginData(SIZING, [...marks].join(" "));
     return node;
   }
   function rect(width, height, color, radius = 0) {
@@ -408,9 +423,9 @@
       border: { color: "line", weight: 1, sides: ["right"] },
       width: 248
     });
-    const mark = navWordmark(TYPE.lead);
+    const mark2 = navWordmark(TYPE.lead);
     const markRow = stack({ name: "wordmark", padding: [0, 12] });
-    markRow.appendChild(mark);
+    markRow.appendChild(mark2);
     nav.appendChild(markRow);
     const tabs = stack({ name: "tabs", gap: 4, width: 216 });
     for (const tab of TABS) tabs.appendChild(fill(tabPill(tab, tab.id === active, 22, 46, 12)));
@@ -425,10 +440,7 @@
     frame.clipsContent = false;
     frame.layoutMode = spec.axis;
     frame.counterAxisAlignItems = (_a = spec.align) != null ? _a : "MIN";
-    setSize(frame, {
-      width: device.width,
-      height: spec.height === "content" ? void 0 : device.height
-    });
+    setSize(frame, { width: device.width });
     return frame;
   }
   function screenFrame(device, spec) {
@@ -436,8 +448,7 @@
     const column = columnFor(device, spec.shape);
     const frame = deviceFrame(device, {
       name: spec.name,
-      axis: device.nav === "rail" && spec.shell ? "HORIZONTAL" : "VERTICAL",
-      height: "device"
+      axis: device.nav === "rail" && spec.shell ? "HORIZONTAL" : "VERTICAL"
     });
     const body = stack({
       name: "body",
@@ -497,7 +508,7 @@
         color: "luz",
         lineHeight: 1.62,
         tracking: TRACKING.body,
-        width: options.width - pad * 2
+        width: room(frame)
       })
     );
     return frame;
@@ -517,7 +528,7 @@
       weight: 600,
       lineHeight: 1.48,
       tracking: TRACKING.lead,
-      width: options.width - 36
+      width: room(frame)
     });
     quoted.setRangeFills(0, 1, paint("lineStrong"));
     quoted.setRangeFills(quoted.characters.length - 1, quoted.characters.length, paint("lineStrong"));
@@ -696,13 +707,17 @@
   };
 
   // figma-plugin/src/ui.ts
+  var CARD_PAD = 18;
+  function cardInner(width, active = false) {
+    return width - 2 * (CARD_PAD + (active ? 1.5 : 1));
+  }
   function card(options = {}) {
     var _a, _b, _c;
     const border = options.active === true ? { color: "caneta", weight: 1.5 } : { color: "line", weight: 1 };
     return stack({
       name: (_a = options.name) != null ? _a : "card",
       gap: (_b = options.gap) != null ? _b : 12,
-      padding: (_c = options.padding) != null ? _c : 18,
+      padding: (_c = options.padding) != null ? _c : CARD_PAD,
       fill: "card",
       radius: SHAPE.card,
       border,
@@ -850,7 +865,7 @@
         color: body === "" ? "muted" : "ink",
         lineHeight: 1.72,
         tracking: -0.8,
-        width: width - 36
+        width: room(frame)
       })
     );
     return frame;
@@ -871,7 +886,7 @@
       width
     });
     frame.appendChild(
-      text(body, { size: TYPE.body, color: style.ink, lineHeight: 1.55, width: width - 30 })
+      text(body, { size: TYPE.body, color: style.ink, lineHeight: 1.55, width: room(frame) })
     );
     return frame;
   }
@@ -962,8 +977,8 @@
   function nicknameCard(width) {
     const shell = card({ gap: 12, width, name: "card/apelido" });
     shell.appendChild(kicker("Como quer ser chamado"));
-    const row2 = stack({ name: "row", direction: "HORIZONTAL", gap: 8, align: "MAX", width: width - 36 });
-    const input = field({ label: "Apelido", value: "Kauã", width: width - 36 - 8 - 92 });
+    const row2 = stack({ name: "row", direction: "HORIZONTAL", gap: 8, align: "MAX", width: cardInner(width) });
+    const input = field({ label: "Apelido", value: "Kauã", width: cardInner(width) - 8 - 92 });
     row2.appendChild(grow(input));
     const save = button("Salvar", "ghost");
     save.layoutSizingHorizontal = "HUG";
@@ -972,7 +987,7 @@
     return shell;
   }
   function targetsCard(width) {
-    const inner = width - 36;
+    const inner = cardInner(width);
     const shell = card({ gap: 12, width, name: "card/vestibulares" });
     shell.appendChild(kicker("A lente da sua correção"));
     shell.appendChild(text("Seus vestibulares", { size: TYPE.lead, weight: 700, tracking: TRACKING.lead }));
@@ -1030,11 +1045,11 @@
       direction: lying ? "HORIZONTAL" : "VERTICAL",
       gap: 14,
       align: lying ? "CENTER" : "MIN",
-      width: width - 36
+      width: cardInner(width)
     });
     const top = stack({ name: "top", direction: "HORIZONTAL", gap: 14, align: "MIN" });
     top.appendChild(storyCover(story.position, story.state));
-    const bodyWidth = (lying ? width - 36 - 220 : width - 36) - 66;
+    const bodyWidth = room(inner) - (lying ? 220 : 0) - 66;
     const body = stack({ name: "body", gap: 8, width: bodyWidth });
     const titleRow = stack({
       name: "titleRow",
@@ -1161,7 +1176,7 @@
     return settle(screen, device);
   }
   function streakCard(width, device) {
-    const inner = width - 36;
+    const inner = cardInner(width);
     const shell = card({ gap: 16, width, name: "card/sequencia" });
     const head = stack({ name: "head", gap: 4, width: inner });
     head.appendChild(text("7 dias seguidos", { size: TYPE.title, weight: 800, tracking: TRACKING.title }));
@@ -1185,7 +1200,7 @@
     return shell;
   }
   function trendsCard(width) {
-    const inner = width - 36;
+    const inner = cardInner(width);
     const shell = card({ gap: 16, width, name: "card/competencias" });
     const head = stack({ name: "head", gap: 3, width: inner });
     head.appendChild(
@@ -1220,7 +1235,7 @@
     return shell;
   }
   function milestonesCard(width) {
-    const inner = width - 36;
+    const inner = cardInner(width);
     const shell = card({ gap: 16, width, name: "card/marcos" });
     shell.appendChild(text("Marcos", { size: TYPE.lead, weight: 700, tracking: TRACKING.lead }));
     const list = stack({ name: "milestones", gap: 14, width: inner });
@@ -1312,8 +1327,7 @@
     const wide = device.id === "desktop";
     const frame = deviceFrame(device, {
       name: "Entrada",
-      axis: wide ? "HORIZONTAL" : "VERTICAL",
-      height: "device"
+      axis: wide ? "HORIZONTAL" : "VERTICAL"
     });
     const brandWidth = wide ? Math.round(device.width * 0.52) : device.width;
     const brand = stack({
@@ -1794,18 +1808,20 @@
       width,
       border: { color: "track", weight: 1, sides: ["top"] }
     });
-    const label = stack({ name: "label", gap: 2 });
-    label.appendChild(text("Soma dos critérios", { size: TYPE.meta, weight: 700 }));
-    label.appendChild(text(disclaimer, { size: TYPE.micro, weight: 500, color: "muted" }));
-    total.appendChild(label);
     const sum = rows.reduce((carried, row2) => carried + row2.score, 0);
-    total.appendChild(
-      text(`${sum}/${SCORE_MAX * rows.length}`, {
-        size: TYPE.lead,
-        weight: 800,
-        tracking: TRACKING.lead
-      })
+    const figure = text(`${sum}/${SCORE_MAX * rows.length}`, {
+      size: TYPE.lead,
+      weight: 800,
+      tracking: TRACKING.lead
+    });
+    const rest = width - figure.width - 10;
+    const label = stack({ name: "label", gap: 2, width: rest });
+    label.appendChild(fill(text("Soma dos critérios", { size: TYPE.meta, weight: 700, width: rest })));
+    label.appendChild(
+      fill(text(disclaimer, { size: TYPE.micro, weight: 500, color: "muted", width: rest }))
     );
+    total.appendChild(label);
+    total.appendChild(figure);
     return total;
   }
   function editorFoot(width) {
@@ -1837,40 +1853,40 @@
         color: "corretorInk",
         tracking: TRACKING.title,
         lineHeight: 1.18,
-        width: width - 36
+        width: cardInner(width)
       })
     );
     frame.appendChild(
       fill(
         text(
           "O argumento convence Seu Tenório, mas 1 desvio de escrita derrubou a nota abaixo do piso. Corrija e reenvie: a história continua esperando.",
-          { size: TYPE.body, lineHeight: 1.55, width: width - 36 }
+          { size: TYPE.body, lineHeight: 1.55, width: cardInner(width) }
         )
       )
     );
     return frame;
   }
   function legendCard(width) {
-    const inner = width - 36;
+    const inner = cardInner(width);
     const shell = card({ gap: 16, width, name: "card/marcacoes" });
     shell.appendChild(text("As marcações", { size: TYPE.lead, weight: 700, tracking: TRACKING.lead }));
     const list = stack({ name: "legend", gap: 14, width: inner });
-    for (const mark of MARKS) {
+    for (const mark2 of MARKS) {
       const row2 = stack({
-        name: `mark/${mark.number}`,
+        name: `mark/${mark2.number}`,
         direction: "HORIZONTAL",
         gap: 11,
         align: "MIN",
         width: inner
       });
-      row2.appendChild(markBadge(mark.number, mark.tone));
-      const line = text(`${mark.kind} ${mark.message}`, {
+      row2.appendChild(markBadge(mark2.number, mark2.tone));
+      const line = text(`${mark2.kind} ${mark2.message}`, {
         size: TYPE.meta,
         color: "ink2",
         lineHeight: 1.55,
         width: inner - 26
       });
-      line.setRangeFills(0, mark.kind.length, paint("ink"));
+      line.setRangeFills(0, mark2.kind.length, paint("ink"));
       row2.appendChild(fill(line));
       list.appendChild(fill(row2));
     }
@@ -1878,7 +1894,7 @@
     return shell;
   }
   function paraPassarCard(width, steps) {
-    const inner = width - 36;
+    const inner = cardInner(width);
     const shell = card({ gap: 16, width, name: "card/para-passar" });
     shell.appendChild(text("Para passar", { size: TYPE.lead, weight: 700, tracking: TRACKING.lead }));
     const list = stack({ name: "steps", gap: 14, width: inner });
@@ -1914,7 +1930,7 @@
           size: TYPE.body,
           weight: 500,
           lineHeight: 1.5,
-          width: width - 36
+          width: cardInner(width)
         })
       )
     );
@@ -1939,7 +1955,7 @@
   }
   var SHOWN = SCORE_ROWS.slice(0, 4);
   function board(width) {
-    const inner = width - 36;
+    const inner = cardInner(width);
     const shell = card({ gap: 14, width, name: "placar" });
     const bar = stack({
       name: "bar",
@@ -1949,14 +1965,16 @@
       justify: "SPACE_BETWEEN",
       width: inner
     });
+    const attempt = text("2ª tentativa", { size: TYPE.meta, weight: 600, color: "muted" });
     bar.appendChild(
       text("Capítulo 2 · O pátio do Tenório", {
         size: TYPE.body,
         weight: 700,
-        tracking: TRACKING.lead
+        tracking: TRACKING.lead,
+        width: inner - attempt.width - 8
       })
     );
-    bar.appendChild(text("2ª tentativa", { size: TYPE.meta, weight: 600, color: "muted" }));
+    bar.appendChild(attempt);
     shell.appendChild(fill(bar));
     const rows = stack({ name: "rows", gap: 12, width: inner });
     for (const row2 of SHOWN) {
@@ -1972,12 +1990,12 @@
     const frame = stack({ name: "correcao", gap: 10, width });
     frame.appendChild(fill(board(width)));
     const marked = card({ gap: 8, width, name: "texto" });
-    marked.appendChild(fill(annotatedDraft(width - 36, TYPE.body, 1.85)));
+    marked.appendChild(fill(annotatedDraft(cardInner(width), TYPE.body, 1.85)));
     frame.appendChild(fill(marked));
     const pass = card({ gap: 10, width, name: "para-passar" });
     pass.appendChild(kicker("Para passar"));
     for (const step of TO_PASS) {
-      pass.appendChild(fill(text(`→ ${step}`, { size: TYPE.body, lineHeight: 1.5, width: width - 36 })));
+      pass.appendChild(fill(text(`→ ${step}`, { size: TYPE.body, lineHeight: 1.5, width: cardInner(width) })));
     }
     frame.appendChild(fill(pass));
     return frame;
@@ -2002,7 +2020,7 @@
       })
     );
     frame.appendChild(
-      fill(text(verdict.line, { size: TYPE.meta, color: "ink2", lineHeight: 1.5, width: width - 36 }))
+      fill(text(verdict.line, { size: TYPE.meta, color: "ink2", lineHeight: 1.5, width: cardInner(width) }))
     );
     return frame;
   }
@@ -2075,16 +2093,15 @@
       border: { color: "line", weight: 1 },
       width
     });
-    const inner = width - 20;
     const screen = stack({
       name: "screen",
       gap: 14,
       padding: 18,
       fill: "paper",
       radius: SHAPE.tile,
-      width: inner
+      width: room(shot)
     });
-    const column = inner - 36;
+    const column = room(screen);
     const bar = stack({
       name: "screenBar",
       direction: "HORIZONTAL",
@@ -2111,7 +2128,7 @@
           size: TYPE.body,
           weight: 600,
           lineHeight: 1.5,
-          width: column - 36
+          width: cardInner(column, true)
         })
       )
     );
@@ -2190,9 +2207,9 @@
   function factBlock(fact, width, size) {
     const block = stack({ name: `fact/${fact.label}`, gap: 8, width });
     block.appendChild(
-      text(fact.number, { size, weight: 800, tracking: TRACKING.title, lineHeight: 1 })
+      text(fact.number, { size, weight: 800, tracking: TRACKING.title, lineHeight: 1.05, width })
     );
-    block.appendChild(text(fact.label, { size: TYPE.body, weight: 700 }));
+    block.appendChild(fill(text(fact.label, { size: TYPE.body, weight: 700, width })));
     block.appendChild(
       fill(text(fact.note, { size: TYPE.meta, color: "muted", lineHeight: 1.45, width }))
     );
@@ -2273,7 +2290,7 @@
           size: TYPE.body,
           color: "ink2",
           lineHeight: 1.5,
-          width: width - 36
+          width: cardInner(width)
         })
       )
     );
@@ -2311,7 +2328,7 @@
         align: desktop ? "CENTER" : "MIN",
         width
       });
-      const inner = width - pad * 2;
+      const inner = room(shell);
       const headWidth = desktop ? Math.round((inner - 56) * (5 / 12)) : inner;
       const miniWidth = desktop ? inner - 56 - headWidth : inner;
       const head = stack({ name: "head", gap: 10, width: headWidth });
@@ -2347,7 +2364,7 @@
         border: { color: "line", weight: 1 },
         width: miniWidth
       });
-      mini.appendChild(fill(THUMBNAILS[index](miniWidth - 28)));
+      mini.appendChild(fill(THUMBNAILS[index](room(mini))));
       shell.appendChild(mini);
       steps.appendChild(fill(shell));
     }
@@ -2364,7 +2381,7 @@
       radius: SHAPE.card,
       width
     });
-    const inner = width - (desktop ? 192 : 48);
+    const inner = room(frame);
     frame.appendChild(
       text("Treinar redação hoje é solitário e abstrato: um tema, uma folha em branco e uma nota dias depois.", {
         size: sizes.quote,
@@ -2445,7 +2462,7 @@
       border: { color: plan.startable ? "caneta" : "line", weight: plan.startable ? 1.5 : 1 },
       width
     });
-    const inner = width - 56;
+    const inner = room(shell);
     const head = stack({ name: "head", gap: 10, width: inner });
     const top = stack({
       name: "top",
@@ -2460,7 +2477,14 @@
     );
     top.appendChild(chip(plan.startable ? "Beta" : "Em breve", plan.startable ? "neutral" : "caneta"));
     head.appendChild(fill(top));
-    const price = stack({ name: "price", direction: "HORIZONTAL", gap: 8, align: "BASELINE", wrap: true });
+    const price = stack({
+      name: "price",
+      direction: "HORIZONTAL",
+      gap: 8,
+      align: "BASELINE",
+      wrap: true,
+      width: inner
+    });
     if (plan.price === null) {
       price.appendChild(
         text("Preço a definir", {
@@ -2663,7 +2687,6 @@
     const frame = deviceFrame(device, {
       name: "Landing",
       axis: "VERTICAL",
-      height: "content",
       align: "CENTER"
     });
     frame.appendChild(navBar(width, device));
@@ -2795,7 +2818,7 @@
       fill(
         text(
           "Escreva para Seu Tenório: por que ele pode confiar o pátio ao grêmio este ano, com compromissos concretos de cuidado e limpeza.",
-          { size: TYPE.body, weight: 500, lineHeight: 1.5, width: width - 36 }
+          { size: TYPE.body, weight: 500, lineHeight: 1.5, width: cardInner(width) }
         )
       )
     );
@@ -2803,7 +2826,7 @@
       name: "requisitos",
       direction: "HORIZONTAL",
       gap: 6,
-      width: width - 36,
+      width: cardInner(width),
       wrap: true
     });
     for (const requirement of REQUIREMENTS2) chips.appendChild(chip(requirement));
@@ -2833,7 +2856,7 @@
     return settle(screen, device);
   }
   function scoreboardCard(width) {
-    const inner = width - 36;
+    const inner = cardInner(width);
     const shell = card({ gap: 16, width, name: "card/placar" });
     shell.appendChild(text("Placar", { size: TYPE.lead, weight: 700, tracking: TRACKING.lead }));
     const rows = stack({ name: "rows", gap: 16, width: inner });
@@ -2847,7 +2870,7 @@
     return shell;
   }
   function markedTextCard(width, device) {
-    const inner = width - 36;
+    const inner = cardInner(width);
     const shell = card({ gap: 16, width, name: "card/texto-corrigido" });
     shell.appendChild(
       text("Seu texto, corrigido", { size: TYPE.lead, weight: 700, tracking: TRACKING.lead })
@@ -2937,7 +2960,7 @@
     screen.content.appendChild(
       fill(speechRow({ speech: CONSEQUENCE.speech, who: CONSEQUENCE.speaker, width, size }))
     );
-    const inner = width - 36;
+    const inner = cardInner(width);
     const stalled = card({ gap: 12, width, name: "card/onde-parou" });
     stalled.appendChild(
       text("Onde o argumento parou", { size: TYPE.lead, weight: 700, tracking: TRACKING.lead })
@@ -2978,7 +3001,7 @@
     screen.content.appendChild(fill(screenBar(width, "← Voltar", [])));
     screen.content.appendChild(fill(screenTitle("Tentativas anteriores", device)));
     for (const attempt of ATTEMPTS) {
-      const inner = width - 36;
+      const inner = cardInner(width);
       const shell = card({ gap: 16, width, padding: 18, name: `tentativa/${attempt.attempt}` });
       const head = stack({
         name: "head",
@@ -3209,7 +3232,7 @@
           size: TYPE.body,
           color: "ink2",
           lineHeight: 1.5,
-          width: 324
+          width: cardInner(360)
         })
       )
     );
@@ -3222,7 +3245,7 @@
           size: TYPE.body,
           weight: 600,
           lineHeight: 1.5,
-          width: 324
+          width: cardInner(360, true)
         })
       )
     );

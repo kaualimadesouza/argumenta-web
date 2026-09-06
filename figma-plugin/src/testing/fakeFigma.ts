@@ -98,6 +98,16 @@ class FakeNode {
     this.fixedHeight = height
   }
 
+  private plugged = new Map<string, string>()
+
+  getPluginData(key: string): string {
+    return this.plugged.get(key) ?? ''
+  }
+
+  setPluginData(key: string, value: string): void {
+    this.plugged.set(key, value)
+  }
+
   remove(): void {
     if (this.parent !== null) {
       this.parent.children = this.parent.children.filter((child) => child !== this)
@@ -215,10 +225,34 @@ class FakeFrame extends FakeNode {
     else this.layoutAlign = 'STRETCH'
   }
 
+  /** An inside stroke eats into the content box, the way a CSS border does
+   *  under `box-sizing: border-box`, so it counts as padding here. */
+  private borders(dimension: Dimension): number {
+    if (this.strokes.length === 0 || this.strokeAlign !== 'INSIDE') return 0
+    const sides =
+      dimension === 'width'
+        ? [this.strokeLeftWeight, this.strokeRightWeight]
+        : [this.strokeTopWeight, this.strokeBottomWeight]
+    return sides.reduce((carried, side) => carried + (side > 0 ? side : this.strokeWeight), 0)
+  }
+
   padding(dimension: Dimension): number {
-    return dimension === 'width'
-      ? this.paddingLeft + this.paddingRight
-      : this.paddingTop + this.paddingBottom
+    const pad =
+      dimension === 'width'
+        ? this.paddingLeft + this.paddingRight
+        : this.paddingTop + this.paddingBottom
+    return pad + this.borders(dimension)
+  }
+
+  /** Whether the parent decides this dimension. `layoutAlign` and `layoutGrow`
+   *  are the older spelling of the same instruction, and Figma obeys them the
+   *  moment the parent states the dimension: that is how a body ends up pinned
+   *  to the viewport with its content spilling out the bottom. */
+  fillsParent(dimension: Dimension): boolean {
+    const parent = this.parent
+    if (parent === null || !parent.isFixed(dimension)) return false
+    if (this.fit[dimension] === 'FILL') return true
+    return dimension === alongMainAxisOf(parent) ? this.layoutGrow === 1 : this.layoutAlign === 'STRETCH'
   }
 
   /** The size a filling child gets: the parent's room on the cross axis, and an
@@ -227,18 +261,18 @@ class FakeFrame extends FakeNode {
     const parent = this.parent as FakeFrame
     const room = parent.size(dimension) - parent.padding(dimension)
     if (dimension !== alongMainAxisOf(parent)) return atLeastFloor(room)
-    const gaps = Math.max(0, parent.children.length - 1) * parent.itemSpacing
-    const others = parent.children.filter((child) => child !== this)
-    const taken = others.reduce(
-      (carried, child) => carried + (child.fit[dimension] === 'FILL' ? 0 : child.size(dimension)),
-      0,
+    const fillers = parent.children.filter(
+      (child) => child instanceof FakeFrame && child.fillsParent(dimension),
     )
-    const sharing = parent.children.filter((child) => child.fit[dimension] === 'FILL').length
-    return atLeastFloor((room - gaps - taken) / Math.max(1, sharing))
+    const gaps = Math.max(0, parent.children.length - 1) * parent.itemSpacing
+    const taken = parent.children
+      .filter((child) => !fillers.includes(child))
+      .reduce((carried, child) => carried + child.size(dimension), 0)
+    return atLeastFloor((room - gaps - taken) / Math.max(1, fillers.length))
   }
 
   size(dimension: Dimension): number {
-    if (this.fit[dimension] === 'FILL' && this.parent !== null) return this.filled(dimension)
+    if (this.fillsParent(dimension)) return this.filled(dimension)
     if (this.isFixed(dimension)) return dimension === 'width' ? this.fixedWidth : this.fixedHeight
     const along = dimension === alongMainAxisOf(this) ? this.mainAxisExtent() : this.crossAxisExtent()
     return atLeastFloor(along + this.padding(dimension))

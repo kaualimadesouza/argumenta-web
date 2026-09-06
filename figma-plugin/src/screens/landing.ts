@@ -1,6 +1,6 @@
 import { brandWordmark, deviceFrame, nightPanel, penMark, speechRow } from '../chrome'
 import { columnFor, type Device } from '../devices'
-import { fill, pressShadow, rect, setSize, settleSizing, stack, text } from '../nodes'
+import { fill, pressShadow, rect, room, setSize, settleSizing, stack, text } from '../nodes'
 import {
   CHAPTER_ROWS,
   CLOSING_FACTS,
@@ -16,7 +16,7 @@ import {
   type LandingFact,
 } from '../landingContent'
 import { LANDING_SCALE, SHAPE, TRACKING, TYPE } from '../tokens'
-import { button, card, checkGlyph, chip, kicker } from '../ui'
+import { button, card, cardInner, checkGlyph, chip, kicker } from '../ui'
 import { columns } from './layout'
 import { THUMBNAILS } from './thumbnails'
 
@@ -96,16 +96,15 @@ function heroShot(width: number): FrameNode {
     border: { color: 'line', weight: 1 },
     width,
   })
-  const inner = width - 20
   const screen = stack({
     name: 'screen',
     gap: 14,
     padding: 18,
     fill: 'paper',
     radius: SHAPE.tile,
-    width: inner,
+    width: room(shot),
   })
-  const column = inner - 36
+  const column = room(screen)
   const bar = stack({
     name: 'screenBar',
     direction: 'HORIZONTAL',
@@ -132,7 +131,7 @@ function heroShot(width: number): FrameNode {
         size: TYPE.body,
         weight: 600,
         lineHeight: 1.5,
-        width: column - 36,
+        width: cardInner(column, true),
       }),
     ),
   )
@@ -217,9 +216,9 @@ function hero(width: number, device: Device): FrameNode {
 function factBlock(fact: LandingFact, width: number, size: number): FrameNode {
   const block = stack({ name: `fact/${fact.label}`, gap: 8, width })
   block.appendChild(
-    text(fact.number, { size, weight: 800, tracking: TRACKING.title, lineHeight: 1 }),
+    text(fact.number, { size, weight: 800, tracking: TRACKING.title, lineHeight: 1.05, width }),
   )
-  block.appendChild(text(fact.label, { size: TYPE.body, weight: 700 }))
+  block.appendChild(fill(text(fact.label, { size: TYPE.body, weight: 700, width })))
   block.appendChild(
     fill(text(fact.note, { size: TYPE.meta, color: 'muted', lineHeight: 1.45, width })),
   )
@@ -308,7 +307,7 @@ function chapterCard(entry: ChapterRow, width: number): FrameNode {
         size: TYPE.body,
         color: 'ink2',
         lineHeight: 1.5,
-        width: width - 36,
+        width: cardInner(width),
       }),
     ),
   )
@@ -363,7 +362,7 @@ function howItWorks(width: number, device: Device): FrameNode {
       align: desktop ? 'CENTER' : 'MIN',
       width,
     })
-    const inner = width - pad * 2
+    const inner = room(shell)
     const headWidth = desktop ? Math.round((inner - 56) * (5 / 12)) : inner
     const miniWidth = desktop ? inner - 56 - headWidth : inner
     const head = stack({ name: 'head', gap: 10, width: headWidth })
@@ -399,7 +398,7 @@ function howItWorks(width: number, device: Device): FrameNode {
       border: { color: 'line', weight: 1 },
       width: miniWidth,
     })
-    mini.appendChild(fill(THUMBNAILS[index](miniWidth - 28)))
+    mini.appendChild(fill(THUMBNAILS[index](room(mini))))
     shell.appendChild(mini)
     steps.appendChild(fill(shell))
   }
@@ -419,7 +418,7 @@ function thesis(width: number, device: Device): FrameNode {
     radius: SHAPE.card,
     width,
   })
-  const inner = width - (desktop ? 192 : 48)
+  const inner = room(frame)
   frame.appendChild(
     text('Treinar redação hoje é solitário e abstrato: um tema, uma folha em branco e uma nota dias depois.', {
       size: sizes.quote,
@@ -506,7 +505,7 @@ function planCard(width: number, plan: (typeof PLANS)[number]): FrameNode {
     border: { color: plan.startable ? 'caneta' : 'line', weight: plan.startable ? 1.5 : 1 },
     width,
   })
-  const inner = width - 56
+  const inner = room(shell)
   const head = stack({ name: 'head', gap: 10, width: inner })
   const top = stack({
     name: 'top',
@@ -521,7 +520,14 @@ function planCard(width: number, plan: (typeof PLANS)[number]): FrameNode {
   )
   top.appendChild(chip(plan.startable ? 'Beta' : 'Em breve', plan.startable ? 'neutral' : 'caneta'))
   head.appendChild(fill(top))
-  const price = stack({ name: 'price', direction: 'HORIZONTAL', gap: 8, align: 'BASELINE', wrap: true })
+  const price = stack({
+    name: 'price',
+    direction: 'HORIZONTAL',
+    gap: 8,
+    align: 'BASELINE',
+    wrap: true,
+    width: inner,
+  })
   if (plan.price === null) {
     price.appendChild(
       text('Preço a definir', {
@@ -739,7 +745,6 @@ export function landing(device: Device): FrameNode {
   const frame = deviceFrame(device, {
     name: 'Landing',
     axis: 'VERTICAL',
-    height: 'content',
     align: 'CENTER',
   })
 

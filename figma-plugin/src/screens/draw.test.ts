@@ -4,7 +4,7 @@ import { columnFor, DEVICES, deviceOf } from '../devices'
 import { loadFonts, stack, text } from '../nodes'
 import { createStyles } from '../styles'
 import { installFakeFigma, type FakeFigma } from '../testing/fakeFigma'
-import { overflows, unfilled } from '../testing/invariants'
+import { overflows, pinned, unfilled } from '../testing/invariants'
 import { COLORS } from '../tokens'
 import { trilha } from './app'
 import { entrada } from './auth'
@@ -130,6 +130,16 @@ describe('no block sits on top of the next one', () => {
     for (const screen of SCREENS) {
       it(`${screen.label} at ${device.width} holds every child inside its height`, () => {
         expect(overflows(screen.build(device))).toEqual([])
+      })
+    }
+  }
+})
+
+describe('no frame is pinned to a parent that hugs it back', () => {
+  for (const device of DEVICES) {
+    for (const screen of SCREENS) {
+      it(`${screen.label} at ${device.width}`, () => {
+        expect(pinned(screen.build(device))).toEqual([])
       })
     }
   }

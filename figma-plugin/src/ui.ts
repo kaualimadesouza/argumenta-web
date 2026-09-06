@@ -4,6 +4,7 @@ import {
   paint,
   pressShadow,
   rect,
+  room,
   setSize,
   stack,
   text,
@@ -23,6 +24,15 @@ export interface CardOptions {
   name?: string
 }
 
+const CARD_PAD = 18
+
+/** What fits inside a card of this width. `box-sizing: border-box` in the
+ *  stylesheet, and Figma lays out the same way: the padding and the border both
+ *  come out of the width, so a child built on the width alone sticks out. */
+export function cardInner(width: number, active = false): number {
+  return width - 2 * (CARD_PAD + (active ? 1.5 : 1))
+}
+
 export function card(options: CardOptions = {}): FrameNode {
   const border: Border = options.active === true
     ? { color: 'caneta', weight: 1.5 }
@@ -30,7 +40,7 @@ export function card(options: CardOptions = {}): FrameNode {
   return stack({
     name: options.name ?? 'card',
     gap: options.gap ?? 12,
-    padding: options.padding ?? 18,
+    padding: options.padding ?? CARD_PAD,
     fill: 'card',
     radius: SHAPE.card,
     border,
@@ -229,7 +239,7 @@ export function textarea(body: string, width: number, height: number): FrameNode
       color: body === '' ? 'muted' : 'ink',
       lineHeight: 1.72,
       tracking: -0.8,
-      width: width - 36,
+      width: room(frame),
     }),
   )
   return frame
@@ -256,7 +266,7 @@ export function notice(body: string, tone: NoticeTone, width: number): FrameNode
     width,
   })
   frame.appendChild(
-    text(body, { size: TYPE.body, color: style.ink, lineHeight: 1.55, width: width - 30 }),
+    text(body, { size: TYPE.body, color: style.ink, lineHeight: 1.55, width: room(frame) }),
   )
   return frame
 }
