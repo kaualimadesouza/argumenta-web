@@ -37,6 +37,20 @@ describe('a navegação principal', () => {
     expect(within(nav).getByRole('link', { name: 'Trilha' })).not.toHaveAttribute('aria-current')
   })
 
+  test('leva o indicador para a aba viva, para ele deslizar entre elas', async () => {
+    at('/progresso')
+
+    const nav = await screen.findByRole('navigation', { name: /navegação principal/i })
+    expect(nav.getAttribute('style')).toContain('--live: 1')
+  })
+
+  test('e o traz de volta para a primeira', async () => {
+    at('/trilha')
+
+    const nav = await screen.findByRole('navigation', { name: /navegação principal/i })
+    expect(nav.getAttribute('style')).toContain('--live: 0')
+  })
+
   test('está na conta também', async () => {
     at('/conta')
 

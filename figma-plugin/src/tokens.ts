@@ -72,9 +72,11 @@ export interface Shape {
   button: number
   tile: number
   chip: number
+  /** The phone nav, which floats instead of running edge to edge. */
+  dock: number
 }
 
-export const SHAPE: Shape = { card: 14, button: 12, tile: 10, chip: 999 }
+export const SHAPE: Shape = { card: 14, button: 12, tile: 10, chip: 999, dock: 22 }
 
 export interface Layout {
   contentMax: number

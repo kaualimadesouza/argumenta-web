@@ -5,7 +5,7 @@ import { fill, stack, text } from '../nodes'
 import { STEP_SCENE, VERDICT_OK, VERDICT_WARN } from '../landingContent'
 import { DRAFT, SCORE_ROWS, TO_PASS } from '../samples'
 import { SHAPE, TRACKING, TYPE } from '../tokens'
-import { card, chip, kicker } from '../ui'
+import { card, cardInner, chip, kicker } from '../ui'
 import { annotatedDraft, editorFoot, scoreRow, scoreTotal } from './correction'
 
 const REQUIREMENTS = ['Tese', 'Justificativa', 'Repertório explicado']
@@ -33,7 +33,7 @@ function editor(width: number): FrameNode {
         size: TYPE.body,
         weight: 500,
         lineHeight: 1.5,
-        width: width - 36,
+        width: cardInner(width),
       }),
     ),
   )
@@ -61,7 +61,7 @@ function editor(width: number): FrameNode {
 const SHOWN = SCORE_ROWS.slice(0, 4)
 
 function board(width: number): FrameNode {
-  const inner = width - 36
+  const inner = cardInner(width)
   const shell = card({ gap: 14, width, name: 'placar' })
   const bar = stack({
     name: 'bar',
@@ -71,14 +71,16 @@ function board(width: number): FrameNode {
     justify: 'SPACE_BETWEEN',
     width: inner,
   })
+  const attempt = text('2ª tentativa', { size: TYPE.meta, weight: 600, color: 'muted' })
   bar.appendChild(
     text('Capítulo 2 · O pátio do Tenório', {
       size: TYPE.body,
       weight: 700,
       tracking: TRACKING.lead,
+      width: inner - attempt.width - 8,
     }),
   )
-  bar.appendChild(text('2ª tentativa', { size: TYPE.meta, weight: 600, color: 'muted' }))
+  bar.appendChild(attempt)
   shell.appendChild(fill(bar))
   const rows = stack({ name: 'rows', gap: 12, width: inner })
   for (const row of SHOWN) {
@@ -96,12 +98,12 @@ function correction(width: number): FrameNode {
   const frame = stack({ name: 'correcao', gap: 10, width })
   frame.appendChild(fill(board(width)))
   const marked = card({ gap: 8, width, name: 'texto' })
-  marked.appendChild(fill(annotatedDraft(width - 36, TYPE.body, 1.85)))
+  marked.appendChild(fill(annotatedDraft(cardInner(width), TYPE.body, 1.85)))
   frame.appendChild(fill(marked))
   const pass = card({ gap: 10, width, name: 'para-passar' })
   pass.appendChild(kicker('Para passar'))
   for (const step of TO_PASS) {
-    pass.appendChild(fill(text(`→ ${step}`, { size: TYPE.body, lineHeight: 1.5, width: width - 36 })))
+    pass.appendChild(fill(text(`→ ${step}`, { size: TYPE.body, lineHeight: 1.5, width: cardInner(width) })))
   }
   frame.appendChild(fill(pass))
   return frame
@@ -131,7 +133,7 @@ function verdictBlock(
     }),
   )
   frame.appendChild(
-    fill(text(verdict.line, { size: TYPE.meta, color: 'ink2', lineHeight: 1.5, width: width - 36 })),
+    fill(text(verdict.line, { size: TYPE.meta, color: 'ink2', lineHeight: 1.5, width: cardInner(width) })),
   )
   return frame
 }

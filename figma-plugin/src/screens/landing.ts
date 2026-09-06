@@ -1,6 +1,6 @@
 import { brandWordmark, deviceFrame, nightPanel, penMark, speechRow } from '../chrome'
 import { columnFor, type Device } from '../devices'
-import { fill, pressShadow, rect, stack, text } from '../nodes'
+import { fill, pressShadow, rect, room, setSize, settleSizing, stack, text } from '../nodes'
 import {
   CHAPTER_ROWS,
   CLOSING_FACTS,
@@ -16,8 +16,8 @@ import {
   type LandingFact,
 } from '../landingContent'
 import { LANDING_SCALE, SHAPE, TRACKING, TYPE } from '../tokens'
-import { button, card, checkGlyph, chip, kicker } from '../ui'
-import { cellWidth, columns } from './layout'
+import { button, card, cardInner, checkGlyph, chip, kicker } from '../ui'
+import { columns, evenHeights } from './layout'
 import { THUMBNAILS } from './thumbnails'
 
 interface Sizes {
@@ -42,8 +42,7 @@ function navBar(width: number, device: Device): FrameNode {
     justify: 'SPACE_BETWEEN',
     width,
   })
-  bar.primaryAxisSizingMode = 'FIXED'
-  bar.resize(width, 72)
+  setSize(bar, { width, height: 72 })
   bar.appendChild(brandWordmark(22))
   if (device.id === 'desktop') {
     const links = stack({ name: 'links', direction: 'HORIZONTAL', gap: 28, align: 'CENTER' })
@@ -80,8 +79,7 @@ function ghostLink(label: string): FrameNode {
     align: 'CENTER',
     justify: 'CENTER',
   })
-  frame.primaryAxisSizingMode = 'FIXED'
-  frame.resize(frame.width, 44)
+  setSize(frame, { height: 44 })
   frame.appendChild(
     text(label, { size: TYPE.body, weight: 600, color: 'ink2', tracking: TRACKING.body }),
   )
@@ -98,16 +96,15 @@ function heroShot(width: number): FrameNode {
     border: { color: 'line', weight: 1 },
     width,
   })
-  const inner = width - 20
   const screen = stack({
     name: 'screen',
     gap: 14,
     padding: 18,
     fill: 'paper',
     radius: SHAPE.tile,
-    width: inner,
+    width: room(shot),
   })
-  const column = inner - 36
+  const column = room(screen)
   const bar = stack({
     name: 'screenBar',
     direction: 'HORIZONTAL',
@@ -134,7 +131,7 @@ function heroShot(width: number): FrameNode {
         size: TYPE.body,
         weight: 600,
         lineHeight: 1.5,
-        width: column - 36,
+        width: cardInner(column, true),
       }),
     ),
   )
@@ -148,8 +145,7 @@ function heroShot(width: number): FrameNode {
     justify: 'CENTER',
     width: column,
   })
-  fake.primaryAxisSizingMode = 'FIXED'
-  fake.resize(column, 50)
+  setSize(fake, { width: column, height: 50 })
   fake.effects = pressShadow('canetaPress')
   fake.appendChild(text('Argumentar', { size: TYPE.body, weight: 700, color: 'card' }))
   screen.appendChild(fill(fake))
@@ -177,15 +173,13 @@ function hero(width: number, device: Device): FrameNode {
     ),
   )
   copy.appendChild(
-    fill(
-      text(HERO_LEAD, {
-        size: TYPE.lead,
-        color: 'ink2',
-        lineHeight: 1.55,
-        tracking: TRACKING.lead,
-        width: Math.min(544, copyWidth),
-      }),
-    ),
+    text(HERO_LEAD, {
+      size: TYPE.lead,
+      color: 'ink2',
+      lineHeight: 1.55,
+      tracking: TRACKING.lead,
+      width: Math.min(544, copyWidth),
+    }),
   )
   const ctaRow = stack({ name: 'ctaRow', direction: 'HORIZONTAL', gap: 12, align: 'CENTER', wrap: true, width: copyWidth })
   const cta = button('Começar grátis')
@@ -222,9 +216,9 @@ function hero(width: number, device: Device): FrameNode {
 function factBlock(fact: LandingFact, width: number, size: number): FrameNode {
   const block = stack({ name: `fact/${fact.label}`, gap: 8, width })
   block.appendChild(
-    text(fact.number, { size, weight: 800, tracking: TRACKING.title, lineHeight: 1 }),
+    text(fact.number, { size, weight: 800, tracking: TRACKING.title, lineHeight: 1.05, width }),
   )
-  block.appendChild(text(fact.label, { size: TYPE.body, weight: 700 }))
+  block.appendChild(fill(text(fact.label, { size: TYPE.body, weight: 700, width })))
   block.appendChild(
     fill(text(fact.note, { size: TYPE.meta, color: 'muted', lineHeight: 1.45, width })),
   )
@@ -242,9 +236,14 @@ function factsStrip(width: number, device: Device): FrameNode {
   })
   const perRow = desktop ? 4 : 2
   const gap = desktop ? 40 : 20
-  const cell = cellWidth(width, perRow, gap)
-  const blocks = FACTS.map((fact) => factBlock(fact, cell, sizesOf(device).stat))
-  for (const row of columns(blocks, perRow, width, gap)) strip.appendChild(fill(row))
+  const rows = columns({
+    items: FACTS,
+    perRow,
+    width,
+    gap,
+    build: (fact, cell) => factBlock(fact, cell, sizesOf(device).stat),
+  })
+  for (const row of rows) strip.appendChild(fill(row))
   return strip
 }
 
@@ -308,7 +307,7 @@ function chapterCard(entry: ChapterRow, width: number): FrameNode {
         size: TYPE.body,
         color: 'ink2',
         lineHeight: 1.5,
-        width: width - 36,
+        width: cardInner(width),
       }),
     ),
   )
@@ -323,8 +322,11 @@ interface ChapterRow {
   objective: string
 }
 
-/** The marquee rolls in the browser; here it is the same row of cards, clipped
- *  by the viewport exactly as the animation shows it. */
+/** The marquee rolls in the browser; here it is the same rows of cards, clipped
+ *  by the viewport exactly as the animation shows them. Both rows sit flush
+ *  against the left edge, as the stylesheet has them: the offset a reader sees
+ *  comes from the two animations running in opposite directions, and a static
+ *  frame cannot carry that. */
 function marquee(device: Device): FrameNode {
   const cardWidth = device.id === 'phone' ? 300 : 340
   const frame = stack({ name: 'marquee', gap: 16, width: device.width })
@@ -334,11 +336,11 @@ function marquee(device: Device): FrameNode {
       name: `row/${index + 1}`,
       direction: 'HORIZONTAL',
       gap: 16,
-      padding: [0, 0, 0, index === 1 ? -120 : 20],
       align: 'MIN',
     })
-    for (const entry of row) line.appendChild(chapterCard(entry, cardWidth))
-    frame.appendChild(line)
+    for (const entry of row) line.appendChild(fill(chapterCard(entry, cardWidth)))
+    const span = row.length * cardWidth + (row.length - 1) * 16
+    frame.appendChild(evenHeights(line, span))
   }
   return frame
 }
@@ -361,7 +363,7 @@ function howItWorks(width: number, device: Device): FrameNode {
       align: desktop ? 'CENTER' : 'MIN',
       width,
     })
-    const inner = width - pad * 2
+    const inner = room(shell)
     const headWidth = desktop ? Math.round((inner - 56) * (5 / 12)) : inner
     const miniWidth = desktop ? inner - 56 - headWidth : inner
     const head = stack({ name: 'head', gap: 10, width: headWidth })
@@ -397,7 +399,7 @@ function howItWorks(width: number, device: Device): FrameNode {
       border: { color: 'line', weight: 1 },
       width: miniWidth,
     })
-    mini.appendChild(fill(THUMBNAILS[index](miniWidth - 28)))
+    mini.appendChild(fill(THUMBNAILS[index](room(mini))))
     shell.appendChild(mini)
     steps.appendChild(fill(shell))
   }
@@ -417,7 +419,7 @@ function thesis(width: number, device: Device): FrameNode {
     radius: SHAPE.card,
     width,
   })
-  const inner = width - (desktop ? 192 : 48)
+  const inner = room(frame)
   frame.appendChild(
     text('Treinar redação hoje é solitário e abstrato: um tema, uma folha em branco e uma nota dias depois.', {
       size: sizes.quote,
@@ -504,7 +506,7 @@ function planCard(width: number, plan: (typeof PLANS)[number]): FrameNode {
     border: { color: plan.startable ? 'caneta' : 'line', weight: plan.startable ? 1.5 : 1 },
     width,
   })
-  const inner = width - 56
+  const inner = room(shell)
   const head = stack({ name: 'head', gap: 10, width: inner })
   const top = stack({
     name: 'top',
@@ -519,7 +521,14 @@ function planCard(width: number, plan: (typeof PLANS)[number]): FrameNode {
   )
   top.appendChild(chip(plan.startable ? 'Beta' : 'Em breve', plan.startable ? 'neutral' : 'caneta'))
   head.appendChild(fill(top))
-  const price = stack({ name: 'price', direction: 'HORIZONTAL', gap: 8, align: 'BASELINE', wrap: true })
+  const price = stack({
+    name: 'price',
+    direction: 'HORIZONTAL',
+    gap: 8,
+    align: 'BASELINE',
+    wrap: true,
+    width: inner,
+  })
   if (plan.price === null) {
     price.appendChild(
       text('Preço a definir', {
@@ -561,8 +570,7 @@ function planCard(width: number, plan: (typeof PLANS)[number]): FrameNode {
     shell.appendChild(fill(button('Começar grátis')))
   } else {
     const waiting = stack({ name: 'waiting', align: 'CENTER', justify: 'CENTER', width: inner })
-    waiting.primaryAxisSizingMode = 'FIXED'
-    waiting.resize(inner, 50)
+    setSize(waiting, { width: inner, height: 50 })
     waiting.appendChild(
       text('Disponível depois do beta.', { size: TYPE.meta, weight: 600, color: 'muted' }),
     )
@@ -674,11 +682,14 @@ function closing(width: number, device: Device): FrameNode {
   })
   const closingPerRow = desktop ? 4 : 2
   const closingGap = desktop ? 40 : 20
-  const closingCell = cellWidth(factsWidth, closingPerRow, closingGap)
-  const blocks = CLOSING_FACTS.map((fact) => factBlock(fact, closingCell, 36))
-  for (const row of columns(blocks, closingPerRow, factsWidth, closingGap)) {
-    strip.appendChild(fill(row))
-  }
+  const closingRows = columns({
+    items: CLOSING_FACTS,
+    perRow: closingPerRow,
+    width: factsWidth,
+    gap: closingGap,
+    build: (fact, cell) => factBlock(fact, cell, 36),
+  })
+  for (const row of closingRows) strip.appendChild(fill(row))
   frame.appendChild(strip)
   return frame
 }
@@ -731,24 +742,16 @@ function footer(width: number, device: Device): FrameNode {
 /** The promotional page a visitor reads before signing up: one frame per width,
  *  the full scroll, since a landing is judged by its whole length. */
 export function landing(device: Device): FrameNode {
-  const column = columnFor(device, 'landing')
-  const width = column.width
+  const width = columnFor(device, 'landing').width
   const frame = deviceFrame(device, {
     name: 'Landing',
     axis: 'VERTICAL',
-    height: 'content',
     align: 'CENTER',
   })
 
-  const wrap = (child: FrameNode): FrameNode => {
-    const holder = stack({ name: 'wrap', padding: [0, column.padX], align: 'MIN', width: device.width })
-    holder.appendChild(child)
-    return holder
-  }
-
-  frame.appendChild(fill(wrap(navBar(width, device))));
-  frame.appendChild(fill(wrap(hero(width, device))))
-  frame.appendChild(fill(wrap(factsStrip(width, device))))
+  frame.appendChild(navBar(width, device))
+  frame.appendChild(hero(width, device))
+  frame.appendChild(factsStrip(width, device))
 
   const stories = section(width, device)
   stories.appendChild(
@@ -761,15 +764,15 @@ export function landing(device: Device): FrameNode {
       ),
     ),
   )
-  frame.appendChild(fill(wrap(stories)))
-  frame.appendChild(fill(marquee(device)))
+  frame.appendChild(stories)
+  frame.appendChild(marquee(device))
 
   const how = section(width, device, true)
   how.appendChild(fill(sectionHead('Como funciona', 'Você escreve. O personagem responde. A história segue, ou não.', width, device)))
   how.appendChild(fill(howItWorks(width, device)))
-  frame.appendChild(fill(wrap(how)))
+  frame.appendChild(how)
 
-  frame.appendChild(fill(wrap(thesis(width, device))))
+  frame.appendChild(thesis(width, device))
 
   const criteria = section(width, device)
   criteria.appendChild(
@@ -783,20 +786,23 @@ export function landing(device: Device): FrameNode {
     ),
   )
   const perRow = device.id === 'desktop' ? 5 : device.id === 'tablet' ? 2 : 1
-  const dimensionWidth = cellWidth(width, perRow, 16)
-  const cards = DIMENSIONS.map((entry) => dimensionCard(dimensionWidth, entry))
-  for (const row of columns(cards, perRow, width, 16)) criteria.appendChild(fill(row))
+  const dimensionRows = columns({
+    items: DIMENSIONS,
+    perRow,
+    width,
+    gap: 16,
+    build: (entry, cell) => dimensionCard(cell, entry),
+  })
+  for (const row of dimensionRows) criteria.appendChild(fill(row))
   criteria.appendChild(
-    fill(
-      text('Toda nota vem com o trecho do seu texto que a justifica. Sem evidência, sem desconto.', {
-        size: TYPE.body,
-        color: 'ink2',
-        lineHeight: 1.55,
-        width: Math.min(736, width),
-      }),
-    ),
+    text('Toda nota vem com o trecho do seu texto que a justifica. Sem evidência, sem desconto.', {
+      size: TYPE.body,
+      color: 'ink2',
+      lineHeight: 1.55,
+      width: Math.min(736, width),
+    }),
   )
-  frame.appendChild(fill(wrap(criteria)))
+  frame.appendChild(criteria)
 
   const plans = section(width, device, true)
   plans.appendChild(
@@ -810,29 +816,30 @@ export function landing(device: Device): FrameNode {
     ),
   )
   const planPerRow = device.id === 'phone' ? 1 : 3
-  const planWidth = cellWidth(width, planPerRow, 20)
-  const planCards = PLANS.map((plan) => planCard(planWidth, plan))
-  for (const row of columns(planCards, planPerRow, width, 20)) {
-    plans.appendChild(fill(row))
-  }
+  const planRows = columns({
+    items: PLANS,
+    perRow: planPerRow,
+    width,
+    gap: 20,
+    build: (plan, cell) => planCard(cell, plan),
+  })
+  for (const row of planRows) plans.appendChild(fill(row))
   plans.appendChild(
-    fill(
-      text('Qualquer envio mantém a sua sequência, em qualquer plano.', {
-        size: TYPE.meta,
-        color: 'muted',
-        lineHeight: 1.55,
-        width: Math.min(736, width),
-      }),
-    ),
+    text('Qualquer envio mantém a sua sequência, em qualquer plano.', {
+      size: TYPE.meta,
+      color: 'muted',
+      lineHeight: 1.55,
+      width: Math.min(736, width),
+    }),
   )
-  frame.appendChild(fill(wrap(plans)))
+  frame.appendChild(plans)
 
   const questions = section(width, device, true)
   questions.appendChild(fill(sectionHead('As três perguntas que todo mundo faz', null, width, device)))
   questions.appendChild(fill(faqList(width, device)))
-  frame.appendChild(fill(wrap(questions)))
+  frame.appendChild(questions)
 
-  frame.appendChild(fill(wrap(closing(width, device))))
-  frame.appendChild(fill(wrap(footer(width, device))))
-  return frame
+  frame.appendChild(closing(width, device))
+  frame.appendChild(footer(width, device))
+  return settleSizing(frame)
 }

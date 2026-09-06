@@ -83,17 +83,92 @@ export function stack(options: StackOptions = {}): FrameNode {
   frame.paddingRight = right
   frame.paddingBottom = bottom
   frame.paddingLeft = left
-  frame.primaryAxisSizingMode = 'AUTO'
-  frame.counterAxisSizingMode = options.width === undefined ? 'AUTO' : 'FIXED'
   frame.counterAxisAlignItems = options.align === 'BASELINE' ? 'BASELINE' : (options.align ?? 'MIN')
   frame.primaryAxisAlignItems = options.justify ?? 'MIN'
   frame.clipsContent = false
   frame.fills = options.fill === undefined || options.fill === null ? [] : paint(options.fill)
   if (options.radius !== undefined) frame.cornerRadius = options.radius
   if (options.wrap === true) frame.layoutWrap = 'WRAP'
-  if (options.width !== undefined) frame.resize(options.width, frame.height)
+  setSize(frame, { width: options.width })
   if (options.border) applyBorder(frame, options.border)
   return frame
+}
+
+export interface Size {
+  width?: number
+  height?: number
+}
+
+/** Figma's sizing modes are axis-relative, so their meaning flips with the
+ *  direction of the stack: on a row, the "primary" axis is the width. This
+ *  states the frame's sizing in the two words the caller is thinking in, and a
+ *  dimension left out hugs its content. */
+export function setSize(frame: FrameNode, size: Size): void {
+  const sideways = frame.layoutMode === 'HORIZONTAL'
+  frame.resize(size.width ?? frame.width, size.height ?? frame.height)
+  const primary = sideways ? size.width : size.height
+  const counter = sideways ? size.height : size.width
+  frame.primaryAxisSizingMode = primary === undefined ? 'AUTO' : 'FIXED'
+  frame.counterAxisSizingMode = counter === undefined ? 'AUTO' : 'FIXED'
+}
+
+export type Dimension = 'width' | 'height'
+
+/** Whether the frame states a dimension instead of hugging its content. Which
+ *  sizing mode owns it flips with the direction: on a row the primary axis is
+ *  the width, on a column it is the height. */
+export function states(frame: FrameNode, dimension: Dimension): boolean {
+  if (frame.layoutMode === 'NONE') return true
+  const primary = dimension === (frame.layoutMode === 'HORIZONTAL' ? 'width' : 'height')
+  return primary ? frame.primaryAxisSizingMode === 'FIXED' : frame.counterAxisSizingMode === 'FIXED'
+}
+
+/** The content box of a frame: `box-sizing: border-box`, so an inside border
+ *  eats into it exactly as the padding does, in Figma as in the stylesheet. */
+export function room(frame: FrameNode, dimension: Dimension = 'width'): number {
+  const sideways = dimension === 'width'
+  const pad = sideways
+    ? frame.paddingLeft + frame.paddingRight
+    : frame.paddingTop + frame.paddingBottom
+  if (frame.strokes.length === 0 || frame.strokeAlign !== 'INSIDE') return frame[dimension] - pad
+  const sides = sideways
+    ? [frame.strokeLeftWeight, frame.strokeRightWeight]
+    : [frame.strokeTopWeight, frame.strokeBottomWeight]
+  const weight = typeof frame.strokeWeight === 'number' ? frame.strokeWeight : 0
+  const border = sides.reduce((carried, side) => carried + (side > 0 ? side : weight), 0)
+  return frame[dimension] - pad - border
+}
+
+/** Every node an auto-layout frame can lay out and size. */
+export type Laid = SceneNode & AutoLayoutChildrenMixin & LayoutMixin
+
+export function laidOut(node: SceneNode): node is Laid {
+  return 'layoutAlign' in node && 'layoutSizingHorizontal' in node
+}
+
+/** The marks `fill` and `grow` left, applied. Which axis a mark lands on
+ *  depends on the parent's direction, and whether it can be honoured depends on
+ *  the parent's size, so both are only knowable once the tree stands. A parent
+ *  that hugs the axis has nothing to hand out, and the mark stays unapplied.
+ *  Parents settle before their children, since a child fills what its parent
+ *  has already decided. */
+export function settleSizing(frame: FrameNode): FrameNode {
+  const cross: Dimension = frame.layoutMode === 'HORIZONTAL' ? 'height' : 'width'
+  const main: Dimension = frame.layoutMode === 'HORIZONTAL' ? 'width' : 'height'
+  for (const child of frame.children) {
+    const marks = laidOut(child) ? child.getPluginData(SIZING).split(' ') : []
+    if (laidOut(child)) {
+      if (marks.includes('fill') && states(frame, cross)) fillDimension(child, cross)
+      if (marks.includes('grow') && states(frame, main)) fillDimension(child, main)
+    }
+    if (child.type === 'FRAME') settleSizing(child)
+  }
+  return frame
+}
+
+function fillDimension(node: Laid, dimension: Dimension): void {
+  if (dimension === 'width') node.layoutSizingHorizontal = 'FILL'
+  else node.layoutSizingVertical = 'FILL'
 }
 
 export function applyBorder(node: FrameNode | RectangleNode, border: Border): void {
@@ -147,15 +222,27 @@ export function text(content: string, options: TextOptions): TextNode {
   return node
 }
 
-/** The child fills its parent's cross axis, as a block element does. */
+/** The child spans its parent's cross axis, as a block element does. */
 export function fill<T extends SceneNode & AutoLayoutChildrenMixin>(node: T): T {
-  node.layoutAlign = 'STRETCH'
-  return node
+  return mark(node, 'fill')
 }
 
 /** The child takes the slack on its parent's main axis. */
 export function grow<T extends SceneNode & AutoLayoutChildrenMixin>(node: T): T {
-  node.layoutGrow = 1
+  return mark(node, 'grow')
+}
+
+const SIZING = 'sizing'
+
+/** Both are recorded, not applied. Figma obeys `layoutGrow` the moment it is
+ *  set, even against a parent that is still hugging: the child collapses to the
+ *  parent it is filling, the parent measures that, and the page ends at the
+ *  fold with the content spilling below it. `settleSizing` applies the marks
+ *  once the tree stands and the parent's size is settled. */
+function mark<T extends SceneNode>(node: T, sizing: 'fill' | 'grow'): T {
+  const marks = new Set(node.getPluginData(SIZING).split(' ').filter(Boolean))
+  marks.add(sizing)
+  node.setPluginData(SIZING, [...marks].join(' '))
   return node
 }
 

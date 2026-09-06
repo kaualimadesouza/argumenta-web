@@ -8,7 +8,7 @@ import {
   settle,
 } from '../chrome'
 import { columnFor, type Device } from '../devices'
-import { applyBorder, fill, grow, paint, stack, text } from '../nodes'
+import { applyBorder, fill, grow, paint, setSize, stack, text } from '../nodes'
 import { LEGAL } from '../samples'
 import { TRACKING, TYPE } from '../tokens'
 import { button, field } from '../ui'
@@ -30,8 +30,7 @@ function googleButton(): FrameNode {
     justify: 'CENTER',
     width: 22,
   })
-  tile.primaryAxisSizingMode = 'FIXED'
-  tile.resize(22, 22)
+  setSize(tile, { width: 22, height: 22 })
   const glyph = figma.createNodeFromSvg(GOOGLE_G)
   glyph.resize(13, 13)
   tile.appendChild(glyph)
@@ -46,7 +45,7 @@ export function entrada(device: Device): FrameNode {
   const frame = deviceFrame(device, {
     name: 'Entrada',
     axis: wide ? 'HORIZONTAL' : 'VERTICAL',
-    height: 'device',
+    justify: wide ? 'MIN' : 'CENTER',
   })
 
   const brandWidth = wide ? Math.round(device.width * 0.52) : device.width
@@ -103,7 +102,7 @@ export function entrada(device: Device): FrameNode {
   list.appendChild(fill(quietRow))
   actions.appendChild(list)
 
-  frame.appendChild(wide ? fill(brand) : grow(fill(brand)))
+  frame.appendChild(fill(brand))
   frame.appendChild(wide ? grow(fill(actions)) : fill(actions))
   return fitToDevice(frame, device)
 }
@@ -111,7 +110,12 @@ export function entrada(device: Device): FrameNode {
 /* -------------------------------- forms -------------------------------- */
 
 export function entrarEmail(device: Device): FrameNode {
-  const screen = screenFrame(device, { name: 'Entrar com e-mail', shell: false, shape: 'narrow' })
+  const screen = screenFrame(device, {
+    name: 'Entrar com e-mail',
+    shell: false,
+    shape: 'narrow',
+    centred: true,
+  })
   const width = screen.width
   screen.content.appendChild(text('← Voltar', { size: TYPE.meta, weight: 600, color: 'ink2' }))
   screen.content.appendChild(
@@ -128,8 +132,7 @@ export function entrarEmail(device: Device): FrameNode {
 function consentRow(width: number): FrameNode {
   const row = stack({ name: 'consent', direction: 'HORIZONTAL', gap: 10, align: 'MIN', width })
   const box = stack({ name: 'checkbox', radius: 4, fill: 'card', width: 18 })
-  box.primaryAxisSizingMode = 'FIXED'
-  box.resize(18, 18)
+  setSize(box, { width: 18, height: 18 })
   applyBorder(box, { color: 'lineStrong', weight: 1 })
   row.appendChild(box)
   const body =
@@ -145,7 +148,12 @@ function consentRow(width: number): FrameNode {
 }
 
 export function criarConta(device: Device): FrameNode {
-  const screen = screenFrame(device, { name: 'Criar conta', shell: false, shape: 'narrow' })
+  const screen = screenFrame(device, {
+    name: 'Criar conta',
+    shell: false,
+    shape: 'narrow',
+    centred: true,
+  })
   const width = screen.width
   screen.content.appendChild(text('← Voltar', { size: TYPE.meta, weight: 600, color: 'ink2' }))
   screen.content.appendChild(

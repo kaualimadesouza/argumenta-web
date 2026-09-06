@@ -4,6 +4,8 @@ import {
   paint,
   pressShadow,
   rect,
+  room,
+  setSize,
   stack,
   text,
   type Border,
@@ -22,6 +24,15 @@ export interface CardOptions {
   name?: string
 }
 
+const CARD_PAD = 18
+
+/** What fits inside a card of this width. `box-sizing: border-box` in the
+ *  stylesheet, and Figma lays out the same way: the padding and the border both
+ *  come out of the width, so a child built on the width alone sticks out. */
+export function cardInner(width: number, active = false): number {
+  return width - 2 * (CARD_PAD + (active ? 1.5 : 1))
+}
+
 export function card(options: CardOptions = {}): FrameNode {
   const border: Border = options.active === true
     ? { color: 'caneta', weight: 1.5 }
@@ -29,7 +40,7 @@ export function card(options: CardOptions = {}): FrameNode {
   return stack({
     name: options.name ?? 'card',
     gap: options.gap ?? 12,
-    padding: options.padding ?? 18,
+    padding: options.padding ?? CARD_PAD,
     fill: 'card',
     radius: SHAPE.card,
     border,
@@ -97,8 +108,7 @@ export function button(label: string, variant: ButtonVariant = 'primary'): Frame
     align: 'CENTER',
     justify: 'CENTER',
   })
-  frame.primaryAxisSizingMode = 'FIXED'
-  frame.resize(frame.width, height)
+  setSize(frame, { height })
   if (ghost) applyBorder(frame, { color: 'lineStrong', weight: 1 })
   if (variant === 'primary') frame.effects = pressShadow('canetaPress')
   if (variant === 'danger') frame.effects = pressShadow('corretorInk')
@@ -186,8 +196,7 @@ export function field(options: FieldOptions): FrameNode {
     justify: options.select === true ? 'SPACE_BETWEEN' : 'MIN',
     width: options.width,
   })
-  control.primaryAxisSizingMode = 'FIXED'
-  control.resize(options.width, 46)
+  setSize(control, { width: options.width, height: 46 })
   control.appendChild(
     text(options.value, {
       size: TYPE.body,
@@ -223,15 +232,14 @@ export function textarea(body: string, width: number, height: number): FrameNode
     border: { color: 'caneta', weight: 1.5 },
     width,
   })
-  frame.primaryAxisSizingMode = 'FIXED'
-  frame.resize(width, height)
+  setSize(frame, { width, height })
   frame.appendChild(
     text(body, {
       size: TYPE.body,
       color: body === '' ? 'muted' : 'ink',
       lineHeight: 1.72,
       tracking: -0.8,
-      width: width - 36,
+      width: room(frame),
     }),
   )
   return frame
@@ -258,7 +266,7 @@ export function notice(body: string, tone: NoticeTone, width: number): FrameNode
     width,
   })
   frame.appendChild(
-    text(body, { size: TYPE.body, color: style.ink, lineHeight: 1.55, width: width - 30 }),
+    text(body, { size: TYPE.body, color: style.ink, lineHeight: 1.55, width: room(frame) }),
   )
   return frame
 }
@@ -276,8 +284,7 @@ export function markBadge(number: number, tone: 'slip' | 'praise'): FrameNode {
     justify: 'CENTER',
     width: 15,
   })
-  frame.primaryAxisSizingMode = 'FIXED'
-  frame.resize(15, 15)
+  setSize(frame, { width: 15, height: 15 })
   frame.appendChild(text(String(number), { size: 9.5, weight: 700, color: 'card' }))
   return frame
 }
@@ -295,8 +302,7 @@ export function tick(done: boolean): FrameNode {
     justify: 'CENTER',
     width: 20,
   })
-  frame.primaryAxisSizingMode = 'FIXED'
-  frame.resize(20, 20)
+  setSize(frame, { width: 20, height: 20 })
   if (!done) applyBorder(frame, { color: 'lineStrong', weight: 1.75, dashed: true })
   if (done) {
     const glyph = figma.createNodeFromSvg(CHECK_SVG)

@@ -3,7 +3,7 @@ import type { Device } from '../devices'
 import { fill, grow, stack, text } from '../nodes'
 import { ATTEMPTS, CONSEQUENCE, DRAFT, MARKS, SCENE, SCORE_ROWS, TO_PASS } from '../samples'
 import { LAYOUT, SHAPE, TRACKING, TYPE } from '../tokens'
-import { button, card, chip, kicker, progressBar, textarea } from '../ui'
+import { button, card, cardInner, chip, kicker, progressBar, textarea } from '../ui'
 import { readingSize, screenTitle } from './layout'
 import {
   annotatedDraft,
@@ -62,7 +62,7 @@ function briefCard(width: number): FrameNode {
     fill(
       text(
         'Escreva para Seu Tenório: por que ele pode confiar o pátio ao grêmio este ano, com compromissos concretos de cuidado e limpeza.',
-        { size: TYPE.body, weight: 500, lineHeight: 1.5, width: width - 36 },
+        { size: TYPE.body, weight: 500, lineHeight: 1.5, width: cardInner(width) },
       ),
     ),
   )
@@ -70,7 +70,7 @@ function briefCard(width: number): FrameNode {
     name: 'requisitos',
     direction: 'HORIZONTAL',
     gap: 6,
-    width: width - 36,
+    width: cardInner(width),
     wrap: true,
   })
   for (const requirement of REQUIREMENTS) chips.appendChild(chip(requirement))
@@ -107,7 +107,7 @@ export function editor(device: Device): FrameNode {
 /* ------------------------------- correção ------------------------------ */
 
 function scoreboardCard(width: number): FrameNode {
-  const inner = width - 36
+  const inner = cardInner(width)
   const shell = card({ gap: 16, width, name: 'card/placar' })
   shell.appendChild(text('Placar', { size: TYPE.lead, weight: 700, tracking: TRACKING.lead }))
   const rows = stack({ name: 'rows', gap: 16, width: inner })
@@ -122,7 +122,7 @@ function scoreboardCard(width: number): FrameNode {
 }
 
 function markedTextCard(width: number, device: Device): FrameNode {
-  const inner = width - 36
+  const inner = cardInner(width)
   const shell = card({ gap: 16, width, name: 'card/texto-corrigido' })
   shell.appendChild(
     text('Seu texto, corrigido', { size: TYPE.lead, weight: 700, tracking: TRACKING.lead }),
@@ -219,7 +219,7 @@ export function consequencia(device: Device): FrameNode {
     fill(speechRow({ speech: CONSEQUENCE.speech, who: CONSEQUENCE.speaker, width, size })),
   )
 
-  const inner = width - 36
+  const inner = cardInner(width)
   const stalled = card({ gap: 12, width, name: 'card/onde-parou' })
   stalled.appendChild(
     text('Onde o argumento parou', { size: TYPE.lead, weight: 700, tracking: TRACKING.lead }),
@@ -263,7 +263,7 @@ export function historico(device: Device): FrameNode {
   screen.content.appendChild(fill(screenBar(width, '← Voltar', [])))
   screen.content.appendChild(fill(screenTitle('Tentativas anteriores', device)))
   for (const attempt of ATTEMPTS) {
-    const inner = width - 36
+    const inner = cardInner(width)
     const shell = card({ gap: 16, width, padding: 18, name: `tentativa/${attempt.attempt}` })
     const head = stack({
       name: 'head',

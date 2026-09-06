@@ -20,6 +20,7 @@ skill first; do not improvise the workflow from memory.
 | Reviewing a PR/diff before merge (mandatory for EVERY PR) | `thermo-nuclear-code-quality-review` |
 | Building or styling any screen/component, colors, fonts | `design-tokens` |
 | Writing ANY Portuguese the student reads (copy, labels, empty states) | `portuguese-copy` |
+| The Figma plugin: sizing, running it, checking what it drew | `figma-plugin` |
 
 ## Non-negotiables
 

@@ -1,11 +1,14 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 
-import { DEVICES, deviceOf } from '../devices'
-import { loadFonts } from '../nodes'
+import { columnFor, DEVICES, deviceOf } from '../devices'
+import { loadFonts, settleSizing, stack, text } from '../nodes'
 import { createStyles } from '../styles'
 import { installFakeFigma, type FakeFigma } from '../testing/fakeFigma'
-import { COLORS } from '../tokens'
+import { overflows, pinned, unfilled } from '../testing/invariants'
+import { COLORS, SHAPE } from '../tokens'
 import { trilha } from './app'
+import { entrada } from './auth'
+import { columns } from './layout'
 import { DEVICE_SCREENS, LANDING, SCREENS } from './index'
 import { cena, consequencia, correcao, editor, historico } from './writing'
 import { systemBoard } from './system'
@@ -111,5 +114,173 @@ describe('the nav changes shape with the width', () => {
         expect(names(build(device)).some((name) => name.startsWith('nav/'))).toBe(false)
       }
     }
+  })
+})
+
+describe('the fake API', () => {
+  /** The negative padding that reached Figma once: art the real API refuses
+   *  must not build here either. */
+  it('refuses a negative padding, as Figma does', () => {
+    expect(() => stack({ padding: [0, 0, 0, -120] })).toThrow(/greater than or equal to 0/)
+  })
+})
+
+describe('no block sits on top of the next one', () => {
+  for (const device of DEVICES) {
+    for (const screen of SCREENS) {
+      it(`${screen.label} at ${device.width} holds every child inside its height`, () => {
+        expect(overflows(screen.build(device))).toEqual([])
+      })
+    }
+  }
+})
+
+describe('no frame is pinned to a parent that hugs it back', () => {
+  for (const device of DEVICES) {
+    for (const screen of SCREENS) {
+      it(`${screen.label} at ${device.width}`, () => {
+        expect(pinned(screen.build(device))).toEqual([])
+      })
+    }
+  }
+})
+
+describe('every frame that fills its parent measures it', () => {
+  for (const device of DEVICES) {
+    for (const screen of SCREENS) {
+      it(`${screen.label} at ${device.width}`, () => {
+        expect(unfilled(screen.build(device))).toEqual([])
+      })
+    }
+  }
+})
+
+describe('a stack with a width', () => {
+  it('hugs its height when it lies sideways', () => {
+    const row = stack({ direction: 'HORIZONTAL', width: 300 })
+    row.appendChild(text('uma linha qualquer', { size: 15 }))
+    expect(row.width).toBe(300)
+    expect(row.height).toBeGreaterThan(1)
+  })
+})
+
+/** The stylesheet's `.wrap` is `max-width` plus `margin: 0 auto`, so a block is
+ *  either the centred column or the full-bleed marquee, never the viewport with
+ *  padding: that one draws the whole page flush against the left edge. */
+describe('the landing centres its column', () => {
+  for (const device of DEVICES) {
+    it(`gives every block the column width at ${device.width}`, () => {
+      const frame = LANDING.build(device)
+      expect(frame.counterAxisAlignItems).toBe('CENTER')
+      const column = columnFor(device, 'landing').width
+      for (const block of frame.children) {
+        expect(block.width, block.name).toBe(block.name === 'marquee' ? device.width : column)
+      }
+    })
+  }
+})
+
+describe('a grid of columns', () => {
+  it('builds every cell at the width it is going to occupy', () => {
+    const widths: number[] = []
+    const rows = columns({
+      items: [1, 2, 3, 4],
+      perRow: 3,
+      width: 900,
+      gap: 20,
+      build: (_item, cell) => {
+        widths.push(cell)
+        return stack({ width: cell })
+      },
+    })
+    expect(widths).toEqual([286, 286, 286, 286])
+    expect(rows.map((row) => row.children.length)).toEqual([3, 1])
+  })
+})
+
+/** `fill` and `grow` are this file's `display: block` and `flex: 1`. Figma keeps
+ *  the hug when a child stretches an axis it also hugs, and then a button
+ *  shrinks to its label and a panel stops at its text. */
+describe('a child that fills its parent', () => {
+  const child = (frame: FrameNode, name: string): SceneNode => {
+    const found = frame.findAll(() => true).find((node) => node.name === name)
+    if (found === undefined) throw new Error(`no ${name} in ${frame.name}`)
+    return found
+  }
+
+  it('spans the column, instead of hugging its label', () => {
+    const frame = entrada(deviceOf('desktop'))
+    const list = child(frame, 'list') as FrameNode
+    expect(child(frame, 'button/Entrar com Google').width).toBe(list.width)
+  })
+
+  it('gives the night panel the whole viewport height', () => {
+    const frame = entrada(deviceOf('desktop'))
+    expect(child(frame, 'brand').height).toBe(frame.height)
+  })
+
+  it('runs the rail down the full height of a desktop screen', () => {
+    const frame = trilha(deviceOf('desktop'))
+    expect(child(frame, 'nav/rail').height).toBe(frame.height)
+  })
+})
+
+/** A row of cards is a flex row in the stylesheet: the cards share the height
+ *  of the tallest one, so their bottom edges line up. */
+describe('cards in a row', () => {
+  const heightsOf = (row: FrameNode): number[] => row.children.map((child) => child.height)
+
+  it('share the height of the tallest, in a grid', () => {
+    const rows = columns({
+      items: ['curto', 'um texto bem mais longo que o outro para empurrar a altura'],
+      perRow: 2,
+      width: 400,
+      gap: 20,
+      build: (item, cell) => {
+        const frame = stack({ width: cell })
+        frame.appendChild(text(item, { size: 15, width: cell }))
+        return frame
+      },
+    })
+    expect(new Set(heightsOf(settleSizing(rows[0]))).size).toBe(1)
+  })
+
+  it('share it in the landing marquee too', () => {
+    for (const device of DEVICES) {
+      const frame = LANDING.build(device)
+      const marquee = frame.children.find((child) => child.name === 'marquee') as FrameNode
+      for (const line of marquee.children as FrameNode[]) {
+        expect(new Set(heightsOf(line)).size, `${line.name} at ${device.width}`).toBe(1)
+      }
+    }
+  })
+})
+
+/** The phone nav is a dock: it leaves the edges, carries its own border and
+ *  marks the live tab with a step of caneta on its top edge. */
+describe('the dock under the thumb', () => {
+  const find = (frame: FrameNode, name: string): SceneNode => {
+    const found = frame.findAll(() => true).find((node) => node.name === name)
+    if (found === undefined) throw new Error(`no ${name} in ${frame.name}`)
+    return found
+  }
+
+  it('floats inside the phone instead of running edge to edge', () => {
+    const device = deviceOf('phone')
+    const dock = find(trilha(device), 'dock') as FrameNode
+    expect(dock.width).toBe(device.width - 28)
+    expect(dock.cornerRadius).toBe(SHAPE.dock)
+    expect(dock.strokes.length).toBe(1)
+  })
+
+  it('steps the live tab and leaves the others alone', () => {
+    const frame = trilha(deviceOf('phone'))
+    const live = find(frame, 'tab/trilha') as FrameNode
+    const other = find(frame, 'tab/conta') as FrameNode
+    const stepOf = (tab: FrameNode): FrameNode => tab.children[0] as FrameNode
+    expect(stepOf(live).height).toBe(3)
+    expect(stepOf(live).fills).not.toEqual([])
+    expect(stepOf(other).height).toBe(3)
+    expect(stepOf(other).fills).toEqual([])
   })
 })

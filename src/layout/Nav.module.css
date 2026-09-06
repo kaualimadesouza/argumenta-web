@@ -1,14 +1,20 @@
-/* Phone: a fixed tab bar. The wordmark belongs to the wider shapes, where the
-   nav is the app's frame instead of a strip under the thumb. */
+/* Phone: a dock under the thumb. It leaves the edges so it reads as an object
+   over the page instead of a strip glued to the floor, and the elevation is the
+   1px border, since the system's only shadow is the press step. The wordmark
+   belongs to the wider shapes, where the nav is the app's frame. */
 .nav {
+  /* the component's own two numbers, which Nav.tsx overrides per route */
+  --live: 0;
+  --tabs: 3;
   position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  left: 0.875rem;
+  right: 0.875rem;
+  bottom: 0.75rem;
   z-index: 10;
   background: var(--color-card);
-  border-top: 1px solid var(--color-line);
-  padding: 0.625rem 0.75rem 1.125rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-dock);
+  padding: 0 0.375rem 0.5rem;
 }
 
 .wordmark {
@@ -36,6 +42,43 @@
   justify-content: center;
   text-decoration: none;
   color: var(--color-ink-2);
+  border-radius: 1rem;
+  transition: color 160ms ease;
+  /* the step's own row, kept even when the step is not drawn, so every icon
+     sits on one line */
+  padding-top: 0.1875rem;
+}
+
+/* One step for the whole dock, which slides from the tab the student left to
+   the one they chose. A mark per tab could only appear and disappear. */
+.rail {
+  position: relative;
+}
+
+.step {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(100% / var(--tabs));
+  height: 0.1875rem;
+  display: flex;
+  justify-content: center;
+  transform: translateX(calc(var(--live) * 100%));
+  transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.step::after {
+  content: '';
+  width: 1.875rem;
+  height: 100%;
+  border-radius: 0 0 0.1875rem 0.1875rem;
+  background: var(--color-caneta);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step {
+    transition: none;
+  }
 }
 
 .tab:hover {
@@ -68,14 +111,29 @@
   .nav {
     position: sticky;
     top: 0;
+    left: 0;
+    right: 0;
     bottom: auto;
-    border-top: none;
+    border: none;
     border-bottom: 1px solid var(--color-line);
+    border-radius: 0;
     padding: 0 1.75rem;
     height: 4.125rem;
     display: flex;
     align-items: center;
     gap: 1.875rem;
+  }
+
+  .rail {
+    flex: 1;
+  }
+
+  .step {
+    display: none;
+  }
+
+  .tab {
+    padding-top: 0;
   }
 
   .wordmark {
@@ -131,7 +189,7 @@
     align-items: stretch;
     gap: 1.75rem;
     padding: 1.625rem 1rem 1.375rem;
-    border-bottom: none;
+    border: none;
     border-right: 1px solid var(--color-line);
   }
 

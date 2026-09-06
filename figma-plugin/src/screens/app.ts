@@ -1,9 +1,9 @@
 import { screenFrame, settle, storyCover } from '../chrome'
 import type { Device } from '../devices'
-import { applyBorder, fill, grow, rect, stack, text } from '../nodes'
+import { applyBorder, fill, grow, rect, room, stack, text } from '../nodes'
 import { MILESTONES, TRACK, TRENDS, WEEK, type StorySample } from '../samples'
 import { COLORS, LAYOUT, SHAPE, TRACKING, TYPE } from '../tokens'
-import { button, card, chip, progressBar, tick } from '../ui'
+import { button, card, cardInner, chip, progressBar, tick } from '../ui'
 import { columns, screenTitle } from './layout'
 import { dangerCard, nicknameCard, targetsCard } from './profile'
 
@@ -31,11 +31,11 @@ export function storyCard(options: StoryCardOptions): FrameNode {
     direction: lying ? 'HORIZONTAL' : 'VERTICAL',
     gap: 14,
     align: lying ? 'CENTER' : 'MIN',
-    width: width - 36,
+    width: cardInner(width),
   })
   const top = stack({ name: 'top', direction: 'HORIZONTAL', gap: 14, align: 'MIN' })
   top.appendChild(storyCover(story.position, story.state))
-  const bodyWidth = (lying ? width - 36 - 220 : width - 36) - 66
+  const bodyWidth = room(inner) - (lying ? 220 : 0) - 66
   const body = stack({ name: 'body', gap: 8, width: bodyWidth })
   const titleRow = stack({
     name: 'titleRow',
@@ -86,8 +86,8 @@ export function storyCard(options: StoryCardOptions): FrameNode {
 const SPARK = { width: 120, height: 26, inset: 2, max: 100 }
 
 /** The same polyline the app draws, so the shape a designer sees is the real one. */
-export function sparkline(points: number[], down: boolean): FrameNode {
-  const step = (SPARK.width - SPARK.inset * 2) / (points.length - 1)
+export function sparkline(points: number[], down: boolean, width = SPARK.width): FrameNode {
+  const step = (width - SPARK.inset * 2) / (points.length - 1)
   const usable = SPARK.height - SPARK.inset * 2
   const drawn = points
     .map((score, index) => {
@@ -96,10 +96,10 @@ export function sparkline(points: number[], down: boolean): FrameNode {
     })
     .join(' ')
   const stroke = down ? COLORS.corretor : COLORS.caneta
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SPARK.width} ${SPARK.height}"><polyline points="${drawn}" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${SPARK.height}"><polyline points="${drawn}" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`
   const node = figma.createNodeFromSvg(svg)
   node.name = 'sparkline'
-  node.resize(SPARK.width, SPARK.height)
+  node.resize(width, SPARK.height)
   return node
 }
 
@@ -163,24 +163,30 @@ export function trilha(device: Device): FrameNode {
       fill(storyCard({ story: featured, width, featured: true, device })),
     )
   }
-  const cards = rest.map((story) => storyCard({ story, width, featured: false, device }))
-  for (const row of columns(cards, perRow, width, gap)) screen.content.appendChild(fill(row))
+  const rows = columns({
+    items: rest,
+    perRow,
+    width,
+    gap,
+    build: (story, cell) => storyCard({ story, width: cell, featured: false, device }),
+  })
+  for (const row of rows) screen.content.appendChild(fill(row))
   return settle(screen, device)
 }
 
 /* ------------------------------- progresso ----------------------------- */
 
 function streakCard(width: number, device: Device): FrameNode {
-  const inner = width - 36
+  const inner = cardInner(width)
   const shell = card({ gap: 16, width, name: 'card/sequencia' })
   const head = stack({ name: 'head', gap: 4, width: inner })
   head.appendChild(text('7 dias seguidos', { size: TYPE.title, weight: 800, tracking: TRACKING.title }))
   head.appendChild(text('Seu recorde é 9 dias', { size: TYPE.meta, weight: 500, color: 'muted' }))
   shell.appendChild(fill(head))
   const week = stack({ name: 'week', direction: 'HORIZONTAL', gap: 7, width: inner })
-  const cellWidth = Math.floor((inner - 7 * 6) / 7)
+  const boxWidth = Math.floor((inner - 7 * 6) / 7)
   const height = device.id === 'desktop' ? 48 : 34
-  for (const day of WEEK) week.appendChild(dayBox(day, cellWidth, height))
+  for (const day of WEEK) week.appendChild(dayBox(day, boxWidth, height))
   shell.appendChild(fill(week))
   shell.appendChild(
     fill(
@@ -196,7 +202,7 @@ function streakCard(width: number, device: Device): FrameNode {
 }
 
 function trendsCard(width: number): FrameNode {
-  const inner = width - 36
+  const inner = cardInner(width)
   const shell = card({ gap: 16, width, name: 'card/competencias' })
   const head = stack({ name: 'head', gap: 3, width: inner })
   head.appendChild(
@@ -207,13 +213,22 @@ function trendsCard(width: number): FrameNode {
   )
   shell.appendChild(fill(head))
   const list = stack({ name: 'trends', gap: 14, width: inner })
-  for (const trend of TRENDS) {
+  // a table: the label column is as wide as the longest name, and the chart
+  // takes what the columns leave, so nothing wraps and nothing is pushed out
+  const codes = TRENDS.map((trend) => text(trend.code, { size: TYPE.meta, weight: 700, color: 'muted' }))
+  const names = TRENDS.map((trend) => text(trend.label, { size: TYPE.meta, weight: 600 }))
+  const codeWidth = Math.max(...codes.map((code) => code.width))
+  const nameWidth = Math.max(...names.map((name) => name.width))
+  const chart = Math.max(56, Math.floor(inner - codeWidth - nameWidth - 28 - 36 - 40))
+  for (const [index, trend] of TRENDS.entries()) {
     const row = stack({ name: `trend/${trend.code}`, direction: 'HORIZONTAL', gap: 10, align: 'CENTER', width: inner })
-    row.appendChild(text(trend.code, { size: TYPE.meta, weight: 700, color: 'muted' }))
-    row.appendChild(
-      fill(text(trend.label, { size: TYPE.meta, weight: 600, width: inner - 120 - 28 - 36 - 40 })),
-    )
-    row.appendChild(sparkline(trend.points, trend.delta < 0))
+    const code = codes[index]
+    code.resize(codeWidth, code.height)
+    row.appendChild(code)
+    const name = names[index]
+    name.resize(nameWidth, name.height)
+    row.appendChild(name)
+    row.appendChild(sparkline(trend.points, trend.delta < 0, chart))
     row.appendChild(text(String(trend.latest), { size: TYPE.meta, weight: 700, align: 'RIGHT', width: 28 }))
     const delta = trend.delta === 0 ? '' : trend.delta > 0 ? `+${trend.delta}` : `−${Math.abs(trend.delta)}`
     row.appendChild(
@@ -232,7 +247,7 @@ function trendsCard(width: number): FrameNode {
 }
 
 function milestonesCard(width: number): FrameNode {
-  const inner = width - 36
+  const inner = cardInner(width)
   const shell = card({ gap: 16, width, name: 'card/marcos' })
   shell.appendChild(text('Marcos', { size: TYPE.lead, weight: 700, tracking: TRACKING.lead }))
   const list = stack({ name: 'milestones', gap: 14, width: inner })

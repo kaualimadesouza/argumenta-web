@@ -4,6 +4,9 @@
 
 type Axis = 'VERTICAL' | 'HORIZONTAL'
 type Sizing = 'AUTO' | 'FIXED'
+type Dimension = 'width' | 'height'
+/** The shorthand Figma's own panel shows: fixed, hug the content, fill the parent. */
+type Fit = 'FIXED' | 'HUG' | 'FILL'
 
 /** Figma never reports a zero dimension: an empty auto-layout frame is 0.01. */
 const FLOOR = 0.01
@@ -15,6 +18,18 @@ function atLeastFloor(value: number): number {
 function assertSize(value: number, what: string): void {
   if (!Number.isFinite(value) || value < 0.01) {
     throw new Error(`Cannot set ${what} to ${value}: Figma requires at least 0.01`)
+  }
+}
+
+type Side = 'Top' | 'Right' | 'Bottom' | 'Left'
+
+/** Figma refuses a negative padding, so the fake has to refuse it too: art that
+ *  cannot exist must not pass the tests. */
+function assertPadding(value: number, side: Side): void {
+  if (!Number.isFinite(value) || value < 0) {
+    throw new Error(
+      `in set_padding${side}: Property "padding${side}" failed: Number must be greater than or equal to 0`,
+    )
   }
 }
 
@@ -39,10 +54,30 @@ class FakeNode {
   layoutAlign = 'INHERIT'
   layoutGrow = 0
   layoutPositioning = 'AUTO'
-  layoutSizingHorizontal = 'FIXED'
-  layoutSizingVertical = 'FIXED'
+  /** Figma's own per-dimension sizing: what the node does with the space. */
+  fit: Record<Dimension, Fit> = { width: 'FIXED', height: 'FIXED' }
   protected fixedWidth = 100
   protected fixedHeight = 20
+
+  get layoutSizingHorizontal(): Fit {
+    return this.fit.width
+  }
+
+  set layoutSizingHorizontal(value: Fit) {
+    this.setFit('width', value)
+  }
+
+  get layoutSizingVertical(): Fit {
+    return this.fit.height
+  }
+
+  set layoutSizingVertical(value: Fit) {
+    this.setFit('height', value)
+  }
+
+  protected setFit(dimension: Dimension, value: Fit): void {
+    this.fit[dimension] = value
+  }
 
   get width(): number {
     return this.fixedWidth
@@ -52,11 +87,25 @@ class FakeNode {
     return this.fixedHeight
   }
 
+  size(dimension: Dimension): number {
+    return dimension === 'width' ? this.width : this.height
+  }
+
   resize(width: number, height: number): void {
     assertSize(width, 'width')
     assertSize(height, 'height')
     this.fixedWidth = width
     this.fixedHeight = height
+  }
+
+  private plugged = new Map<string, string>()
+
+  getPluginData(key: string): string {
+    return this.plugged.get(key) ?? ''
+  }
+
+  setPluginData(key: string, value: string): void {
+    this.plugged.set(key, value)
   }
 
   remove(): void {
@@ -77,15 +126,48 @@ class FakeFrame extends FakeNode {
   layoutWrap = 'NO_WRAP'
   itemSpacing = 0
   counterAxisSpacing = 0
-  paddingTop = 0
-  paddingRight = 0
-  paddingBottom = 0
-  paddingLeft = 0
+  private pad: Record<Side, number> = { Top: 0, Right: 0, Bottom: 0, Left: 0 }
   primaryAxisSizingMode: Sizing = 'AUTO'
   counterAxisSizingMode: Sizing = 'AUTO'
   primaryAxisAlignItems = 'MIN'
   counterAxisAlignItems = 'MIN'
   clipsContent = true
+
+  get paddingTop(): number {
+    return this.pad.Top
+  }
+
+  set paddingTop(value: number) {
+    assertPadding(value, 'Top')
+    this.pad.Top = value
+  }
+
+  get paddingRight(): number {
+    return this.pad.Right
+  }
+
+  set paddingRight(value: number) {
+    assertPadding(value, 'Right')
+    this.pad.Right = value
+  }
+
+  get paddingBottom(): number {
+    return this.pad.Bottom
+  }
+
+  set paddingBottom(value: number) {
+    assertPadding(value, 'Bottom')
+    this.pad.Bottom = value
+  }
+
+  get paddingLeft(): number {
+    return this.pad.Left
+  }
+
+  set paddingLeft(value: number) {
+    assertPadding(value, 'Left')
+    this.pad.Left = value
+  }
 
   appendChild(child: FakeNode): void {
     child.parent = this
@@ -116,28 +198,98 @@ class FakeFrame extends FakeNode {
     return sizes.length === 0 ? 0 : Math.max(...sizes)
   }
 
-  get width(): number {
-    if (this.layoutMode === 'NONE' || this.counterAxisSizingMode === 'FIXED') {
-      if (this.layoutMode === 'HORIZONTAL' && this.primaryAxisSizingMode === 'AUTO') {
-        return atLeastFloor(this.mainAxisExtent() + this.paddingLeft + this.paddingRight)
-      }
-      return this.fixedWidth
+  /** Which sizing mode owns a dimension flips with the direction: on a row the
+   *  primary axis is the width, on a column it is the height. */
+  private isFixed(dimension: Dimension): boolean {
+    if (this.layoutMode === 'NONE') return true
+    const primary = dimension === (this.layoutMode === 'HORIZONTAL' ? 'width' : 'height')
+    return primary
+      ? this.primaryAxisSizingMode === 'FIXED'
+      : this.counterAxisSizingMode === 'FIXED'
+  }
+
+  /** Figma's shorthand writes through to the axis modes, and refuses to fill a
+   *  parent that is hugging the same dimension: one of the two has to give. */
+  protected setFit(dimension: Dimension, value: Fit): void {
+    const parent = this.parent
+    if (value === 'FILL' && (parent === null || !parent.isFixed(dimension))) {
+      throw new Error(`Cannot set ${dimension} to FILL: the parent hugs its ${dimension}`)
     }
-    const extent = this.layoutMode === 'HORIZONTAL' ? this.mainAxisExtent() : this.crossAxisExtent()
-    return atLeastFloor(extent + this.paddingLeft + this.paddingRight)
+    super.setFit(dimension, value)
+    const primary = dimension === (this.layoutMode === 'HORIZONTAL' ? 'width' : 'height')
+    const mode: Sizing = value === 'HUG' ? 'AUTO' : 'FIXED'
+    if (primary) this.primaryAxisSizingMode = mode
+    else this.counterAxisSizingMode = mode
+    if (value !== 'FILL' || parent === null) return
+    if (dimension === alongMainAxisOf(parent)) this.layoutGrow = 1
+    else this.layoutAlign = 'STRETCH'
+  }
+
+  /** An inside stroke eats into the content box, the way a CSS border does
+   *  under `box-sizing: border-box`, so it counts as padding here. */
+  private borders(dimension: Dimension): number {
+    if (this.strokes.length === 0 || this.strokeAlign !== 'INSIDE') return 0
+    const sides =
+      dimension === 'width'
+        ? [this.strokeLeftWeight, this.strokeRightWeight]
+        : [this.strokeTopWeight, this.strokeBottomWeight]
+    return sides.reduce((carried, side) => carried + (side > 0 ? side : this.strokeWeight), 0)
+  }
+
+  padding(dimension: Dimension): number {
+    const pad =
+      dimension === 'width'
+        ? this.paddingLeft + this.paddingRight
+        : this.paddingTop + this.paddingBottom
+    return pad + this.borders(dimension)
+  }
+
+  /** Whether the parent decides this dimension. `layoutAlign` and `layoutGrow`
+   *  are the older spelling of the same instruction, and Figma obeys them the
+   *  moment the parent states the dimension: that is how a body ends up pinned
+   *  to the viewport with its content spilling out the bottom. */
+  fillsParent(dimension: Dimension): boolean {
+    const parent = this.parent
+    if (parent === null || !parent.isFixed(dimension)) return false
+    if (this.fit[dimension] === 'FILL') return true
+    return dimension === alongMainAxisOf(parent) ? this.layoutGrow === 1 : this.layoutAlign === 'STRETCH'
+  }
+
+  /** The size a filling child gets: the parent's room on the cross axis, and an
+   *  equal share of what the siblings leave on the main one. */
+  private filled(dimension: Dimension): number {
+    const parent = this.parent as FakeFrame
+    const room = parent.size(dimension) - parent.padding(dimension)
+    if (dimension !== alongMainAxisOf(parent)) return atLeastFloor(room)
+    const fillers = parent.children.filter(
+      (child) => child instanceof FakeFrame && child.fillsParent(dimension),
+    )
+    const gaps = Math.max(0, parent.children.length - 1) * parent.itemSpacing
+    const taken = parent.children
+      .filter((child) => !fillers.includes(child))
+      .reduce((carried, child) => carried + child.size(dimension), 0)
+    return atLeastFloor((room - gaps - taken) / Math.max(1, fillers.length))
+  }
+
+  size(dimension: Dimension): number {
+    if (this.fillsParent(dimension)) return this.filled(dimension)
+    if (this.isFixed(dimension)) return dimension === 'width' ? this.fixedWidth : this.fixedHeight
+    const along = dimension === alongMainAxisOf(this) ? this.mainAxisExtent() : this.crossAxisExtent()
+    return atLeastFloor(along + this.padding(dimension))
+  }
+
+  get width(): number {
+    return this.size('width')
   }
 
   get height(): number {
-    if (this.layoutMode === 'NONE') return this.fixedHeight
-    if (this.layoutMode === 'VERTICAL' && this.primaryAxisSizingMode === 'FIXED') {
-      return this.fixedHeight
-    }
-    if (this.layoutMode === 'HORIZONTAL' && this.counterAxisSizingMode === 'FIXED') {
-      return this.fixedHeight
-    }
-    const extent = this.layoutMode === 'VERTICAL' ? this.mainAxisExtent() : this.crossAxisExtent()
-    return atLeastFloor(extent + this.paddingTop + this.paddingBottom)
+    return this.size('height')
   }
+}
+
+/** The dimension a stack lays its children along. */
+function alongMainAxisOf(frame: FakeFrame): Dimension {
+  return frame.layoutMode === 'HORIZONTAL' ? 'width' : 'height'
 }
 
 /** Rough metrics, but deterministic: enough for a layout to have a size. */
@@ -167,7 +319,9 @@ class FakeText extends FakeNode {
   }
 
   get height(): number {
-    const perLine = Math.max(1, Math.floor(this.width / (this.fontSize * GLYPH)))
+    // the slack keeps a line that fits exactly from rounding down to a
+    // character less and reporting two lines: 109.2 / 7.8 is 13.999…
+    const perLine = Math.max(1, Math.floor(this.width / (this.fontSize * GLYPH) + 1e-6))
     const lines = Math.max(1, Math.ceil(this.characters.length / perLine))
     return Math.round(lines * this.fontSize * this.factor)
   }

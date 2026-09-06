@@ -1,5 +1,5 @@
 import { columnFor, type ColumnShape, type Device } from './devices'
-import { fill, grow, icon, paint, rect, stack, text } from './nodes'
+import { fill, grow, icon, paint, rect, room, setSize, settleSizing, stack, text } from './nodes'
 import { COLORS, SHAPE, TRACKING, TYPE, type ColorName } from './tokens'
 
 /* ------------------------------ wordmark ------------------------------ */
@@ -91,33 +91,54 @@ function tabPill(tab: Tab, active: boolean, size: number, height: number, gap: n
     radius: height >= 46 ? SHAPE.button : SHAPE.tile,
     align: 'CENTER',
   })
-  pill.primaryAxisSizingMode = 'FIXED'
-  pill.resize(pill.width, height)
+  setSize(pill, { height })
   pill.appendChild(icon(tab.svg, size, ink))
   pill.appendChild(text(tab.label, { size: TYPE.body, weight: 600, color: ink, tracking: TRACKING.body }))
   return pill
 }
 
+/** The phone nav is a dock: it leaves the edges, carries its own border and
+ *  marks the live tab with a step of caneta on its top edge, which is where the
+ *  eye lands before it reads the label. */
 function tabBar(device: Device, active: TabId | null): FrameNode {
-  const bar = stack({
+  const holder = stack({
     name: 'nav/tabbar',
     direction: 'HORIZONTAL',
-    padding: [10, 12, 18, 12],
-    fill: 'card',
-    border: { color: 'line', weight: 1, sides: ['top'] },
+    padding: [0, DOCK.side, DOCK.below, DOCK.side],
     width: device.width,
+  })
+  const dock = stack({
+    name: 'dock',
+    direction: 'HORIZONTAL',
+    padding: [0, 6, 8, 6],
+    fill: 'card',
+    radius: SHAPE.dock,
+    border: { color: 'line', weight: 1 },
+    width: device.width - DOCK.side * 2,
   })
   for (const tab of TABS) {
     const isActive = tab.id === active
     const ink: ColorName = isActive ? 'caneta' : 'ink2'
     const cell = stack({ name: `tab/${tab.id}`, gap: 5, align: 'CENTER', justify: 'CENTER' })
-    cell.primaryAxisSizingMode = 'FIXED'
-    cell.resize(cell.width, 44)
+    cell.appendChild(step(isActive))
     cell.appendChild(icon(tab.svg, 23, ink))
     cell.appendChild(text(tab.label, { size: TYPE.micro, weight: isActive ? 700 : 500, color: ink }))
-    bar.appendChild(grow(cell))
+    // the 44px floor for a thumb, unless the row already needs more
+    setSize(cell, { height: Math.max(44, cell.height) })
+    dock.appendChild(grow(cell))
   }
-  return bar
+  holder.appendChild(fill(dock))
+  return holder
+}
+
+const DOCK = { side: 14, below: 12, step: 3, stepWidth: 30 }
+
+/** The caneta step over the live tab. The other tabs keep the same empty slot,
+ *  so every icon sits on one row instead of centring itself in its own cell. */
+function step(live: boolean): FrameNode {
+  const frame = stack({ name: 'step', fill: live ? 'caneta' : null, radius: DOCK.step })
+  setSize(frame, { width: DOCK.stepWidth, height: DOCK.step })
+  return frame
 }
 
 function topBar(device: Device, active: TabId | null): FrameNode {
@@ -131,8 +152,7 @@ function topBar(device: Device, active: TabId | null): FrameNode {
     align: 'CENTER',
     width: device.width,
   })
-  bar.primaryAxisSizingMode = 'FIXED'
-  bar.resize(device.width, 66)
+  setSize(bar, { width: device.width, height: 66 })
   bar.appendChild(navWordmark(TYPE.lead))
   const tabs = stack({ name: 'tabs', direction: 'HORIZONTAL', gap: 4, align: 'CENTER' })
   for (const tab of TABS) tabs.appendChild(tabPill(tab, tab.id === active, 20, 40, 9))
@@ -182,23 +202,25 @@ export interface Screen {
 export interface FrameSpec {
   name: string
   axis: 'VERTICAL' | 'HORIZONTAL'
-  /** `device` starts at the viewport height; `content` grows with the content. */
-  height: 'device' | 'content'
   align?: 'MIN' | 'CENTER'
+  /** Where the blocks sit along the frame's own direction. */
+  justify?: 'MIN' | 'CENTER'
 }
 
 /** The paper the viewport is drawn on. Every frame on the canvas starts here,
- *  so the sizing rules live in one place. */
+ *  so the sizing rules live in one place. The height hugs while the screen is
+ *  being written: a frame that states it before its content exists pins the
+ *  children that fill it, and then the page ends at the fold. `fitToDevice`
+ *  states it once, at the end, when there is something to measure. */
 export function deviceFrame(device: Device, spec: FrameSpec): FrameNode {
   const frame = figma.createFrame()
   frame.name = `${spec.name} · ${device.width}`
-  frame.resize(device.width, device.height)
   frame.fills = paint('paper')
   frame.clipsContent = false
   frame.layoutMode = spec.axis
-  frame.primaryAxisSizingMode = spec.height === 'content' ? 'AUTO' : 'FIXED'
-  frame.counterAxisSizingMode = 'FIXED'
   frame.counterAxisAlignItems = spec.align ?? 'MIN'
+  frame.primaryAxisAlignItems = spec.justify ?? 'MIN'
+  setSize(frame, { width: device.width })
   return frame
 }
 
@@ -209,7 +231,6 @@ export function screenFrame(device: Device, spec: ScreenSpec): Screen {
   const frame = deviceFrame(device, {
     name: spec.name,
     axis: device.nav === 'rail' && spec.shell ? 'HORIZONTAL' : 'VERTICAL',
-    height: 'device',
   })
 
   const body = stack({
@@ -233,26 +254,12 @@ export function screenFrame(device: Device, spec: ScreenSpec): Screen {
   return { frame, content, width: column.width }
 }
 
-/** Grows the frame when the screen is taller than the device, so nothing is cut,
- *  and keeps the tab bar at the bottom of a short one. Height is the primary
- *  axis when the screen stacks and the counter axis when it sits beside a rail,
- *  so the mode to relax is not the same one. */
+/** Grows the frame when the screen is taller than the device, so nothing is
+ *  cut, and keeps the tab bar at the bottom of a short one. */
 export function fitToDevice(frame: FrameNode, device: Device): FrameNode {
-  const sideways = frame.layoutMode === 'HORIZONTAL'
-  if (sideways) {
-    frame.counterAxisSizingMode = 'AUTO'
-    if (frame.height < device.height) {
-      frame.counterAxisSizingMode = 'FIXED'
-      frame.resize(device.width, device.height)
-    }
-    return frame
-  }
-  frame.primaryAxisSizingMode = 'AUTO'
-  if (frame.height < device.height) {
-    frame.primaryAxisSizingMode = 'FIXED'
-    frame.resize(device.width, device.height)
-  }
-  return frame
+  setSize(frame, { width: device.width })
+  if (frame.height < device.height) setSize(frame, { width: device.width, height: device.height })
+  return settleSizing(frame)
 }
 
 /** What a column screen ends with: the frame, sized to its own content. */
@@ -305,7 +312,7 @@ export function nightPanel(body: string, options: NightOptions): FrameNode {
       color: 'luz',
       lineHeight: 1.62,
       tracking: TRACKING.body,
-      width: options.width - pad * 2,
+      width: room(frame),
     }),
   )
   return frame
@@ -334,7 +341,7 @@ export function speechRow(options: SpeechOptions): FrameNode {
     weight: 600,
     lineHeight: 1.48,
     tracking: TRACKING.lead,
-    width: options.width - 36,
+    width: room(frame),
   })
   quoted.setRangeFills(0, 1, paint('lineStrong'))
   quoted.setRangeFills(quoted.characters.length - 1, quoted.characters.length, paint('lineStrong'))
@@ -365,8 +372,7 @@ export function storyCover(position: number, state: StoryState): FrameNode {
     justify: 'CENTER',
     width: 52,
   })
-  frame.primaryAxisSizingMode = 'FIXED'
-  frame.resize(52, 52)
+  setSize(frame, { width: 52, height: 52 })
   if (done) frame.appendChild(icon(COVER_DONE, 22, 'aprovado'))
   else if (locked) frame.appendChild(icon(COVER_LOCKED, 22, 'muted'))
   else frame.appendChild(text(String(position), { size: TYPE.lead, weight: 800, color: 'luz', tracking: TRACKING.title }))
