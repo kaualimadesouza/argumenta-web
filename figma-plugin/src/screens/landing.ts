@@ -1,6 +1,6 @@
-import { brandWordmark, nightPanel, speechRow } from '../chrome'
+import { brandWordmark, deviceFrame, nightPanel, penMark, speechRow } from '../chrome'
 import { columnFor, type Device } from '../devices'
-import { fill, grow, paint, pressShadow, rect, stack, text } from '../nodes'
+import { fill, pressShadow, rect, stack, text } from '../nodes'
 import {
   CHAPTER_ROWS,
   CLOSING_FACTS,
@@ -13,15 +13,12 @@ import {
   NAV_LINKS,
   PLANS,
   STEPS,
-  STEP_SCENE,
-  VERDICT_OK,
-  VERDICT_WARN,
   type LandingFact,
 } from '../landingContent'
-import { DRAFT, PRAISE, SCORE_FLOOR, SCORE_MAX, SCORE_ROWS, SLIP, TO_PASS } from '../samples'
 import { LANDING_SCALE, SHAPE, TRACKING, TYPE } from '../tokens'
-import { button, card, checkGlyph, chip, kicker, progressBar } from '../ui'
-import { cellWidth, columns } from './blocks'
+import { button, card, checkGlyph, chip, kicker } from '../ui'
+import { cellWidth, columns } from './layout'
+import { THUMBNAILS } from './thumbnails'
 
 interface Sizes {
   hero: number
@@ -348,257 +345,6 @@ function marquee(device: Device): FrameNode {
 
 /* ----------------------------- como funciona --------------------------- */
 
-function miniScene(width: number): FrameNode {
-  const frame = stack({ name: 'scene', gap: 10, width })
-  const narration = stack({
-    name: 'narration',
-    padding: [14, 16],
-    fill: 'noite',
-    radius: SHAPE.card,
-    width,
-  })
-  narration.appendChild(
-    fill(
-      text(STEP_SCENE.narration, {
-        size: TYPE.body,
-        color: 'luz',
-        lineHeight: 1.55,
-        tracking: TRACKING.body,
-        width: width - 32,
-      }),
-    ),
-  )
-  frame.appendChild(fill(narration))
-  const speech = stack({
-    name: 'speech',
-    gap: 10,
-    padding: [14, 16, 12, 16],
-    fill: 'card',
-    radius: SHAPE.card,
-    border: { color: 'line', weight: 1 },
-    width,
-  })
-  const quoted = text(`“${STEP_SCENE.speech}”`, {
-    size: TYPE.body,
-    weight: 600,
-    lineHeight: 1.5,
-    width: width - 32,
-  })
-  speech.appendChild(fill(quoted))
-  const who = stack({ name: 'who', direction: 'HORIZONTAL', gap: 9, align: 'CENTER' })
-  who.appendChild(rect(18, 1, 'lineStrong'))
-  who.appendChild(text(STEP_SCENE.speaker, { size: TYPE.meta, weight: 700, color: 'ink2' }))
-  speech.appendChild(who)
-  frame.appendChild(fill(speech))
-  return frame
-}
-
-function miniEditor(width: number): FrameNode {
-  const frame = stack({ name: 'editor', gap: 10, width })
-  const objective = card({ gap: 8, width, name: 'objetivo' })
-  objective.appendChild(kicker('Seu objetivo'))
-  objective.appendChild(
-    fill(
-      text(STEP_SCENE.objective, {
-        size: TYPE.body,
-        weight: 500,
-        lineHeight: 1.5,
-        width: width - 36,
-      }),
-    ),
-  )
-  frame.appendChild(fill(objective))
-  const chips = stack({ name: 'requisitos', direction: 'HORIZONTAL', gap: 6, wrap: true, width })
-  for (const requirement of ['Tese', 'Justificativa', 'Repertório explicado']) {
-    chips.appendChild(chip(requirement, 'neutral'))
-  }
-  frame.appendChild(fill(chips))
-  const sheet = stack({
-    name: 'sheet',
-    padding: [14, 16],
-    fill: 'card',
-    radius: SHAPE.card,
-    border: { color: 'caneta', weight: 1.5 },
-    width,
-  })
-  sheet.appendChild(
-    fill(
-      text(DRAFT, {
-        size: TYPE.body,
-        lineHeight: 1.72,
-        tracking: -0.8,
-        width: width - 32,
-      }),
-    ),
-  )
-  frame.appendChild(fill(sheet))
-  const foot = stack({
-    name: 'foot',
-    direction: 'HORIZONTAL',
-    justify: 'SPACE_BETWEEN',
-    gap: 8,
-    width,
-  })
-  foot.appendChild(text('47 / 250 palavras', { size: TYPE.meta, weight: 600, color: 'muted' }))
-  foot.appendChild(text('Rascunho salvo', { size: TYPE.meta, weight: 600, color: 'muted' }))
-  frame.appendChild(fill(foot))
-  return frame
-}
-
-function miniBoard(width: number): FrameNode {
-  const inner = width - 36
-  const shell = card({ gap: 14, width, name: 'placar' })
-  const bar = stack({
-    name: 'bar',
-    direction: 'HORIZONTAL',
-    gap: 8,
-    align: 'CENTER',
-    justify: 'SPACE_BETWEEN',
-    width: inner,
-  })
-  bar.appendChild(
-    text('Capítulo 2 · O pátio do Tenório', {
-      size: TYPE.body,
-      weight: 700,
-      tracking: TRACKING.lead,
-    }),
-  )
-  bar.appendChild(text('2ª tentativa', { size: TYPE.meta, weight: 600, color: 'muted' }))
-  shell.appendChild(fill(bar))
-  const rows = stack({ name: 'rows', gap: 12, width: inner })
-  for (const row of SCORE_ROWS.slice(0, 4)) {
-    const line = stack({ name: row.code, gap: 7, width: inner })
-    const head = stack({ name: 'head', direction: 'HORIZONTAL', gap: 8, align: 'BASELINE', width: inner })
-    head.appendChild(text(row.code, { size: TYPE.meta, weight: 700, color: 'muted' }))
-    head.appendChild(
-      text(row.label, { size: TYPE.meta, weight: 600, color: row.belowFloor ? 'corretorInk' : 'ink' }),
-    )
-    if (row.belowFloor) {
-      head.appendChild(text('abaixo do piso', { size: TYPE.meta, weight: 500, color: 'muted' }))
-    }
-    head.appendChild(grow(stack({ name: 'gap' })))
-    head.appendChild(
-      text(String(row.score), {
-        size: TYPE.meta,
-        weight: 700,
-        color: row.belowFloor ? 'corretorInk' : 'ink',
-      }),
-    )
-    line.appendChild(fill(head))
-    line.appendChild(
-      progressBar({
-        percent: (row.score / SCORE_MAX) * 100,
-        floor: (SCORE_FLOOR / SCORE_MAX) * 100,
-        width: inner,
-        tone: row.belowFloor ? 'alert' : 'caneta',
-      }),
-    )
-    rows.appendChild(fill(line))
-  }
-  shell.appendChild(fill(rows))
-  const total = stack({
-    name: 'total',
-    direction: 'HORIZONTAL',
-    gap: 10,
-    padding: [12, 0, 0, 0],
-    align: 'BASELINE',
-    justify: 'SPACE_BETWEEN',
-    width: inner,
-    border: { color: 'track', weight: 1, sides: ['top'] },
-  })
-  const label = stack({ name: 'label', gap: 2 })
-  label.appendChild(text('Soma dos critérios', { size: TYPE.meta, weight: 700 }))
-  label.appendChild(
-    text('Estimativa do Argumenta, não nota de banca', {
-      size: TYPE.micro,
-      weight: 500,
-      color: 'muted',
-    }),
-  )
-  total.appendChild(label)
-  const sum = SCORE_ROWS.slice(0, 4).reduce((carried, row) => carried + row.score, 0)
-  total.appendChild(
-    text(`${sum} / ${SCORE_MAX * 4}`, { size: TYPE.lead, weight: 800, tracking: TRACKING.lead }),
-  )
-  shell.appendChild(fill(total))
-  return shell
-}
-
-function miniCorrection(width: number): FrameNode {
-  const frame = stack({ name: 'correcao', gap: 10, width })
-  frame.appendChild(fill(miniBoard(width)))
-  const textCard = card({ gap: 8, width, name: 'texto' })
-  const body = text(DRAFT, {
-    size: TYPE.body,
-    lineHeight: 1.85,
-    tracking: -0.8,
-    width: width - 36,
-  })
-  const slip = DRAFT.indexOf(SLIP)
-  body.setRangeFills(slip, slip + SLIP.length, paint('corretor'))
-  body.setRangeTextDecoration(slip, slip + SLIP.length, 'UNDERLINE')
-  const praise = DRAFT.indexOf(PRAISE)
-  body.setRangeFills(praise, praise + PRAISE.length, paint('caneta'))
-  body.setRangeFontName(praise, praise + PRAISE.length, { family: 'Inter', style: 'Semi Bold' })
-  textCard.appendChild(fill(body))
-  frame.appendChild(fill(textCard))
-  const pass = card({ gap: 10, width, name: 'para-passar' })
-  pass.appendChild(kicker('Para passar'))
-  for (const step of TO_PASS) {
-    pass.appendChild(
-      fill(text(`→ ${step}`, { size: TYPE.body, lineHeight: 1.5, width: width - 36 })),
-    )
-  }
-  frame.appendChild(fill(pass))
-  return frame
-}
-
-function verdictBlock(
-  verdict: { title: string; line: string },
-  tone: 'ok' | 'warn',
-  width: number,
-): FrameNode {
-  const frame = stack({
-    name: `verdict/${tone}`,
-    gap: 9,
-    padding: 18,
-    fill: tone === 'ok' ? 'aprovadoSoft' : 'streakSoft',
-    radius: SHAPE.card,
-    border: { color: tone === 'ok' ? 'aprovado' : 'streak', weight: 1.5 },
-    width,
-  })
-  frame.appendChild(
-    text(verdict.title, {
-      size: TYPE.lead,
-      weight: 800,
-      color: tone === 'ok' ? 'aprovadoInk' : 'streakInk',
-      tracking: TRACKING.lead,
-      lineHeight: 1.2,
-    }),
-  )
-  frame.appendChild(
-    fill(
-      text(verdict.line, {
-        size: TYPE.meta,
-        color: 'ink2',
-        lineHeight: 1.5,
-        width: width - 36,
-      }),
-    ),
-  )
-  return frame
-}
-
-function miniFor(index: number, width: number): FrameNode {
-  if (index === 0) return miniScene(width)
-  if (index === 1) return miniEditor(width)
-  if (index === 2) return miniCorrection(width)
-  const frame = stack({ name: 'verdicts', gap: 10, width })
-  frame.appendChild(fill(verdictBlock(VERDICT_OK, 'ok', width)))
-  frame.appendChild(fill(verdictBlock(VERDICT_WARN, 'warn', width)))
-  return frame
-}
-
 function howItWorks(width: number, device: Device): FrameNode {
   const desktop = device.id === 'desktop'
   const steps = stack({ name: 'steps', gap: desktop ? 24 : 20, width })
@@ -651,7 +397,7 @@ function howItWorks(width: number, device: Device): FrameNode {
       border: { color: 'line', weight: 1 },
       width: miniWidth,
     })
-    mini.appendChild(fill(miniFor(index, miniWidth - 28)))
+    mini.appendChild(fill(THUMBNAILS[index](miniWidth - 28)))
     shell.appendChild(mini)
     steps.appendChild(fill(shell))
   }
@@ -880,14 +626,6 @@ function faqList(width: number, device: Device): FrameNode {
 
 /* -------------------------------- closing ------------------------------ */
 
-function penMark(width: number): FrameNode {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110"><path d="M18 86 q70 -20 152 -8" fill="none" stroke="#FFE9A8" stroke-width="16" stroke-linecap="round"/><g transform="rotate(38 172 74)"><rect x="166" y="28" width="13" height="40" rx="4" fill="#2649E5"/><path d="M166 68 h13 l-6.5 14 z" fill="#101418"/><circle cx="172.5" cy="79" r="1.6" fill="#F4F5F7"/></g></svg>`
-  const node = figma.createNodeFromSvg(svg)
-  node.name = 'PenMark'
-  node.resize(width, width * (110 / 220))
-  return node
-}
-
 function closing(width: number, device: Device): FrameNode {
   const desktop = device.id === 'desktop'
   const frame = stack({
@@ -995,15 +733,12 @@ function footer(width: number, device: Device): FrameNode {
 export function landing(device: Device): FrameNode {
   const column = columnFor(device, 'landing')
   const width = column.width
-  const frame = figma.createFrame()
-  frame.name = `Landing · ${device.width}`
-  frame.resize(device.width, device.height)
-  frame.fills = paint('paper')
-  frame.clipsContent = false
-  frame.layoutMode = 'VERTICAL'
-  frame.primaryAxisSizingMode = 'AUTO'
-  frame.counterAxisSizingMode = 'FIXED'
-  frame.counterAxisAlignItems = 'CENTER'
+  const frame = deviceFrame(device, {
+    name: 'Landing',
+    axis: 'VERTICAL',
+    height: 'content',
+    align: 'CENTER',
+  })
 
   const wrap = (child: FrameNode): FrameNode => {
     const holder = stack({ name: 'wrap', padding: [0, column.padX], align: 'MIN', width: device.width })

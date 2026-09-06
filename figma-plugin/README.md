@@ -30,13 +30,17 @@ página e os estilos `Argumenta/*`, em vez de empilhar cópias.
 | Arquivo | O que é |
 |---|---|
 | `tokens.ts` | os tokens v3 em pixel e porcentagem, espelhando `tokens.css` |
-| `css.ts` | leitor do `tokens.css`, usado só pelo teste de paridade |
 | `devices.ts` | os três recortes (390, 834, 1440) e a largura da coluna de leitura |
 | `nodes.ts` | primitivas de nó do Figma (stack, text, borda, sombra, ícone) |
 | `ui.ts` | os componentes de `src/components` (botão, chip, cartão, campo, barra) |
-| `chrome.ts` | wordmark, as três formas do `Nav`, painel noturno, fala, capa |
+| `chrome.ts` | o quadro do aparelho, wordmark, as três formas do `Nav`, painel noturno |
 | `samples.ts`, `landingContent.ts` | a copy pt-BR, copiada do código |
+| `screens/layout.ts` | passo de leitura, título de tela e as colunas |
+| `screens/correction.ts` | a anatomia da correção, desenhada na tela e no thumbnail |
+| `screens/thumbnails.ts` | os quatro thumbnails do "Como funciona" da landing |
+| `screens/profile.ts` | os cartões de `src/profile` |
 | `screens/` | uma tela por função, mais o inventário e o quadro do sistema |
+| `testing/` | a API falsa do Figma e o leitor do `tokens.css`, só para os testes |
 
 Depois de mexer:
 

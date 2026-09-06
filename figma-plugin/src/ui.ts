@@ -9,7 +9,7 @@ import {
   type Border,
   type Padding,
 } from './nodes'
-import { SHAPE, TRACKING, TYPE, type ColorName } from './tokens'
+import { COLORS, SHAPE, TRACKING, TYPE, type ColorName } from './tokens'
 
 /* -------------------------------- card -------------------------------- */
 
@@ -206,7 +206,7 @@ export function field(options: FieldOptions): FrameNode {
 }
 
 function chevron(): FrameNode {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="m6 9.5 6 5.5 6-5.5" stroke="#54606C" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="m6 9.5 6 5.5 6-5.5" stroke="${COLORS.ink2}" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>`
   const node = figma.createNodeFromSvg(svg)
   node.name = 'chevron'
   node.resize(16, 16)
@@ -282,7 +282,7 @@ export function markBadge(number: number, tone: 'slip' | 'praise'): FrameNode {
   return frame
 }
 
-const CHECK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="m5.5 12.4 4.2 4.1L18.5 7.6" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+const CHECK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="m5.5 12.4 4.2 4.1L18.5 7.6" stroke="${COLORS.card}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`
 
 /** A milestone's state: the filled check, or the dashed circle still waiting. */
 export function tick(done: boolean): FrameNode {
@@ -308,7 +308,7 @@ export function tick(done: boolean): FrameNode {
 
 /** The drawn arrow of a "Para passar" step. */
 export function arrowBullet(): FrameNode {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 8" fill="none"><path d="M0 4h12M8.5 1 12 4l-3.5 3" stroke="#2649E5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 8" fill="none"><path d="M0 4h12M8.5 1 12 4l-3.5 3" stroke="${COLORS.caneta}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`
   const node = figma.createNodeFromSvg(svg)
   node.name = 'arrow'
   node.resize(13, 8)
@@ -316,7 +316,7 @@ export function arrowBullet(): FrameNode {
 }
 
 export function checkGlyph(size = 20): FrameNode {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="m5.5 12.4 4.2 4.1L18.5 7.6" stroke="#2649E5" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="m5.5 12.4 4.2 4.1L18.5 7.6" stroke="${COLORS.caneta}" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>`
   const node = figma.createNodeFromSvg(svg)
   node.name = 'check'
   node.resize(size, size)

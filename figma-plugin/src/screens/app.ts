@@ -1,22 +1,132 @@
-import { screenFrame, settle } from '../chrome'
+import { screenFrame, settle, storyCover } from '../chrome'
 import type { Device } from '../devices'
-import { fill, stack, text } from '../nodes'
-import { MILESTONES, TRACK, TRENDS, WEEK } from '../samples'
-import { LAYOUT, TRACKING, TYPE } from '../tokens'
-import { button, card, chip } from '../ui'
-import {
-  columns,
-  dangerCard,
-  dayBox,
-  milestoneRow,
-  nicknameCard,
-  screenTitle,
-  sparkline,
-  storyCard,
-  targetsCard,
-} from './blocks'
+import { applyBorder, fill, grow, rect, stack, text } from '../nodes'
+import { MILESTONES, TRACK, TRENDS, WEEK, type StorySample } from '../samples'
+import { COLORS, LAYOUT, SHAPE, TRACKING, TYPE } from '../tokens'
+import { button, card, chip, progressBar, tick } from '../ui'
+import { columns, screenTitle } from './layout'
+import { dangerCard, nicknameCard, targetsCard } from './profile'
 
 /* -------------------------------- trilha ------------------------------- */
+
+export interface StoryCardOptions {
+  story: StorySample
+  width: number
+  /** The story in progress lies down across the full width on a wide screen. */
+  featured: boolean
+  device: Device
+}
+
+export function storyCard(options: StoryCardOptions): FrameNode {
+  const { story, width, featured, device } = options
+  const shell = card({
+    active: story.state === 'in_progress',
+    gap: 14,
+    width,
+    name: `story/${story.title}`,
+  })
+  const lying = featured && device.id !== 'phone'
+  const inner = stack({
+    name: 'story',
+    direction: lying ? 'HORIZONTAL' : 'VERTICAL',
+    gap: 14,
+    align: lying ? 'CENTER' : 'MIN',
+    width: width - 36,
+  })
+  const top = stack({ name: 'top', direction: 'HORIZONTAL', gap: 14, align: 'MIN' })
+  top.appendChild(storyCover(story.position, story.state))
+  const bodyWidth = (lying ? width - 36 - 220 : width - 36) - 66
+  const body = stack({ name: 'body', gap: 8, width: bodyWidth })
+  const titleRow = stack({
+    name: 'titleRow',
+    direction: 'HORIZONTAL',
+    gap: 8,
+    align: 'CENTER',
+    justify: 'SPACE_BETWEEN',
+    width: bodyWidth,
+  })
+  titleRow.appendChild(
+    text(story.title, {
+      size: featured && device.id === 'desktop' ? TYPE.lead : TYPE.body,
+      weight: 700,
+      tracking: -1.8,
+    }),
+  )
+  titleRow.appendChild(chip(story.badge, story.badgeTone))
+  body.appendChild(fill(titleRow))
+  body.appendChild(
+    fill(
+      text(story.line, {
+        size: TYPE.meta,
+        weight: 500,
+        color: 'muted',
+        lineHeight: 1.45,
+        width: bodyWidth,
+      }),
+    ),
+  )
+  body.appendChild(progressBar({ percent: story.percent, width: bodyWidth, tone: story.state === 'completed' ? 'done' : 'caneta' }))
+  top.appendChild(grow(body))
+  inner.appendChild(lying ? grow(top) : fill(top))
+  if (story.cta !== null) {
+    const cta = button(story.cta)
+    if (lying) {
+      cta.layoutSizingHorizontal = 'HUG'
+      inner.appendChild(cta)
+    } else {
+      inner.appendChild(fill(cta))
+    }
+  }
+  shell.appendChild(fill(inner))
+  return shell
+}
+
+/* ------------------------------- progresso ----------------------------- */
+
+const SPARK = { width: 120, height: 26, inset: 2, max: 100 }
+
+/** The same polyline the app draws, so the shape a designer sees is the real one. */
+export function sparkline(points: number[], down: boolean): FrameNode {
+  const step = (SPARK.width - SPARK.inset * 2) / (points.length - 1)
+  const usable = SPARK.height - SPARK.inset * 2
+  const drawn = points
+    .map((score, index) => {
+      const y = SPARK.inset + usable * (1 - Math.min(Math.max(score, 0), SPARK.max) / SPARK.max)
+      return `${SPARK.inset + step * index},${y}`
+    })
+    .join(' ')
+  const stroke = down ? COLORS.corretor : COLORS.caneta
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SPARK.width} ${SPARK.height}"><polyline points="${drawn}" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+  const node = figma.createNodeFromSvg(svg)
+  node.name = 'sparkline'
+  node.resize(SPARK.width, SPARK.height)
+  return node
+}
+
+export function milestoneRow(label: string, done: boolean, width: number): FrameNode {
+  const row = stack({ name: 'milestone', direction: 'HORIZONTAL', gap: 12, align: 'CENTER', width })
+  row.appendChild(tick(done))
+  row.appendChild(
+    fill(
+      text(label, {
+        size: TYPE.body,
+        weight: done ? 600 : 500,
+        color: done ? 'ink' : 'muted',
+        width: width - 32,
+      }),
+    ),
+  )
+  return row
+}
+
+export function dayBox(day: { label: string; done: boolean; today: boolean }, width: number, height: number): FrameNode {
+  const cell = stack({ name: `day/${day.label}`, gap: 7, align: 'CENTER', width })
+  cell.appendChild(text(day.label, { size: TYPE.micro, weight: 600, color: 'muted' }))
+  const box = rect(width, height, day.today && day.done ? 'caneta' : day.done ? 'canetaSoft' : 'track', SHAPE.tile)
+  cell.appendChild(box)
+  if (day.today) applyBorder(box, { color: 'caneta', weight: 1.5 })
+  return cell
+}
 
 export function trilha(device: Device): FrameNode {
   const screen = screenFrame(device, { name: 'Trilha', shell: true, tab: 'trilha', shape: 'wide' })

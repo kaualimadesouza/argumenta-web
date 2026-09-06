@@ -1,4 +1,4 @@
-import { COLORS, SHAPE, type ColorName } from './tokens'
+import { COLORS, type ColorName } from './tokens'
 
 /** Inter is the only family: five weights, the ones index.html loads. */
 export type Weight = 400 | 500 | 600 | 700 | 800
@@ -196,5 +196,3 @@ export function icon(svg: string, size: number, color: ColorName): FrameNode {
   }
   return node
 }
-
-export const RADIUS = SHAPE

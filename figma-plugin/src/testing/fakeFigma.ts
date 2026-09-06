@@ -153,7 +153,6 @@ class FakeText extends FakeNode {
   textDecoration = 'NONE'
   lineHeight: unknown = { unit: 'AUTO' }
   letterSpacing: unknown = { value: 0, unit: 'PERCENT' }
-  private ranges = 0
 
   private get factor(): number {
     const height = this.lineHeight as { unit: string; value?: number }
@@ -177,7 +176,6 @@ class FakeText extends FakeNode {
     if (start < 0 || end > this.characters.length || start >= end) {
       throw new Error(`range ${start}..${end} is outside "${this.characters.slice(0, 24)}…"`)
     }
-    this.ranges += 1
   }
 
   setRangeFills(start: number, end: number): void {
@@ -190,10 +188,6 @@ class FakeText extends FakeNode {
 
   setRangeFontName(start: number, end: number): void {
     this.checkRange(start, end)
-  }
-
-  get styledRanges(): number {
-    return this.ranges
   }
 }
 

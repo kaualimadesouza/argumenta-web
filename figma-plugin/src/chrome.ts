@@ -1,6 +1,6 @@
 import { columnFor, type ColumnShape, type Device } from './devices'
-import { applyBorder, fill, grow, icon, paint, rect, stack, text } from './nodes'
-import { SHAPE, TRACKING, TYPE, type ColorName } from './tokens'
+import { fill, grow, icon, paint, rect, stack, text } from './nodes'
+import { COLORS, SHAPE, TRACKING, TYPE, type ColorName } from './tokens'
 
 /* ------------------------------ wordmark ------------------------------ */
 
@@ -40,6 +40,16 @@ export function brandWordmark(size: number, onNight = false): FrameNode {
   return frame
 }
 
+/** The BIC pen drawing a highlighter stroke, the brand illustration of the
+ *  entry screen and the landing's closing call. */
+export function penMark(width: number): FrameNode {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110"><path d="M18 86 q70 -20 152 -8" fill="none" stroke="${COLORS.marcaTexto}" stroke-width="16" stroke-linecap="round"/><g transform="rotate(38 172 74)"><rect x="166" y="28" width="13" height="40" rx="4" fill="${COLORS.caneta}"/><path d="M166 68 h13 l-6.5 14 z" fill="${COLORS.ink}"/><circle cx="172.5" cy="79" r="1.6" fill="${COLORS.paper}"/></g></svg>`
+  const node = figma.createNodeFromSvg(svg)
+  node.name = 'PenMark'
+  node.resize(width, width * (110 / 220))
+  return node
+}
+
 /* --------------------------------- nav -------------------------------- */
 
 export type TabId = 'trilha' | 'progresso' | 'conta'
@@ -50,7 +60,7 @@ interface Tab {
   svg: string
 }
 
-const STROKE = 'stroke="#54606C" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"'
+const STROKE = `stroke="${COLORS.ink2}" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"`
 
 const TABS: Tab[] = [
   {
@@ -169,19 +179,38 @@ export interface Screen {
   width: number
 }
 
-/** The device frame with its paper, its nav in the shape that width uses, and
- *  the content column the screen writes into. */
-export function screenFrame(device: Device, spec: ScreenSpec): Screen {
-  const column = columnFor(device, spec.shape)
+export interface FrameSpec {
+  name: string
+  axis: 'VERTICAL' | 'HORIZONTAL'
+  /** `device` starts at the viewport height; `content` grows with the content. */
+  height: 'device' | 'content'
+  align?: 'MIN' | 'CENTER'
+}
+
+/** The paper the viewport is drawn on. Every frame on the canvas starts here,
+ *  so the sizing rules live in one place. */
+export function deviceFrame(device: Device, spec: FrameSpec): FrameNode {
   const frame = figma.createFrame()
   frame.name = `${spec.name} · ${device.width}`
   frame.resize(device.width, device.height)
   frame.fills = paint('paper')
   frame.clipsContent = false
-  frame.layoutMode = device.nav === 'rail' && spec.shell ? 'HORIZONTAL' : 'VERTICAL'
-  frame.primaryAxisSizingMode = 'FIXED'
+  frame.layoutMode = spec.axis
+  frame.primaryAxisSizingMode = spec.height === 'content' ? 'AUTO' : 'FIXED'
   frame.counterAxisSizingMode = 'FIXED'
-  frame.counterAxisAlignItems = 'MIN'
+  frame.counterAxisAlignItems = spec.align ?? 'MIN'
+  return frame
+}
+
+/** The device frame with its paper, its nav in the shape that width uses, and
+ *  the content column the screen writes into. */
+export function screenFrame(device: Device, spec: ScreenSpec): Screen {
+  const column = columnFor(device, spec.shape)
+  const frame = deviceFrame(device, {
+    name: spec.name,
+    axis: device.nav === 'rail' && spec.shell ? 'HORIZONTAL' : 'VERTICAL',
+    height: 'device',
+  })
 
   const body = stack({
     name: 'body',
@@ -208,8 +237,7 @@ export function screenFrame(device: Device, spec: ScreenSpec): Screen {
  *  and keeps the tab bar at the bottom of a short one. Height is the primary
  *  axis when the screen stacks and the counter axis when it sits beside a rail,
  *  so the mode to relax is not the same one. */
-export function settle(screen: Screen, device: Device): FrameNode {
-  const frame = screen.frame
+export function fitToDevice(frame: FrameNode, device: Device): FrameNode {
   const sideways = frame.layoutMode === 'HORIZONTAL'
   if (sideways) {
     frame.counterAxisSizingMode = 'AUTO'
@@ -225,6 +253,11 @@ export function settle(screen: Screen, device: Device): FrameNode {
     frame.resize(device.width, device.height)
   }
   return frame
+}
+
+/** What a column screen ends with: the frame, sized to its own content. */
+export function settle(screen: Screen, device: Device): FrameNode {
+  return fitToDevice(screen.frame, device)
 }
 
 /* -------------------------------- blocks ------------------------------- */
@@ -313,8 +346,8 @@ export function speechRow(options: SpeechOptions): FrameNode {
   return frame
 }
 
-const COVER_DONE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="m5.5 12.4 4.2 4.1L18.5 7.6" stroke="#0E9F6E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`
-const COVER_LOCKED = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><rect x="4.8" y="10.6" width="14.4" height="9.4" rx="2.6" stroke="#6B7683" stroke-width="1.75"/><path d="M8.6 10.6V7.9a3.4 3.4 0 0 1 6.8 0v2.7" stroke="#6B7683" stroke-width="1.75"/></svg>`
+const COVER_DONE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="m5.5 12.4 4.2 4.1L18.5 7.6" stroke="${COLORS.aprovado}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+const COVER_LOCKED = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><rect x="4.8" y="10.6" width="14.4" height="9.4" rx="2.6" stroke="${COLORS.muted}" stroke-width="1.75"/><path d="M8.6 10.6V7.9a3.4 3.4 0 0 1 6.8 0v2.7" stroke="${COLORS.muted}" stroke-width="1.75"/></svg>`
 
 export type StoryState = 'available' | 'in_progress' | 'completed' | 'locked'
 
@@ -349,4 +382,3 @@ export function frameLabel(label: string): TextNode {
   return text(label, { size: 16, weight: 600, color: 'muted', name: `label/${label}` })
 }
 
-export { applyBorder }

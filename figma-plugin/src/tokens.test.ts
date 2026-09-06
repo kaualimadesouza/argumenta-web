@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 
 import { describe, expect, it } from 'vitest'
 
-import { type RootBlock, rootBlocks, tokenAt } from './css'
+import { type RootBlock, rootBlocks, tokenAt } from './testing/tokenSheet'
 import {
   COLORS,
   LANDING_SCALE,

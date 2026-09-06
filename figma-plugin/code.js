@@ -284,7 +284,14 @@
     menta.y = 0;
     return frame;
   }
-  var STROKE = 'stroke="#54606C" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"';
+  function penMark(width) {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110"><path d="M18 86 q70 -20 152 -8" fill="none" stroke="${COLORS.marcaTexto}" stroke-width="16" stroke-linecap="round"/><g transform="rotate(38 172 74)"><rect x="166" y="28" width="13" height="40" rx="4" fill="${COLORS.caneta}"/><path d="M166 68 h13 l-6.5 14 z" fill="${COLORS.ink}"/><circle cx="172.5" cy="79" r="1.6" fill="${COLORS.paper}"/></g></svg>`;
+    const node = figma.createNodeFromSvg(svg);
+    node.name = "PenMark";
+    node.resize(width, width * (110 / 220));
+    return node;
+  }
+  var STROKE = `stroke="${COLORS.ink2}" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"`;
   var TABS = [
     {
       id: "trilha",
@@ -377,18 +384,27 @@
     nav.appendChild(fill(tabs));
     return nav;
   }
-  function screenFrame(device, spec) {
-    var _a, _b, _c;
-    const column = columnFor(device, spec.shape);
+  function deviceFrame(device, spec) {
+    var _a;
     const frame = figma.createFrame();
     frame.name = `${spec.name} · ${device.width}`;
     frame.resize(device.width, device.height);
     frame.fills = paint("paper");
     frame.clipsContent = false;
-    frame.layoutMode = device.nav === "rail" && spec.shell ? "HORIZONTAL" : "VERTICAL";
-    frame.primaryAxisSizingMode = "FIXED";
+    frame.layoutMode = spec.axis;
+    frame.primaryAxisSizingMode = spec.height === "content" ? "AUTO" : "FIXED";
     frame.counterAxisSizingMode = "FIXED";
-    frame.counterAxisAlignItems = "MIN";
+    frame.counterAxisAlignItems = (_a = spec.align) != null ? _a : "MIN";
+    return frame;
+  }
+  function screenFrame(device, spec) {
+    var _a, _b, _c;
+    const column = columnFor(device, spec.shape);
+    const frame = deviceFrame(device, {
+      name: spec.name,
+      axis: device.nav === "rail" && spec.shell ? "HORIZONTAL" : "VERTICAL",
+      height: "device"
+    });
     const body = stack({
       name: "body",
       padding: [column.padTop, column.padX, column.padBottom, column.padX],
@@ -404,8 +420,7 @@
     if (spec.shell && device.nav === "tabbar") frame.appendChild(fill(tabBar(device, (_c = spec.tab) != null ? _c : null)));
     return { frame, content, width: column.width };
   }
-  function settle(screen, device) {
-    const frame = screen.frame;
+  function fitToDevice(frame, device) {
     const sideways = frame.layoutMode === "HORIZONTAL";
     if (sideways) {
       frame.counterAxisSizingMode = "AUTO";
@@ -421,6 +436,9 @@
       frame.resize(device.width, device.height);
     }
     return frame;
+  }
+  function settle(screen, device) {
+    return fitToDevice(screen.frame, device);
   }
   function screenBar(width, back, right) {
     const bar = stack({
@@ -488,8 +506,8 @@
     frame.appendChild(whoRow);
     return frame;
   }
-  var COVER_DONE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="m5.5 12.4 4.2 4.1L18.5 7.6" stroke="#0E9F6E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-  var COVER_LOCKED = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><rect x="4.8" y="10.6" width="14.4" height="9.4" rx="2.6" stroke="#6B7683" stroke-width="1.75"/><path d="M8.6 10.6V7.9a3.4 3.4 0 0 1 6.8 0v2.7" stroke="#6B7683" stroke-width="1.75"/></svg>`;
+  var COVER_DONE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="m5.5 12.4 4.2 4.1L18.5 7.6" stroke="${COLORS.aprovado}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  var COVER_LOCKED = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><rect x="4.8" y="10.6" width="14.4" height="9.4" rx="2.6" stroke="${COLORS.muted}" stroke-width="1.75"/><path d="M8.6 10.6V7.9a3.4 3.4 0 0 1 6.8 0v2.7" stroke="${COLORS.muted}" stroke-width="1.75"/></svg>`;
   function storyCover(position, state) {
     const done = state === "completed";
     const locked = state === "locked";
@@ -791,7 +809,7 @@
     return frame;
   }
   function chevron() {
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="m6 9.5 6 5.5 6-5.5" stroke="#54606C" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="m6 9.5 6 5.5 6-5.5" stroke="${COLORS.ink2}" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
     const node = figma.createNodeFromSvg(svg);
     node.name = "chevron";
     node.resize(16, 16);
@@ -854,7 +872,7 @@
     frame.appendChild(text(String(number), { size: 9.5, weight: 700, color: "card" }));
     return frame;
   }
-  var CHECK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="m5.5 12.4 4.2 4.1L18.5 7.6" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  var CHECK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="m5.5 12.4 4.2 4.1L18.5 7.6" stroke="${COLORS.card}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   function tick(done) {
     const frame = stack({
       name: done ? "tick/done" : "tick/pending",
@@ -876,21 +894,21 @@
     return frame;
   }
   function arrowBullet() {
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 8" fill="none"><path d="M0 4h12M8.5 1 12 4l-3.5 3" stroke="#2649E5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 8" fill="none"><path d="M0 4h12M8.5 1 12 4l-3.5 3" stroke="${COLORS.caneta}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
     const node = figma.createNodeFromSvg(svg);
     node.name = "arrow";
     node.resize(13, 8);
     return node;
   }
   function checkGlyph(size = 20) {
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="m5.5 12.4 4.2 4.1L18.5 7.6" stroke="#2649E5" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="m5.5 12.4 4.2 4.1L18.5 7.6" stroke="${COLORS.caneta}" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
     const node = figma.createNodeFromSvg(svg);
     node.name = "check";
     node.resize(size, size);
     return node;
   }
 
-  // figma-plugin/src/screens/blocks.ts
+  // figma-plugin/src/screens/layout.ts
   function readingSize(device) {
     return device.id === "desktop" ? TYPE.title : TYPE.lead;
   }
@@ -918,6 +936,65 @@
     }
     return rows;
   }
+
+  // figma-plugin/src/screens/profile.ts
+  function nicknameCard(width) {
+    const shell = card({ gap: 12, width, name: "card/apelido" });
+    shell.appendChild(kicker("Como quer ser chamado"));
+    const row2 = stack({ name: "row", direction: "HORIZONTAL", gap: 8, align: "MAX", width: width - 36 });
+    const input = field({ label: "Apelido", value: "Kauã", width: width - 36 - 8 - 92 });
+    row2.appendChild(grow(input));
+    const save = button("Salvar", "ghost");
+    save.layoutSizingHorizontal = "HUG";
+    row2.appendChild(save);
+    shell.appendChild(fill(row2));
+    return shell;
+  }
+  function targetsCard(width) {
+    const inner = width - 36;
+    const shell = card({ gap: 12, width, name: "card/vestibulares" });
+    shell.appendChild(kicker("A lente da sua correção"));
+    shell.appendChild(text("Seus vestibulares", { size: TYPE.lead, weight: 700, tracking: TRACKING.lead }));
+    const row2 = stack({ name: "row", direction: "HORIZONTAL", gap: 8, align: "MAX", width: inner });
+    const half = Math.floor((inner - 16 - 108) / 2);
+    row2.appendChild(grow(field({ label: "Vestibular", value: "ENEM", width: half, select: true })));
+    row2.appendChild(grow(field({ label: "Ano", value: "2026", width: half, select: true })));
+    const add = button("Adicionar", "ghost");
+    add.layoutSizingHorizontal = "HUG";
+    row2.appendChild(add);
+    shell.appendChild(fill(row2));
+    const list = stack({ name: "list", gap: 8, width: inner });
+    list.appendChild(fill(targetItem("ENEM 2026", true, inner, false)));
+    list.appendChild(fill(targetItem("FUVEST 2027", false, inner, true)));
+    shell.appendChild(fill(list));
+    return shell;
+  }
+  function targetItem(name, active, width, ruled) {
+    const item = stack({
+      name: `target/${name}`,
+      direction: "HORIZONTAL",
+      gap: 8,
+      padding: ruled ? [8, 0, 0, 0] : 0,
+      align: "CENTER",
+      width,
+      border: ruled ? { color: "line", weight: 1, sides: ["top"] } : void 0
+    });
+    item.appendChild(grow(text(name, { size: TYPE.body, weight: 600 })));
+    item.appendChild(active ? chip("Lente ativa") : button(`Usar a lente ${name}`, "quiet"));
+    item.appendChild(button("Remover", "quiet"));
+    return item;
+  }
+  function dangerCard(width) {
+    const shell = card({ gap: 12, width, name: "card/conta" });
+    shell.appendChild(text("Sessão e conta", { size: TYPE.lead, weight: 700, tracking: TRACKING.lead }));
+    shell.appendChild(fill(button("Sair da conta", "ghost")));
+    const quiet = button("Excluir minha conta", "quiet");
+    quiet.layoutSizingHorizontal = "HUG";
+    shell.appendChild(quiet);
+    return shell;
+  }
+
+  // figma-plugin/src/screens/app.ts
   function storyCard(options) {
     const { story, width, featured, device } = options;
     const shell = card({
@@ -989,153 +1066,12 @@
       const y = SPARK.inset + usable * (1 - Math.min(Math.max(score, 0), SPARK.max) / SPARK.max);
       return `${SPARK.inset + step * index},${y}`;
     }).join(" ");
-    const stroke = down ? "#D92D20" : "#2649E5";
+    const stroke = down ? COLORS.corretor : COLORS.caneta;
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SPARK.width} ${SPARK.height}"><polyline points="${drawn}" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
     const node = figma.createNodeFromSvg(svg);
     node.name = "sparkline";
     node.resize(SPARK.width, SPARK.height);
     return node;
-  }
-  function nicknameCard(width) {
-    const shell = card({ gap: 12, width, name: "card/apelido" });
-    shell.appendChild(kicker("Como quer ser chamado"));
-    const row2 = stack({ name: "row", direction: "HORIZONTAL", gap: 8, align: "MAX", width: width - 36 });
-    const input = field({ label: "Apelido", value: "Kauã", width: width - 36 - 8 - 92 });
-    row2.appendChild(grow(input));
-    const save = button("Salvar", "ghost");
-    save.layoutSizingHorizontal = "HUG";
-    row2.appendChild(save);
-    shell.appendChild(fill(row2));
-    return shell;
-  }
-  function targetsCard(width) {
-    const inner = width - 36;
-    const shell = card({ gap: 12, width, name: "card/vestibulares" });
-    shell.appendChild(kicker("A lente da sua correção"));
-    shell.appendChild(text("Seus vestibulares", { size: TYPE.lead, weight: 700, tracking: TRACKING.lead }));
-    const row2 = stack({ name: "row", direction: "HORIZONTAL", gap: 8, align: "MAX", width: inner });
-    const half = Math.floor((inner - 16 - 108) / 2);
-    row2.appendChild(grow(field({ label: "Vestibular", value: "ENEM", width: half, select: true })));
-    row2.appendChild(grow(field({ label: "Ano", value: "2026", width: half, select: true })));
-    const add = button("Adicionar", "ghost");
-    add.layoutSizingHorizontal = "HUG";
-    row2.appendChild(add);
-    shell.appendChild(fill(row2));
-    const list = stack({ name: "list", gap: 8, width: inner });
-    list.appendChild(fill(targetItem("ENEM 2026", true, inner, false)));
-    list.appendChild(fill(targetItem("FUVEST 2027", false, inner, true)));
-    shell.appendChild(fill(list));
-    return shell;
-  }
-  function targetItem(name, active, width, ruled) {
-    const item = stack({
-      name: `target/${name}`,
-      direction: "HORIZONTAL",
-      gap: 8,
-      padding: ruled ? [8, 0, 0, 0] : 0,
-      align: "CENTER",
-      width,
-      border: ruled ? { color: "line", weight: 1, sides: ["top"] } : void 0
-    });
-    item.appendChild(grow(text(name, { size: TYPE.body, weight: 600 })));
-    item.appendChild(active ? chip("Lente ativa") : button(`Usar a lente ${name}`, "quiet"));
-    item.appendChild(button("Remover", "quiet"));
-    return item;
-  }
-  function dangerCard(width) {
-    const shell = card({ gap: 12, width, name: "card/conta" });
-    shell.appendChild(text("Sessão e conta", { size: TYPE.lead, weight: 700, tracking: TRACKING.lead }));
-    shell.appendChild(fill(button("Sair da conta", "ghost")));
-    const quiet = button("Excluir minha conta", "quiet");
-    quiet.layoutSizingHorizontal = "HUG";
-    shell.appendChild(quiet);
-    return shell;
-  }
-  function sceneBeats(width, device) {
-    const size = readingSize(device);
-    const pad = device.id === "desktop" ? 28 : 20;
-    const objective = card({ active: true, gap: 8, padding: 17, width, name: "beat/objetivo" });
-    objective.appendChild(kicker("Seu objetivo"));
-    objective.appendChild(
-      fill(text(SCENE.objective, { size: TYPE.body, weight: 600, lineHeight: 1.5, width: width - 34 }))
-    );
-    const hint = card({ gap: 8, padding: 17, width, name: "beat/dica" });
-    hint.appendChild(kicker("Dica de repertório", "streak"));
-    hint.appendChild(
-      fill(text(SCENE.hint, { size: TYPE.body, color: "ink2", lineHeight: 1.58, width: width - 34 }))
-    );
-    return [
-      nightPanel(SCENE.narration, { width, size, padding: pad }),
-      speechRow({ speech: SCENE.speech, who: SCENE.speaker, width, size }),
-      objective,
-      hint
-    ];
-  }
-  function verdictHeadline(width, device) {
-    const frame = stack({
-      name: "headline",
-      gap: 9,
-      padding: 18,
-      fill: "corretorSoft",
-      radius: SHAPE.card,
-      border: { color: "corretor", weight: 1.5 },
-      width
-    });
-    frame.appendChild(
-      text("Quase. A norma culta segurou você.", {
-        size: device.id === "desktop" ? TYPE.display : TYPE.title,
-        weight: 800,
-        color: "corretorInk",
-        tracking: TRACKING.title,
-        lineHeight: 1.18,
-        width: width - 36
-      })
-    );
-    frame.appendChild(
-      fill(
-        text(
-          "O argumento convence Seu Tenório, mas 1 desvio de escrita derrubou a nota abaixo do piso. Corrija e reenvie: a história continua esperando.",
-          { size: TYPE.body, lineHeight: 1.55, width: width - 36 }
-        )
-      )
-    );
-    return frame;
-  }
-  function legendCard(width, marks) {
-    const shell = card({ gap: 16, width, name: "card/marcacoes" });
-    shell.appendChild(text("As marcações", { size: TYPE.lead, weight: 700, tracking: TRACKING.lead }));
-    const list = stack({ name: "legend", gap: 14, width: width - 36 });
-    for (const mark of marks) {
-      const row2 = stack({ name: `mark/${mark.number}`, direction: "HORIZONTAL", gap: 11, align: "MIN", width: width - 36 });
-      row2.appendChild(markBadge(mark.number, mark.tone));
-      const line = text(`${mark.kind} ${mark.message}`, {
-        size: TYPE.meta,
-        color: "ink2",
-        lineHeight: 1.55,
-        width: width - 36 - 26
-      });
-      line.setRangeFills(0, mark.kind.length, [{ type: "SOLID", color: { r: 16 / 255, g: 20 / 255, b: 24 / 255 } }]);
-      row2.appendChild(fill(line));
-      list.appendChild(fill(row2));
-    }
-    shell.appendChild(fill(list));
-    return shell;
-  }
-  function paraPassarCard(width, steps) {
-    const shell = card({ gap: 16, width, name: "card/para-passar" });
-    shell.appendChild(text("Para passar", { size: TYPE.lead, weight: 700, tracking: TRACKING.lead }));
-    const list = stack({ name: "steps", gap: 14, width: width - 36 });
-    for (const step of steps) {
-      const row2 = stack({ name: "step", direction: "HORIZONTAL", gap: 11, align: "MIN", width: width - 36 });
-      const bullet = arrowBullet();
-      row2.appendChild(bullet);
-      row2.appendChild(
-        fill(text(step, { size: TYPE.body, lineHeight: 1.55, width: width - 36 - 24 }))
-      );
-      list.appendChild(fill(row2));
-    }
-    shell.appendChild(fill(list));
-    return shell;
   }
   function milestoneRow(label, done, width) {
     const row2 = stack({ name: "milestone", direction: "HORIZONTAL", gap: 12, align: "CENTER", width });
@@ -1157,15 +1093,9 @@
     cell.appendChild(text(day.label, { size: TYPE.micro, weight: 600, color: "muted" }));
     const box = rect(width, height, day.today && day.done ? "caneta" : day.done ? "canetaSoft" : "track", SHAPE.tile);
     cell.appendChild(box);
-    if (day.today) {
-      box.strokes = [{ type: "SOLID", color: { r: 38 / 255, g: 73 / 255, b: 229 / 255 } }];
-      box.strokeWeight = 1.5;
-      box.strokeAlign = "INSIDE";
-    }
+    if (day.today) applyBorder(box, { color: "caneta", weight: 1.5 });
     return cell;
   }
-
-  // figma-plugin/src/screens/app.ts
   function trilha(device) {
     const screen = screenFrame(device, { name: "Trilha", shell: true, tab: "trilha", shape: "wide" });
     const width = screen.width;
@@ -1332,13 +1262,6 @@
   }
 
   // figma-plugin/src/screens/auth.ts
-  function penMark(width) {
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110"><path d="M18 86 q70 -20 152 -8" fill="none" stroke="#FFE9A8" stroke-width="16" stroke-linecap="round"/><g transform="rotate(38 172 74)"><rect x="166" y="28" width="13" height="40" rx="4" fill="#2649E5"/><path d="M166 68 h13 l-6.5 14 z" fill="#101418"/><circle cx="172.5" cy="79" r="1.6" fill="#F4F5F7"/></g></svg>`;
-    const node = figma.createNodeFromSvg(svg);
-    node.name = "PenMark";
-    node.resize(width, width * (110 / 220));
-    return node;
-  }
   var GOOGLE_G = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.97 10.72A5.41 5.41 0 0 1 3.68 9c0-.6.1-1.18.28-1.72V4.95H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.05l3.01-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A9 9 0 0 0 9 0 9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"/></svg>`;
   function googleButton() {
     const frame = button("Entrar com Google");
@@ -1360,15 +1283,12 @@
     return frame;
   }
   function entrada(device) {
-    const frame = figma.createFrame();
-    frame.name = `Entrada · ${device.width}`;
-    frame.resize(device.width, device.height);
-    frame.fills = paint("paper");
-    frame.clipsContent = false;
     const wide = device.id === "desktop";
-    frame.layoutMode = wide ? "HORIZONTAL" : "VERTICAL";
-    frame.primaryAxisSizingMode = "FIXED";
-    frame.counterAxisSizingMode = "FIXED";
+    const frame = deviceFrame(device, {
+      name: "Entrada",
+      axis: wide ? "HORIZONTAL" : "VERTICAL",
+      height: "device"
+    });
     const brandWidth = wide ? Math.round(device.width * 0.52) : device.width;
     const brand = stack({
       name: "brand",
@@ -1421,7 +1341,7 @@
     actions.appendChild(list);
     frame.appendChild(wide ? fill(brand) : grow(fill(brand)));
     frame.appendChild(wide ? grow(fill(actions)) : fill(actions));
-    return frame;
+    return fitToDevice(frame, device);
   }
   function entrarEmail(device) {
     const screen = screenFrame(device, { name: "Entrar com e-mail", shell: false, shape: "narrow" });
@@ -1796,6 +1716,278 @@
   ];
   var NAV_LINKS = ["Como funciona", "Histórias", "Planos", "Perguntas"];
 
+  // figma-plugin/src/screens/correction.ts
+  function annotatedDraft(width, size, lineHeight) {
+    const body = text(DRAFT, { size, lineHeight, tracking: -0.8, width });
+    const slip = DRAFT.indexOf(SLIP);
+    body.setRangeFills(slip, slip + SLIP.length, paint("corretor"));
+    body.setRangeTextDecoration(slip, slip + SLIP.length, "UNDERLINE");
+    const praise = DRAFT.indexOf(PRAISE);
+    body.setRangeFills(praise, praise + PRAISE.length, paint("caneta"));
+    body.setRangeFontName(praise, praise + PRAISE.length, fontOf(600));
+    return body;
+  }
+  function scoreRow(row2, width, style) {
+    const line = stack({ name: `criterio/${row2.code}`, gap: 7, width });
+    const head = stack({ name: "head", direction: "HORIZONTAL", gap: 8, align: "BASELINE", width });
+    head.appendChild(text(row2.code, { size: TYPE.meta, weight: 700, color: "muted" }));
+    head.appendChild(
+      text(row2.label, { size: TYPE.meta, weight: 600, color: row2.belowFloor ? "corretorInk" : "ink" })
+    );
+    const aside = style.aside === "criterion" ? row2.extra : row2.belowFloor ? "abaixo do piso" : void 0;
+    if (aside !== void 0) {
+      head.appendChild(text(aside, { size: TYPE.meta, weight: 500, color: "muted" }));
+    }
+    head.appendChild(grow(stack({ name: "gap" })));
+    head.appendChild(
+      text(style.showMax ? `${row2.score}/${SCORE_MAX}` : String(row2.score), {
+        size: TYPE.meta,
+        weight: 700,
+        color: row2.belowFloor ? "corretorInk" : "ink"
+      })
+    );
+    line.appendChild(fill(head));
+    line.appendChild(
+      progressBar({
+        percent: row2.score / SCORE_MAX * 100,
+        floor: SCORE_FLOOR / SCORE_MAX * 100,
+        width,
+        tone: row2.belowFloor ? "alert" : "caneta"
+      })
+    );
+    return line;
+  }
+  function scoreTotal(rows, width, disclaimer) {
+    const total = stack({
+      name: "total",
+      direction: "HORIZONTAL",
+      gap: 10,
+      padding: [14, 0, 0, 0],
+      align: "BASELINE",
+      justify: "SPACE_BETWEEN",
+      width,
+      border: { color: "track", weight: 1, sides: ["top"] }
+    });
+    const label = stack({ name: "label", gap: 2 });
+    label.appendChild(text("Soma dos critérios", { size: TYPE.meta, weight: 700 }));
+    label.appendChild(text(disclaimer, { size: TYPE.micro, weight: 500, color: "muted" }));
+    total.appendChild(label);
+    const sum = rows.reduce((carried, row2) => carried + row2.score, 0);
+    total.appendChild(
+      text(`${sum}/${SCORE_MAX * rows.length}`, {
+        size: TYPE.lead,
+        weight: 800,
+        tracking: TRACKING.lead
+      })
+    );
+    return total;
+  }
+  function editorFoot(width) {
+    const foot = stack({
+      name: "foot",
+      direction: "HORIZONTAL",
+      justify: "SPACE_BETWEEN",
+      gap: 8,
+      width
+    });
+    foot.appendChild(text("47 / 250 palavras", { size: TYPE.meta, weight: 600, color: "muted" }));
+    foot.appendChild(text("Rascunho salvo", { size: TYPE.meta, weight: 600, color: "muted" }));
+    return foot;
+  }
+  function technicalVerdict(width, titleSize) {
+    const frame = stack({
+      name: "headline",
+      gap: 9,
+      padding: 18,
+      fill: "corretorSoft",
+      radius: SHAPE.card,
+      border: { color: "corretor", weight: 1.5 },
+      width
+    });
+    frame.appendChild(
+      text("Quase. A norma culta segurou você.", {
+        size: titleSize,
+        weight: 800,
+        color: "corretorInk",
+        tracking: TRACKING.title,
+        lineHeight: 1.18,
+        width: width - 36
+      })
+    );
+    frame.appendChild(
+      fill(
+        text(
+          "O argumento convence Seu Tenório, mas 1 desvio de escrita derrubou a nota abaixo do piso. Corrija e reenvie: a história continua esperando.",
+          { size: TYPE.body, lineHeight: 1.55, width: width - 36 }
+        )
+      )
+    );
+    return frame;
+  }
+  function legendCard(width) {
+    const inner = width - 36;
+    const shell = card({ gap: 16, width, name: "card/marcacoes" });
+    shell.appendChild(text("As marcações", { size: TYPE.lead, weight: 700, tracking: TRACKING.lead }));
+    const list = stack({ name: "legend", gap: 14, width: inner });
+    for (const mark of MARKS) {
+      const row2 = stack({
+        name: `mark/${mark.number}`,
+        direction: "HORIZONTAL",
+        gap: 11,
+        align: "MIN",
+        width: inner
+      });
+      row2.appendChild(markBadge(mark.number, mark.tone));
+      const line = text(`${mark.kind} ${mark.message}`, {
+        size: TYPE.meta,
+        color: "ink2",
+        lineHeight: 1.55,
+        width: inner - 26
+      });
+      line.setRangeFills(0, mark.kind.length, paint("ink"));
+      row2.appendChild(fill(line));
+      list.appendChild(fill(row2));
+    }
+    shell.appendChild(fill(list));
+    return shell;
+  }
+  function paraPassarCard(width, steps) {
+    const inner = width - 36;
+    const shell = card({ gap: 16, width, name: "card/para-passar" });
+    shell.appendChild(text("Para passar", { size: TYPE.lead, weight: 700, tracking: TRACKING.lead }));
+    const list = stack({ name: "steps", gap: 14, width: inner });
+    for (const step of steps) {
+      const row2 = stack({ name: "step", direction: "HORIZONTAL", gap: 11, align: "MIN", width: inner });
+      row2.appendChild(arrowBullet());
+      row2.appendChild(fill(text(step, { size: TYPE.body, lineHeight: 1.55, width: inner - 24 })));
+      list.appendChild(fill(row2));
+    }
+    shell.appendChild(fill(list));
+    return shell;
+  }
+
+  // figma-plugin/src/screens/thumbnails.ts
+  var REQUIREMENTS = ["Tese", "Justificativa", "Repertório explicado"];
+  function scene(width) {
+    const frame = stack({ name: "scene", gap: 10, width });
+    frame.appendChild(
+      fill(nightPanel(STEP_SCENE.narration, { width, size: TYPE.body, padding: 15 }))
+    );
+    frame.appendChild(
+      fill(speechRow({ speech: STEP_SCENE.speech, who: STEP_SCENE.speaker, width, size: TYPE.body }))
+    );
+    return frame;
+  }
+  function editor(width) {
+    const frame = stack({ name: "editor", gap: 10, width });
+    const objective = card({ gap: 8, width, name: "objetivo" });
+    objective.appendChild(kicker("Seu objetivo"));
+    objective.appendChild(
+      fill(
+        text(STEP_SCENE.objective, {
+          size: TYPE.body,
+          weight: 500,
+          lineHeight: 1.5,
+          width: width - 36
+        })
+      )
+    );
+    frame.appendChild(fill(objective));
+    const chips = stack({ name: "requisitos", direction: "HORIZONTAL", gap: 6, wrap: true, width });
+    for (const requirement of REQUIREMENTS) chips.appendChild(chip(requirement, "neutral"));
+    frame.appendChild(fill(chips));
+    const sheet = stack({
+      name: "sheet",
+      padding: [14, 16],
+      fill: "card",
+      radius: SHAPE.card,
+      border: { color: "caneta", weight: 1.5 },
+      width
+    });
+    sheet.appendChild(
+      fill(text(DRAFT, { size: TYPE.body, lineHeight: 1.72, tracking: -0.8, width: width - 32 }))
+    );
+    frame.appendChild(fill(sheet));
+    frame.appendChild(fill(editorFoot(width)));
+    return frame;
+  }
+  var SHOWN = SCORE_ROWS.slice(0, 4);
+  function board(width) {
+    const inner = width - 36;
+    const shell = card({ gap: 14, width, name: "placar" });
+    const bar = stack({
+      name: "bar",
+      direction: "HORIZONTAL",
+      gap: 8,
+      align: "CENTER",
+      justify: "SPACE_BETWEEN",
+      width: inner
+    });
+    bar.appendChild(
+      text("Capítulo 2 · O pátio do Tenório", {
+        size: TYPE.body,
+        weight: 700,
+        tracking: TRACKING.lead
+      })
+    );
+    bar.appendChild(text("2ª tentativa", { size: TYPE.meta, weight: 600, color: "muted" }));
+    shell.appendChild(fill(bar));
+    const rows = stack({ name: "rows", gap: 12, width: inner });
+    for (const row2 of SHOWN) {
+      rows.appendChild(fill(scoreRow(row2, inner, { showMax: false, aside: "floor" })));
+    }
+    shell.appendChild(fill(rows));
+    shell.appendChild(
+      fill(scoreTotal(SHOWN, inner, "Estimativa do Argumenta, não nota de banca"))
+    );
+    return shell;
+  }
+  function correction(width) {
+    const frame = stack({ name: "correcao", gap: 10, width });
+    frame.appendChild(fill(board(width)));
+    const marked = card({ gap: 8, width, name: "texto" });
+    marked.appendChild(fill(annotatedDraft(width - 36, TYPE.body, 1.85)));
+    frame.appendChild(fill(marked));
+    const pass = card({ gap: 10, width, name: "para-passar" });
+    pass.appendChild(kicker("Para passar"));
+    for (const step of TO_PASS) {
+      pass.appendChild(fill(text(`→ ${step}`, { size: TYPE.body, lineHeight: 1.5, width: width - 36 })));
+    }
+    frame.appendChild(fill(pass));
+    return frame;
+  }
+  function verdictBlock(verdict, tone, width) {
+    const frame = stack({
+      name: `verdict/${tone}`,
+      gap: 9,
+      padding: 18,
+      fill: tone === "ok" ? "aprovadoSoft" : "streakSoft",
+      radius: SHAPE.card,
+      border: { color: tone === "ok" ? "aprovado" : "streak", weight: 1.5 },
+      width
+    });
+    frame.appendChild(
+      text(verdict.title, {
+        size: TYPE.lead,
+        weight: 800,
+        color: tone === "ok" ? "aprovadoInk" : "streakInk",
+        tracking: TRACKING.lead,
+        lineHeight: 1.2
+      })
+    );
+    frame.appendChild(
+      fill(text(verdict.line, { size: TYPE.meta, color: "ink2", lineHeight: 1.5, width: width - 36 }))
+    );
+    return frame;
+  }
+  function verdicts(width) {
+    const frame = stack({ name: "verdicts", gap: 10, width });
+    frame.appendChild(fill(verdictBlock(VERDICT_OK, "ok", width)));
+    frame.appendChild(fill(verdictBlock(VERDICT_WARN, "warn", width)));
+    return frame;
+  }
+  var THUMBNAILS = [scene, editor, correction, verdicts];
+
   // figma-plugin/src/screens/landing.ts
   function sizesOf(device) {
     return LANDING_SCALE[device.id];
@@ -2078,247 +2270,6 @@
     }
     return frame;
   }
-  function miniScene(width) {
-    const frame = stack({ name: "scene", gap: 10, width });
-    const narration = stack({
-      name: "narration",
-      padding: [14, 16],
-      fill: "noite",
-      radius: SHAPE.card,
-      width
-    });
-    narration.appendChild(
-      fill(
-        text(STEP_SCENE.narration, {
-          size: TYPE.body,
-          color: "luz",
-          lineHeight: 1.55,
-          tracking: TRACKING.body,
-          width: width - 32
-        })
-      )
-    );
-    frame.appendChild(fill(narration));
-    const speech = stack({
-      name: "speech",
-      gap: 10,
-      padding: [14, 16, 12, 16],
-      fill: "card",
-      radius: SHAPE.card,
-      border: { color: "line", weight: 1 },
-      width
-    });
-    const quoted = text(`“${STEP_SCENE.speech}”`, {
-      size: TYPE.body,
-      weight: 600,
-      lineHeight: 1.5,
-      width: width - 32
-    });
-    speech.appendChild(fill(quoted));
-    const who = stack({ name: "who", direction: "HORIZONTAL", gap: 9, align: "CENTER" });
-    who.appendChild(rect(18, 1, "lineStrong"));
-    who.appendChild(text(STEP_SCENE.speaker, { size: TYPE.meta, weight: 700, color: "ink2" }));
-    speech.appendChild(who);
-    frame.appendChild(fill(speech));
-    return frame;
-  }
-  function miniEditor(width) {
-    const frame = stack({ name: "editor", gap: 10, width });
-    const objective = card({ gap: 8, width, name: "objetivo" });
-    objective.appendChild(kicker("Seu objetivo"));
-    objective.appendChild(
-      fill(
-        text(STEP_SCENE.objective, {
-          size: TYPE.body,
-          weight: 500,
-          lineHeight: 1.5,
-          width: width - 36
-        })
-      )
-    );
-    frame.appendChild(fill(objective));
-    const chips = stack({ name: "requisitos", direction: "HORIZONTAL", gap: 6, wrap: true, width });
-    for (const requirement of ["Tese", "Justificativa", "Repertório explicado"]) {
-      chips.appendChild(chip(requirement, "neutral"));
-    }
-    frame.appendChild(fill(chips));
-    const sheet = stack({
-      name: "sheet",
-      padding: [14, 16],
-      fill: "card",
-      radius: SHAPE.card,
-      border: { color: "caneta", weight: 1.5 },
-      width
-    });
-    sheet.appendChild(
-      fill(
-        text(DRAFT, {
-          size: TYPE.body,
-          lineHeight: 1.72,
-          tracking: -0.8,
-          width: width - 32
-        })
-      )
-    );
-    frame.appendChild(fill(sheet));
-    const foot = stack({
-      name: "foot",
-      direction: "HORIZONTAL",
-      justify: "SPACE_BETWEEN",
-      gap: 8,
-      width
-    });
-    foot.appendChild(text("47 / 250 palavras", { size: TYPE.meta, weight: 600, color: "muted" }));
-    foot.appendChild(text("Rascunho salvo", { size: TYPE.meta, weight: 600, color: "muted" }));
-    frame.appendChild(fill(foot));
-    return frame;
-  }
-  function miniBoard(width) {
-    const inner = width - 36;
-    const shell = card({ gap: 14, width, name: "placar" });
-    const bar = stack({
-      name: "bar",
-      direction: "HORIZONTAL",
-      gap: 8,
-      align: "CENTER",
-      justify: "SPACE_BETWEEN",
-      width: inner
-    });
-    bar.appendChild(
-      text("Capítulo 2 · O pátio do Tenório", {
-        size: TYPE.body,
-        weight: 700,
-        tracking: TRACKING.lead
-      })
-    );
-    bar.appendChild(text("2ª tentativa", { size: TYPE.meta, weight: 600, color: "muted" }));
-    shell.appendChild(fill(bar));
-    const rows = stack({ name: "rows", gap: 12, width: inner });
-    for (const row2 of SCORE_ROWS.slice(0, 4)) {
-      const line = stack({ name: row2.code, gap: 7, width: inner });
-      const head = stack({ name: "head", direction: "HORIZONTAL", gap: 8, align: "BASELINE", width: inner });
-      head.appendChild(text(row2.code, { size: TYPE.meta, weight: 700, color: "muted" }));
-      head.appendChild(
-        text(row2.label, { size: TYPE.meta, weight: 600, color: row2.belowFloor ? "corretorInk" : "ink" })
-      );
-      if (row2.belowFloor) {
-        head.appendChild(text("abaixo do piso", { size: TYPE.meta, weight: 500, color: "muted" }));
-      }
-      head.appendChild(grow(stack({ name: "gap" })));
-      head.appendChild(
-        text(String(row2.score), {
-          size: TYPE.meta,
-          weight: 700,
-          color: row2.belowFloor ? "corretorInk" : "ink"
-        })
-      );
-      line.appendChild(fill(head));
-      line.appendChild(
-        progressBar({
-          percent: row2.score / SCORE_MAX * 100,
-          floor: SCORE_FLOOR / SCORE_MAX * 100,
-          width: inner,
-          tone: row2.belowFloor ? "alert" : "caneta"
-        })
-      );
-      rows.appendChild(fill(line));
-    }
-    shell.appendChild(fill(rows));
-    const total = stack({
-      name: "total",
-      direction: "HORIZONTAL",
-      gap: 10,
-      padding: [12, 0, 0, 0],
-      align: "BASELINE",
-      justify: "SPACE_BETWEEN",
-      width: inner,
-      border: { color: "track", weight: 1, sides: ["top"] }
-    });
-    const label = stack({ name: "label", gap: 2 });
-    label.appendChild(text("Soma dos critérios", { size: TYPE.meta, weight: 700 }));
-    label.appendChild(
-      text("Estimativa do Argumenta, não nota de banca", {
-        size: TYPE.micro,
-        weight: 500,
-        color: "muted"
-      })
-    );
-    total.appendChild(label);
-    const sum = SCORE_ROWS.slice(0, 4).reduce((carried, row2) => carried + row2.score, 0);
-    total.appendChild(
-      text(`${sum} / ${SCORE_MAX * 4}`, { size: TYPE.lead, weight: 800, tracking: TRACKING.lead })
-    );
-    shell.appendChild(fill(total));
-    return shell;
-  }
-  function miniCorrection(width) {
-    const frame = stack({ name: "correcao", gap: 10, width });
-    frame.appendChild(fill(miniBoard(width)));
-    const textCard = card({ gap: 8, width, name: "texto" });
-    const body = text(DRAFT, {
-      size: TYPE.body,
-      lineHeight: 1.85,
-      tracking: -0.8,
-      width: width - 36
-    });
-    const slip = DRAFT.indexOf(SLIP);
-    body.setRangeFills(slip, slip + SLIP.length, paint("corretor"));
-    body.setRangeTextDecoration(slip, slip + SLIP.length, "UNDERLINE");
-    const praise = DRAFT.indexOf(PRAISE);
-    body.setRangeFills(praise, praise + PRAISE.length, paint("caneta"));
-    body.setRangeFontName(praise, praise + PRAISE.length, { family: "Inter", style: "Semi Bold" });
-    textCard.appendChild(fill(body));
-    frame.appendChild(fill(textCard));
-    const pass = card({ gap: 10, width, name: "para-passar" });
-    pass.appendChild(kicker("Para passar"));
-    for (const step of TO_PASS) {
-      pass.appendChild(
-        fill(text(`→ ${step}`, { size: TYPE.body, lineHeight: 1.5, width: width - 36 }))
-      );
-    }
-    frame.appendChild(fill(pass));
-    return frame;
-  }
-  function verdictBlock(verdict, tone, width) {
-    const frame = stack({
-      name: `verdict/${tone}`,
-      gap: 9,
-      padding: 18,
-      fill: tone === "ok" ? "aprovadoSoft" : "streakSoft",
-      radius: SHAPE.card,
-      border: { color: tone === "ok" ? "aprovado" : "streak", weight: 1.5 },
-      width
-    });
-    frame.appendChild(
-      text(verdict.title, {
-        size: TYPE.lead,
-        weight: 800,
-        color: tone === "ok" ? "aprovadoInk" : "streakInk",
-        tracking: TRACKING.lead,
-        lineHeight: 1.2
-      })
-    );
-    frame.appendChild(
-      fill(
-        text(verdict.line, {
-          size: TYPE.meta,
-          color: "ink2",
-          lineHeight: 1.5,
-          width: width - 36
-        })
-      )
-    );
-    return frame;
-  }
-  function miniFor(index, width) {
-    if (index === 0) return miniScene(width);
-    if (index === 1) return miniEditor(width);
-    if (index === 2) return miniCorrection(width);
-    const frame = stack({ name: "verdicts", gap: 10, width });
-    frame.appendChild(fill(verdictBlock(VERDICT_OK, "ok", width)));
-    frame.appendChild(fill(verdictBlock(VERDICT_WARN, "warn", width)));
-    return frame;
-  }
   function howItWorks(width, device) {
     const desktop = device.id === "desktop";
     const steps = stack({ name: "steps", gap: desktop ? 24 : 20, width });
@@ -2371,7 +2322,7 @@
         border: { color: "line", weight: 1 },
         width: miniWidth
       });
-      mini.appendChild(fill(miniFor(index, miniWidth - 28)));
+      mini.appendChild(fill(THUMBNAILS[index](miniWidth - 28)));
       shell.appendChild(mini);
       steps.appendChild(fill(shell));
     }
@@ -2585,13 +2536,6 @@
     }
     return list;
   }
-  function penMark2(width) {
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110"><path d="M18 86 q70 -20 152 -8" fill="none" stroke="#FFE9A8" stroke-width="16" stroke-linecap="round"/><g transform="rotate(38 172 74)"><rect x="166" y="28" width="13" height="40" rx="4" fill="#2649E5"/><path d="M166 68 h13 l-6.5 14 z" fill="#101418"/><circle cx="172.5" cy="79" r="1.6" fill="#F4F5F7"/></g></svg>`;
-    const node = figma.createNodeFromSvg(svg);
-    node.name = "PenMark";
-    node.resize(width, width * (110 / 220));
-    return node;
-  }
   function closing(width, device) {
     const desktop = device.id === "desktop";
     const frame = stack({
@@ -2601,7 +2545,7 @@
       align: "CENTER",
       width
     });
-    frame.appendChild(penMark2(160));
+    frame.appendChild(penMark(160));
     frame.appendChild(
       text("Pare de treinar no vazio. Comece a convencer alguém.", {
         size: sizesOf(device).hero,
@@ -2690,15 +2634,12 @@
   function landing(device) {
     const column = columnFor(device, "landing");
     const width = column.width;
-    const frame = figma.createFrame();
-    frame.name = `Landing · ${device.width}`;
-    frame.resize(device.width, device.height);
-    frame.fills = paint("paper");
-    frame.clipsContent = false;
-    frame.layoutMode = "VERTICAL";
-    frame.primaryAxisSizingMode = "AUTO";
-    frame.counterAxisSizingMode = "FIXED";
-    frame.counterAxisAlignItems = "CENTER";
+    const frame = deviceFrame(device, {
+      name: "Landing",
+      axis: "VERTICAL",
+      height: "content",
+      align: "CENTER"
+    });
     const wrap = (child) => {
       const holder = stack({ name: "wrap", padding: [0, column.padX], align: "MIN", width: device.width });
       holder.appendChild(child);
@@ -2789,6 +2730,26 @@
   }
 
   // figma-plugin/src/screens/writing.ts
+  function sceneBeats(width, device) {
+    const size = readingSize(device);
+    const pad = device.id === "desktop" ? 28 : 20;
+    const objective = card({ active: true, gap: 8, padding: 17, width, name: "beat/objetivo" });
+    objective.appendChild(kicker("Seu objetivo"));
+    objective.appendChild(
+      fill(text(SCENE.objective, { size: TYPE.body, weight: 600, lineHeight: 1.5, width: width - 34 }))
+    );
+    const hint = card({ gap: 8, padding: 17, width, name: "beat/dica" });
+    hint.appendChild(kicker("Dica de repertório", "streak"));
+    hint.appendChild(
+      fill(text(SCENE.hint, { size: TYPE.body, color: "ink2", lineHeight: 1.58, width: width - 34 }))
+    );
+    return [
+      nightPanel(SCENE.narration, { width, size, padding: pad }),
+      speechRow({ speech: SCENE.speech, who: SCENE.speaker, width, size }),
+      objective,
+      hint
+    ];
+  }
   function cena(device) {
     const screen = screenFrame(device, { name: "Cena", shell: false, shape: "reading" });
     const width = screen.width;
@@ -2802,7 +2763,7 @@
     screen.content.appendChild(fill(button("Argumentar")));
     return settle(screen, device);
   }
-  var REQUIREMENTS = ["Tese", "Justificativa", "Repertório explicado"];
+  var REQUIREMENTS2 = ["Tese", "Justificativa", "Repertório explicado"];
   function briefCard(width) {
     const shell = card({ gap: 12, width, name: "card/objetivo" });
     shell.appendChild(
@@ -2820,24 +2781,12 @@
       width: width - 36,
       wrap: true
     });
-    for (const requirement of REQUIREMENTS) chips.appendChild(chip(requirement));
+    for (const requirement of REQUIREMENTS2) chips.appendChild(chip(requirement));
     shell.appendChild(fill(chips));
     return shell;
   }
-  function editorFoot(width) {
-    const foot = stack({
-      name: "foot",
-      direction: "HORIZONTAL",
-      justify: "SPACE_BETWEEN",
-      gap: 8,
-      width
-    });
-    foot.appendChild(text("47 / 250 palavras", { size: TYPE.meta, weight: 600, color: "muted" }));
-    foot.appendChild(text("Rascunho salvo", { size: TYPE.meta, weight: 600, color: "muted" }));
-    return foot;
-  }
   var SHEET_HEIGHT = { phone: 256, tablet: 352, desktop: 416 };
-  function editor(device) {
+  function editor2(device) {
     const screen = screenFrame(device, { name: "Editor", shell: false, shape: "wide" });
     const width = screen.width;
     screen.content.appendChild(fill(screenBar(width, "← Cena", [chip("1/3 envios hoje")])));
@@ -2864,64 +2813,12 @@
     shell.appendChild(text("Placar", { size: TYPE.lead, weight: 700, tracking: TRACKING.lead }));
     const rows = stack({ name: "rows", gap: 16, width: inner });
     for (const row2 of SCORE_ROWS) {
-      const line = stack({ name: `criterio/${row2.code}`, gap: 7, width: inner });
-      const head = stack({ name: "head", direction: "HORIZONTAL", gap: 8, align: "BASELINE", width: inner });
-      head.appendChild(text(row2.code, { size: TYPE.meta, weight: 700, color: "muted" }));
-      head.appendChild(
-        text(row2.label, { size: TYPE.meta, weight: 600, color: row2.belowFloor ? "corretorInk" : "ink" })
-      );
-      if (row2.extra !== void 0) {
-        head.appendChild(text(row2.extra, { size: TYPE.meta, weight: 500, color: "muted" }));
-      }
-      head.appendChild(grow(stack({ name: "gap" })));
-      head.appendChild(
-        text(`${row2.score}/${SCORE_MAX}`, {
-          size: TYPE.meta,
-          weight: 700,
-          color: row2.belowFloor ? "corretorInk" : "ink"
-        })
-      );
-      line.appendChild(fill(head));
-      line.appendChild(
-        progressBar({
-          percent: row2.score / SCORE_MAX * 100,
-          floor: SCORE_FLOOR / SCORE_MAX * 100,
-          width: inner,
-          tone: row2.belowFloor ? "alert" : "caneta"
-        })
-      );
-      rows.appendChild(fill(line));
+      rows.appendChild(fill(scoreRow(row2, inner, { showMax: true, aside: "criterion" })));
     }
     shell.appendChild(fill(rows));
-    const total = stack({
-      name: "total",
-      direction: "HORIZONTAL",
-      gap: 10,
-      padding: [14, 0, 0, 0],
-      align: "BASELINE",
-      justify: "SPACE_BETWEEN",
-      width: inner,
-      border: { color: "track", weight: 1, sides: ["top"] }
-    });
-    const label = stack({ name: "label", gap: 2 });
-    label.appendChild(text("Soma dos critérios", { size: TYPE.meta, weight: 700 }));
-    label.appendChild(
-      text("Estimativa Argumenta, não é nota oficial do vestibular", {
-        size: TYPE.micro,
-        weight: 500,
-        color: "muted"
-      })
+    shell.appendChild(
+      fill(scoreTotal(SCORE_ROWS, inner, "Estimativa Argumenta, não é nota oficial do vestibular"))
     );
-    total.appendChild(label);
-    const sum = SCORE_ROWS.reduce((carried, row2) => carried + row2.score, 0);
-    total.appendChild(
-      text(`${sum}/${SCORE_MAX * SCORE_ROWS.length}`, {
-        size: TYPE.lead,
-        weight: 800,
-        tracking: TRACKING.lead
-      })
-    );
-    shell.appendChild(fill(total));
     return shell;
   }
   function markedTextCard(width, device) {
@@ -2930,19 +2827,8 @@
     shell.appendChild(
       text("Seu texto, corrigido", { size: TYPE.lead, weight: 700, tracking: TRACKING.lead })
     );
-    const body = text(DRAFT, {
-      size: device.id === "desktop" ? TYPE.lead : TYPE.body,
-      lineHeight: device.id === "desktop" ? 1.9 : 1.85,
-      tracking: -0.8,
-      width: inner
-    });
-    const slip = DRAFT.indexOf(SLIP);
-    body.setRangeFills(slip, slip + SLIP.length, paint("corretor"));
-    body.setRangeTextDecoration(slip, slip + SLIP.length, "UNDERLINE");
-    const praise = DRAFT.indexOf(PRAISE);
-    body.setRangeFills(praise, praise + PRAISE.length, paint("caneta"));
-    body.setRangeFontName(praise, praise + PRAISE.length, { family: "Inter", style: "Semi Bold" });
-    shell.appendChild(fill(body));
+    const desktop = device.id === "desktop";
+    shell.appendChild(fill(annotatedDraft(inner, desktop ? TYPE.lead : TYPE.body, desktop ? 1.9 : 1.85)));
     const explanation = stack({
       name: "explicacao",
       padding: [10, 12],
@@ -2977,12 +2863,14 @@
     bar.appendChild(text("O pátio do Tenório", { size: TYPE.body, weight: 700, tracking: TRACKING.lead }));
     bar.appendChild(text("Tentativa 2", { size: TYPE.meta, weight: 600, color: "muted" }));
     screen.content.appendChild(fill(bar));
-    screen.content.appendChild(fill(verdictHeadline(width, device)));
+    screen.content.appendChild(
+      fill(technicalVerdict(width, device.id === "desktop" ? TYPE.display : TYPE.title))
+    );
     const desktop = device.id === "desktop";
     const mainWidth = desktop ? width - LAYOUT.rail - 20 : width;
     const main2 = stack({ name: "main", gap: desktop ? 20 : 16, width: mainWidth });
     main2.appendChild(fill(markedTextCard(mainWidth, device)));
-    main2.appendChild(fill(legendCard(mainWidth, MARKS)));
+    main2.appendChild(fill(legendCard(mainWidth)));
     main2.appendChild(fill(paraPassarCard(mainWidth, TO_PASS)));
     const actions = stack({
       name: "actions",
@@ -3111,7 +2999,7 @@
     { label: "Onboarding", routes: ["/onboarding"], build: onboarding },
     { label: "Trilha", routes: ["/trilha"], build: trilha },
     { label: "Cena", routes: ["/capitulos/:chapterId"], build: cena },
-    { label: "Editor", routes: ["/capitulos/:chapterId/escrever"], build: editor },
+    { label: "Editor", routes: ["/capitulos/:chapterId/escrever"], build: editor2 },
     { label: "Correção", routes: ["/capitulos/:chapterId/correcao"], build: correcao },
     { label: "Consequência", routes: ["/capitulos/:chapterId/consequencia"], build: consequencia },
     { label: "Histórico", routes: ["/capitulos/:chapterId/historico"], build: historico },
@@ -3402,7 +3290,7 @@
     return frame;
   }
   function systemBoard() {
-    const board = stack({
+    const board2 = stack({
       name: "Sistema visual",
       gap: 48,
       padding: 48,
@@ -3427,13 +3315,13 @@
         )
       )
     );
-    board.appendChild(fill(head));
-    board.appendChild(fill(colours()));
-    board.appendChild(fill(typography()));
-    board.appendChild(fill(shapes()));
-    board.appendChild(fill(controls()));
-    board.fills = paint("card");
-    return board;
+    board2.appendChild(fill(head));
+    board2.appendChild(fill(colours()));
+    board2.appendChild(fill(typography()));
+    board2.appendChild(fill(shapes()));
+    board2.appendChild(fill(controls()));
+    board2.fills = paint("card");
+    return board2;
   }
 
   // figma-plugin/src/main.ts

@@ -1,31 +1,42 @@
-import { nightPanel, screenFrame, settle, speechRow } from '../chrome'
+import { nightPanel, screenBar, screenFrame, settle, speechRow } from '../chrome'
 import type { Device } from '../devices'
-import { fill, grow, paint, stack, text } from '../nodes'
-import {
-  ATTEMPTS,
-  CONSEQUENCE,
-  DRAFT,
-  MARKS,
-  PRAISE,
-  SCORE_FLOOR,
-  SCORE_MAX,
-  SCORE_ROWS,
-  SLIP,
-  TO_PASS,
-} from '../samples'
+import { fill, grow, stack, text } from '../nodes'
+import { ATTEMPTS, CONSEQUENCE, DRAFT, MARKS, SCENE, SCORE_ROWS, TO_PASS } from '../samples'
 import { LAYOUT, SHAPE, TRACKING, TYPE } from '../tokens'
 import { button, card, chip, kicker, progressBar, textarea } from '../ui'
+import { readingSize, screenTitle } from './layout'
 import {
+  annotatedDraft,
+  editorFoot,
   legendCard,
   paraPassarCard,
-  readingSize,
-  sceneBeats,
-  screenBar,
-  screenTitle,
-  verdictHeadline,
-} from './blocks'
+  scoreRow,
+  scoreTotal,
+  technicalVerdict,
+} from './correction'
 
 /* --------------------------------- cena -------------------------------- */
+
+export function sceneBeats(width: number, device: Device): FrameNode[] {
+  const size = readingSize(device)
+  const pad = device.id === 'desktop' ? 28 : 20
+  const objective = card({ active: true, gap: 8, padding: 17, width, name: 'beat/objetivo' })
+  objective.appendChild(kicker('Seu objetivo'))
+  objective.appendChild(
+    fill(text(SCENE.objective, { size: TYPE.body, weight: 600, lineHeight: 1.5, width: width - 34 })),
+  )
+  const hint = card({ gap: 8, padding: 17, width, name: 'beat/dica' })
+  hint.appendChild(kicker('Dica de repertório', 'streak'))
+  hint.appendChild(
+    fill(text(SCENE.hint, { size: TYPE.body, color: 'ink2', lineHeight: 1.58, width: width - 34 })),
+  )
+  return [
+    nightPanel(SCENE.narration, { width, size, padding: pad }),
+    speechRow({ speech: SCENE.speech, who: SCENE.speaker, width, size }),
+    objective,
+    hint,
+  ]
+}
 
 export function cena(device: Device): FrameNode {
   const screen = screenFrame(device, { name: 'Cena', shell: false, shape: 'reading' })
@@ -67,19 +78,6 @@ function briefCard(width: number): FrameNode {
   return shell
 }
 
-function editorFoot(width: number): FrameNode {
-  const foot = stack({
-    name: 'foot',
-    direction: 'HORIZONTAL',
-    justify: 'SPACE_BETWEEN',
-    gap: 8,
-    width,
-  })
-  foot.appendChild(text('47 / 250 palavras', { size: TYPE.meta, weight: 600, color: 'muted' }))
-  foot.appendChild(text('Rascunho salvo', { size: TYPE.meta, weight: 600, color: 'muted' }))
-  return foot
-}
-
 const SHEET_HEIGHT: Record<Device['id'], number> = { phone: 256, tablet: 352, desktop: 416 }
 
 export function editor(device: Device): FrameNode {
@@ -114,90 +112,23 @@ function scoreboardCard(width: number): FrameNode {
   shell.appendChild(text('Placar', { size: TYPE.lead, weight: 700, tracking: TRACKING.lead }))
   const rows = stack({ name: 'rows', gap: 16, width: inner })
   for (const row of SCORE_ROWS) {
-    const line = stack({ name: `criterio/${row.code}`, gap: 7, width: inner })
-    const head = stack({ name: 'head', direction: 'HORIZONTAL', gap: 8, align: 'BASELINE', width: inner })
-    head.appendChild(text(row.code, { size: TYPE.meta, weight: 700, color: 'muted' }))
-    head.appendChild(
-      text(row.label, { size: TYPE.meta, weight: 600, color: row.belowFloor ? 'corretorInk' : 'ink' }),
-    )
-    if (row.extra !== undefined) {
-      head.appendChild(text(row.extra, { size: TYPE.meta, weight: 500, color: 'muted' }))
-    }
-    head.appendChild(grow(stack({ name: 'gap' })))
-    head.appendChild(
-      text(`${row.score}/${SCORE_MAX}`, {
-        size: TYPE.meta,
-        weight: 700,
-        color: row.belowFloor ? 'corretorInk' : 'ink',
-      }),
-    )
-    line.appendChild(fill(head))
-    line.appendChild(
-      progressBar({
-        percent: (row.score / SCORE_MAX) * 100,
-        floor: (SCORE_FLOOR / SCORE_MAX) * 100,
-        width: inner,
-        tone: row.belowFloor ? 'alert' : 'caneta',
-      }),
-    )
-    rows.appendChild(fill(line))
+    rows.appendChild(fill(scoreRow(row, inner, { showMax: true, aside: 'criterion' })))
   }
   shell.appendChild(fill(rows))
-
-  const total = stack({
-    name: 'total',
-    direction: 'HORIZONTAL',
-    gap: 10,
-    padding: [14, 0, 0, 0],
-    align: 'BASELINE',
-    justify: 'SPACE_BETWEEN',
-    width: inner,
-    border: { color: 'track', weight: 1, sides: ['top'] },
-  })
-  const label = stack({ name: 'label', gap: 2 })
-  label.appendChild(text('Soma dos critérios', { size: TYPE.meta, weight: 700 }))
-  label.appendChild(
-    text('Estimativa Argumenta, não é nota oficial do vestibular', {
-      size: TYPE.micro,
-      weight: 500,
-      color: 'muted',
-    }),
+  shell.appendChild(
+    fill(scoreTotal(SCORE_ROWS, inner, 'Estimativa Argumenta, não é nota oficial do vestibular')),
   )
-  total.appendChild(label)
-  const sum = SCORE_ROWS.reduce((carried, row) => carried + row.score, 0)
-  total.appendChild(
-    text(`${sum}/${SCORE_MAX * SCORE_ROWS.length}`, {
-      size: TYPE.lead,
-      weight: 800,
-      tracking: TRACKING.lead,
-    }),
-  )
-  shell.appendChild(fill(total))
   return shell
 }
 
-/** The student's text with the marks in place. Figma has no wavy underline and
- *  no background on a text range, so a slip is a straight corretor underline
- *  and a praised repertoire is caneta and semibold. */
 function markedTextCard(width: number, device: Device): FrameNode {
   const inner = width - 36
   const shell = card({ gap: 16, width, name: 'card/texto-corrigido' })
   shell.appendChild(
     text('Seu texto, corrigido', { size: TYPE.lead, weight: 700, tracking: TRACKING.lead }),
   )
-  const body = text(DRAFT, {
-    size: device.id === 'desktop' ? TYPE.lead : TYPE.body,
-    lineHeight: device.id === 'desktop' ? 1.9 : 1.85,
-    tracking: -0.8,
-    width: inner,
-  })
-  const slip = DRAFT.indexOf(SLIP)
-  body.setRangeFills(slip, slip + SLIP.length, paint('corretor'))
-  body.setRangeTextDecoration(slip, slip + SLIP.length, 'UNDERLINE')
-  const praise = DRAFT.indexOf(PRAISE)
-  body.setRangeFills(praise, praise + PRAISE.length, paint('caneta'))
-  body.setRangeFontName(praise, praise + PRAISE.length, { family: 'Inter', style: 'Semi Bold' })
-  shell.appendChild(fill(body))
+  const desktop = device.id === 'desktop'
+  shell.appendChild(fill(annotatedDraft(inner, desktop ? TYPE.lead : TYPE.body, desktop ? 1.9 : 1.85)))
   const explanation = stack({
     name: 'explicacao',
     padding: [10, 12],
@@ -233,13 +164,15 @@ export function correcao(device: Device): FrameNode {
   bar.appendChild(text('O pátio do Tenório', { size: TYPE.body, weight: 700, tracking: TRACKING.lead }))
   bar.appendChild(text('Tentativa 2', { size: TYPE.meta, weight: 600, color: 'muted' }))
   screen.content.appendChild(fill(bar))
-  screen.content.appendChild(fill(verdictHeadline(width, device)))
+  screen.content.appendChild(
+    fill(technicalVerdict(width, device.id === 'desktop' ? TYPE.display : TYPE.title)),
+  )
 
   const desktop = device.id === 'desktop'
   const mainWidth = desktop ? width - LAYOUT.rail - 20 : width
   const main = stack({ name: 'main', gap: desktop ? 20 : 16, width: mainWidth })
   main.appendChild(fill(markedTextCard(mainWidth, device)))
-  main.appendChild(fill(legendCard(mainWidth, MARKS)))
+  main.appendChild(fill(legendCard(mainWidth)))
   main.appendChild(fill(paraPassarCard(mainWidth, TO_PASS)))
   const actions = stack({
     name: 'actions',
@@ -360,5 +293,3 @@ export function historico(device: Device): FrameNode {
   }
   return settle(screen, device)
 }
-
-export { kicker }

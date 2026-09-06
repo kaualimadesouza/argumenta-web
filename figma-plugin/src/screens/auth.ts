@@ -1,22 +1,20 @@
-import { brandWordmark, screenFrame, settle } from '../chrome'
+import {
+  brandWordmark,
+  deviceFrame,
+  fitToDevice,
+  penMark,
+  screenBar,
+  screenFrame,
+  settle,
+} from '../chrome'
 import { columnFor, type Device } from '../devices'
 import { applyBorder, fill, grow, paint, stack, text } from '../nodes'
 import { LEGAL } from '../samples'
-import { SHAPE, TRACKING, TYPE } from '../tokens'
+import { TRACKING, TYPE } from '../tokens'
 import { button, field } from '../ui'
-import { screenBar } from './blocks'
 
 /* ------------------------------ brand art ------------------------------ */
 
-/** The BIC pen drawing a highlighter stroke, the brand illustration of the
- *  entry screen, with the same geometry as src/components/art/PenMark.tsx. */
-function penMark(width: number): FrameNode {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110"><path d="M18 86 q70 -20 152 -8" fill="none" stroke="#FFE9A8" stroke-width="16" stroke-linecap="round"/><g transform="rotate(38 172 74)"><rect x="166" y="28" width="13" height="40" rx="4" fill="#2649E5"/><path d="M166 68 h13 l-6.5 14 z" fill="#101418"/><circle cx="172.5" cy="79" r="1.6" fill="#F4F5F7"/></g></svg>`
-  const node = figma.createNodeFromSvg(svg)
-  node.name = 'PenMark'
-  node.resize(width, width * (110 / 220))
-  return node
-}
 
 const GOOGLE_G = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.97 10.72A5.41 5.41 0 0 1 3.68 9c0-.6.1-1.18.28-1.72V4.95H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.05l3.01-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A9 9 0 0 0 9 0 9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"/></svg>`
 
@@ -44,15 +42,12 @@ function googleButton(): FrameNode {
 /* ------------------------------- entrada ------------------------------- */
 
 export function entrada(device: Device): FrameNode {
-  const frame = figma.createFrame()
-  frame.name = `Entrada · ${device.width}`
-  frame.resize(device.width, device.height)
-  frame.fills = paint('paper')
-  frame.clipsContent = false
   const wide = device.id === 'desktop'
-  frame.layoutMode = wide ? 'HORIZONTAL' : 'VERTICAL'
-  frame.primaryAxisSizingMode = 'FIXED'
-  frame.counterAxisSizingMode = 'FIXED'
+  const frame = deviceFrame(device, {
+    name: 'Entrada',
+    axis: wide ? 'HORIZONTAL' : 'VERTICAL',
+    height: 'device',
+  })
 
   const brandWidth = wide ? Math.round(device.width * 0.52) : device.width
   const brand = stack({
@@ -108,7 +103,7 @@ export function entrada(device: Device): FrameNode {
 
   frame.appendChild(wide ? fill(brand) : grow(fill(brand)))
   frame.appendChild(wide ? grow(fill(actions)) : fill(actions))
-  return frame
+  return fitToDevice(frame, device)
 }
 
 /* -------------------------------- forms -------------------------------- */
@@ -270,5 +265,3 @@ export function notFound(device: Device): FrameNode {
   screen.content.appendChild(block)
   return settle(screen, device)
 }
-
-export { SHAPE }
