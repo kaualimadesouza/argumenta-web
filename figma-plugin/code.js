@@ -1220,12 +1220,16 @@
     );
     shell.appendChild(fill(head));
     const list = stack({ name: "trends", gap: 14, width: inner });
+    const codes = TRENDS.map((trend) => text(trend.code, { size: TYPE.meta, weight: 700, color: "muted" }));
     const names = TRENDS.map((trend) => text(trend.label, { size: TYPE.meta, weight: 600 }));
+    const codeWidth = Math.max(...codes.map((code) => code.width));
     const nameWidth = Math.max(...names.map((name) => name.width));
-    const chart = Math.max(56, Math.floor(inner - 16 - nameWidth - 28 - 36 - 40));
+    const chart = Math.max(56, Math.floor(inner - codeWidth - nameWidth - 28 - 36 - 40));
     for (const [index, trend] of TRENDS.entries()) {
       const row2 = stack({ name: `trend/${trend.code}`, direction: "HORIZONTAL", gap: 10, align: "CENTER", width: inner });
-      row2.appendChild(text(trend.code, { size: TYPE.meta, weight: 700, color: "muted", width: 16 }));
+      const code = codes[index];
+      code.resize(codeWidth, code.height);
+      row2.appendChild(code);
       const name = names[index];
       name.resize(nameWidth, name.height);
       row2.appendChild(name);
