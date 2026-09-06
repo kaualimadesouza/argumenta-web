@@ -279,7 +279,7 @@ export function progresso(device: Device): FrameNode {
 /* --------------------------- conta and onboarding ---------------------- */
 
 export function conta(device: Device): FrameNode {
-  const screen = screenFrame(device, { name: 'Conta', shell: true, tab: 'conta', shape: 'wide' })
+  const screen = screenFrame(device, { name: 'Conta', shell: true, tab: 'conta', shape: 'document' })
   const width = screen.width
   screen.content.appendChild(screenTitle('Sua conta', device))
   screen.content.appendChild(fill(nicknameCard(width)))
@@ -289,7 +289,7 @@ export function conta(device: Device): FrameNode {
 }
 
 export function onboarding(device: Device): FrameNode {
-  const screen = screenFrame(device, { name: 'Onboarding', shell: false, shape: 'wide' })
+  const screen = screenFrame(device, { name: 'Onboarding', shell: false, shape: 'document' })
   const width = screen.width
   screen.content.appendChild(screenTitle('Quase lá', device))
   screen.content.appendChild(

@@ -23,28 +23,47 @@ describe('the three device frames', () => {
 })
 
 describe('columnFor', () => {
-  it('never lets a reading column outgrow the viewport it sits in', () => {
-    const phone = columnFor(deviceOf('phone'), 'reading')
-    expect(phone.width).toBe(deviceOf('phone').width - 2 * phone.padX)
+  /** global.css sets `box-sizing: border-box` on everything, so a page's
+   *  max-width already contains its horizontal padding: the reading column is
+   *  the capped box minus that padding, never the cap itself. */
+  it('takes the padding out of the capped box, not off the viewport', () => {
+    const tablet = deviceOf('tablet')
+    const column = columnFor(tablet, 'reading')
+    expect(column.width).toBe(LAYOUT.contentMaxWide - 2 * column.padX)
   })
 
-  it('opens up to the wide reading column on a tablet', () => {
-    expect(columnFor(deviceOf('tablet'), 'reading').width).toBe(LAYOUT.contentMaxWide)
+  it('falls back to the viewport when the viewport is narrower than the cap', () => {
+    const phone = deviceOf('phone')
+    const column = columnFor(phone, 'reading')
+    expect(column.width).toBe(phone.width - 2 * column.padX)
   })
 
   it('gives the two-column screens the page width on a desktop', () => {
-    expect(columnFor(deviceOf('desktop'), 'wide').width).toBe(LAYOUT.pageMax)
+    const column = columnFor(deviceOf('desktop'), 'wide')
+    expect(column.width).toBe(LAYOUT.pageMax - 2 * column.padX)
   })
 
   it('keeps a reading screen at the reading column even on a desktop', () => {
-    expect(columnFor(deviceOf('desktop'), 'reading').width).toBe(LAYOUT.contentMaxWide)
+    const column = columnFor(deviceOf('desktop'), 'reading')
+    expect(column.width).toBe(LAYOUT.contentMaxWide - 2 * column.padX)
   })
 
   it('holds the auth forms at their own narrow column', () => {
-    expect(columnFor(deviceOf('desktop'), 'narrow').width).toBe(400)
+    const column = columnFor(deviceOf('desktop'), 'narrow')
+    expect(column.width).toBe(400 - 2 * column.padX)
+  })
+
+  it('never widens a screen whose stylesheet has no breakpoint', () => {
+    for (const device of DEVICES) {
+      const column = columnFor(device, 'document')
+      expect(column.width, device.id).toBe(
+        Math.min(LAYOUT.contentMax, device.width) - 2 * column.padX,
+      )
+    }
   })
 
   it('lets the landing run to its own max width', () => {
-    expect(columnFor(deviceOf('desktop'), 'landing').width).toBe(LAYOUT.landingMax)
+    const column = columnFor(deviceOf('desktop'), 'landing')
+    expect(column.width).toBe(LAYOUT.landingMax - 2 * column.padX)
   })
 })

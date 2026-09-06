@@ -25,10 +25,12 @@ export function deviceOf(id: DeviceId): Device {
   return found
 }
 
-/** The width a screen's content column is allowed to reach:
- *  `reading` is one column of prose, `wide` opens to two columns on a desktop,
- *  `narrow` is the auth form, `landing` is the marketing page. */
-export type ColumnShape = 'reading' | 'wide' | 'narrow' | 'landing'
+/** The width a screen's content column is allowed to reach, one per shape the
+ *  stylesheets actually use: `document` never widens (its sheet has no
+ *  breakpoint), `reading` opens once at 48rem, `wide` opens again at 75rem for
+ *  the two-column screens, `narrow` is the auth form and `landing` is the
+ *  marketing page. */
+export type ColumnShape = 'document' | 'reading' | 'wide' | 'narrow' | 'landing'
 
 export interface ColumnSpec {
   width: number
@@ -47,6 +49,11 @@ interface ColumnRule {
 }
 
 const RULES: Record<ColumnShape, Record<DeviceId, ColumnRule>> = {
+  document: {
+    phone: { max: LAYOUT.contentMax, padX: 20, padTop: 24, padBottom: 48, gap: 16 },
+    tablet: { max: LAYOUT.contentMax, padX: 20, padTop: 24, padBottom: 56, gap: 16 },
+    desktop: { max: LAYOUT.contentMax, padX: 20, padTop: 24, padBottom: 64, gap: 16 },
+  },
   reading: {
     phone: { max: LAYOUT.contentMax, padX: 20, padTop: 18, padBottom: 40, gap: 14 },
     tablet: { max: LAYOUT.contentMaxWide, padX: 24, padTop: 32, padBottom: 48, gap: 16 },
@@ -69,10 +76,14 @@ const RULES: Record<ColumnShape, Record<DeviceId, ColumnRule>> = {
   },
 }
 
+/** `box-sizing: border-box` in global.css means a page's max-width already
+ *  contains its horizontal padding, so the column is the capped box minus that
+ *  padding, and the cap gives way to the viewport only when the viewport is
+ *  narrower than it. */
 export function columnFor(device: Device, shape: ColumnShape): ColumnSpec {
   const rule = RULES[shape][device.id]
   return {
-    width: Math.min(rule.max, device.width - 2 * rule.padX),
+    width: Math.min(rule.max, device.width) - 2 * rule.padX,
     padX: rule.padX,
     padTop: rule.padTop,
     padBottom: rule.padBottom,

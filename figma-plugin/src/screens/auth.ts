@@ -59,7 +59,7 @@ export function entrada(device: Device): FrameNode {
     justify: 'CENTER',
     width: brandWidth,
   })
-  brand.appendChild(penMark(wide ? 240 : 200))
+  brand.appendChild(penMark(200))
   brand.appendChild(brandWordmark(wide ? 56 : 44, wide))
   brand.appendChild(
     text('Vença a discussão dentro da história. Passe no vestibular fora dela.', {
@@ -71,7 +71,9 @@ export function entrada(device: Device): FrameNode {
     }),
   )
 
-  const column = columnFor(device, 'narrow')
+  // the actions pane carries its own box on a wide screen, 25rem with 3rem of
+  // padding, so border-box leaves a 304px column inside it
+  const listWidth = wide ? 400 - 96 : columnFor(device, 'narrow').width
   const actions = stack({
     name: 'actions',
     gap: 10,
@@ -80,7 +82,7 @@ export function entrada(device: Device): FrameNode {
     justify: 'CENTER',
     width: wide ? device.width - brandWidth : device.width,
   })
-  const list = stack({ name: 'list', gap: 10, width: column.width })
+  const list = stack({ name: 'list', gap: 10, width: listWidth })
   list.appendChild(fill(googleButton()))
   list.appendChild(fill(button('Criar conta com e-mail', 'ghost')))
   list.appendChild(
@@ -90,13 +92,13 @@ export function entrada(device: Device): FrameNode {
         color: 'muted',
         lineHeight: 1.5,
         align: 'CENTER',
-        width: column.width,
+        width: listWidth,
       }),
     ),
   )
   const quiet = button('Já tenho conta', 'quiet')
   quiet.layoutSizingHorizontal = 'HUG'
-  const quietRow = stack({ name: 'quietRow', align: 'CENTER', width: column.width })
+  const quietRow = stack({ name: 'quietRow', align: 'CENTER', width: listWidth })
   quietRow.appendChild(quiet)
   list.appendChild(fill(quietRow))
   actions.appendChild(list)
@@ -136,6 +138,7 @@ function consentRow(width: number): FrameNode {
   for (const link of ['termos de uso', 'política de privacidade']) {
     const at = body.indexOf(link)
     copy.setRangeFills(at, at + link.length, paint('caneta'))
+    copy.setRangeTextDecoration(at, at + link.length, 'UNDERLINE')
   }
   row.appendChild(fill(copy))
   return row
@@ -196,7 +199,7 @@ export function googleCallback(device: Device): FrameNode {
 /* --------------------------------- legal ------------------------------- */
 
 export function legal(device: Device): FrameNode {
-  const screen = screenFrame(device, { name: 'Privacidade', shell: false, shape: 'reading' })
+  const screen = screenFrame(device, { name: 'Privacidade', shell: false, shape: 'document' })
   const width = screen.width
   screen.content.appendChild(screenBar(width, '← Argumenta', []))
   screen.content.appendChild(
@@ -243,7 +246,7 @@ export function notFound(device: Device): FrameNode {
   const screen = screenFrame(device, {
     name: '404',
     shell: false,
-    shape: 'reading',
+    shape: 'document',
     centred: true,
   })
   const inner = Math.min(416, screen.width)

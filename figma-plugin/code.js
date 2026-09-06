@@ -79,6 +79,11 @@
     { id: "desktop", label: "Desktop · 1440 × 900", width: 1440, height: 900, nav: "rail" }
   ];
   var RULES = {
+    document: {
+      phone: { max: LAYOUT.contentMax, padX: 20, padTop: 24, padBottom: 48, gap: 16 },
+      tablet: { max: LAYOUT.contentMax, padX: 20, padTop: 24, padBottom: 56, gap: 16 },
+      desktop: { max: LAYOUT.contentMax, padX: 20, padTop: 24, padBottom: 64, gap: 16 }
+    },
     reading: {
       phone: { max: LAYOUT.contentMax, padX: 20, padTop: 18, padBottom: 40, gap: 14 },
       tablet: { max: LAYOUT.contentMaxWide, padX: 24, padTop: 32, padBottom: 48, gap: 16 },
@@ -103,7 +108,7 @@
   function columnFor(device, shape) {
     const rule = RULES[shape][device.id];
     return {
-      width: Math.min(rule.max, device.width - 2 * rule.padX),
+      width: Math.min(rule.max, device.width) - 2 * rule.padX,
       padX: rule.padX,
       padTop: rule.padTop,
       padBottom: rule.padBottom,
@@ -1235,7 +1240,7 @@
     return settle(screen, device);
   }
   function conta(device) {
-    const screen = screenFrame(device, { name: "Conta", shell: true, tab: "conta", shape: "wide" });
+    const screen = screenFrame(device, { name: "Conta", shell: true, tab: "conta", shape: "document" });
     const width = screen.width;
     screen.content.appendChild(screenTitle("Sua conta", device));
     screen.content.appendChild(fill(nicknameCard(width)));
@@ -1244,7 +1249,7 @@
     return settle(screen, device);
   }
   function onboarding(device) {
-    const screen = screenFrame(device, { name: "Onboarding", shell: false, shape: "wide" });
+    const screen = screenFrame(device, { name: "Onboarding", shell: false, shape: "document" });
     const width = screen.width;
     screen.content.appendChild(screenTitle("Quase lá", device));
     screen.content.appendChild(
@@ -1299,7 +1304,7 @@
       justify: "CENTER",
       width: brandWidth
     });
-    brand.appendChild(penMark(wide ? 240 : 200));
+    brand.appendChild(penMark(200));
     brand.appendChild(brandWordmark(wide ? 56 : 44, wide));
     brand.appendChild(
       text("Vença a discussão dentro da história. Passe no vestibular fora dela.", {
@@ -1310,7 +1315,7 @@
         width: wide ? 380 : Math.min(300, device.width - 80)
       })
     );
-    const column = columnFor(device, "narrow");
+    const listWidth = wide ? 400 - 96 : columnFor(device, "narrow").width;
     const actions = stack({
       name: "actions",
       gap: 10,
@@ -1319,7 +1324,7 @@
       justify: "CENTER",
       width: wide ? device.width - brandWidth : device.width
     });
-    const list = stack({ name: "list", gap: 10, width: column.width });
+    const list = stack({ name: "list", gap: 10, width: listWidth });
     list.appendChild(fill(googleButton()));
     list.appendChild(fill(button("Criar conta com e-mail", "ghost")));
     list.appendChild(
@@ -1329,13 +1334,13 @@
           color: "muted",
           lineHeight: 1.5,
           align: "CENTER",
-          width: column.width
+          width: listWidth
         })
       )
     );
     const quiet = button("Já tenho conta", "quiet");
     quiet.layoutSizingHorizontal = "HUG";
-    const quietRow = stack({ name: "quietRow", align: "CENTER", width: column.width });
+    const quietRow = stack({ name: "quietRow", align: "CENTER", width: listWidth });
     quietRow.appendChild(quiet);
     list.appendChild(fill(quietRow));
     actions.appendChild(list);
@@ -1369,6 +1374,7 @@
     for (const link of ["termos de uso", "política de privacidade"]) {
       const at = body.indexOf(link);
       copy.setRangeFills(at, at + link.length, paint("caneta"));
+      copy.setRangeTextDecoration(at, at + link.length, "UNDERLINE");
     }
     row2.appendChild(fill(copy));
     return row2;
@@ -1425,7 +1431,7 @@
   }
   function legal(device) {
     var _a;
-    const screen = screenFrame(device, { name: "Privacidade", shell: false, shape: "reading" });
+    const screen = screenFrame(device, { name: "Privacidade", shell: false, shape: "document" });
     const width = screen.width;
     screen.content.appendChild(screenBar(width, "← Argumenta", []));
     screen.content.appendChild(
@@ -1469,7 +1475,7 @@
     const screen = screenFrame(device, {
       name: "404",
       shell: false,
-      shape: "reading",
+      shape: "document",
       centred: true
     });
     const inner = Math.min(416, screen.width);
