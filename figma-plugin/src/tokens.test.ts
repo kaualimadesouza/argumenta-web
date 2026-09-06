@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest'
 import { type RootBlock, rootBlocks, tokenAt } from './testing/tokenSheet'
 import {
   COLORS,
+  DOCK,
   LANDING_SCALE,
   LAYOUT,
   REM,
@@ -79,6 +80,19 @@ describe('the plugin scales against src/styles/tokens.css', () => {
     expect(SHAPE.tile).toBe(px(base('--radius-tile')))
     expect(SHAPE.chip).toBe(px(base('--radius-chip')))
     expect(SHAPE.dock).toBe(px(base('--radius-dock')))
+  })
+
+  /** The dock is the one component drawn twice, here and in Nav.module.css.
+   *  Both read these numbers, so neither can drift on its own again. */
+  it('reads the dock the stylesheet draws', () => {
+    expect(DOCK.margin).toBe(px(base('--dock-margin')))
+    expect(DOCK.below).toBe(px(base('--dock-below')))
+    expect(DOCK.side).toBe(px(base('--dock-side')))
+    expect(DOCK.pad).toBe(px(base('--dock-pad')))
+    expect(DOCK.gap).toBe(px(base('--dock-gap')))
+    expect(DOCK.step).toBe(px(base('--dock-step')))
+    expect(DOCK.stepWidth).toBe(px(base('--dock-step-width')))
+    expect(DOCK.thumb).toBe(px(base('--dock-thumb')))
   })
 
   it('reads the reading columns and rails', () => {

@@ -1,6 +1,6 @@
 import { columnFor, type ColumnShape, type Device } from './devices'
 import { fill, grow, icon, paint, rect, room, setSize, settleSizing, stack, text } from './nodes'
-import { COLORS, SHAPE, TRACKING, TYPE, type ColorName } from './tokens'
+import { COLORS, DOCK, SHAPE, TRACKING, TYPE, type ColorName } from './tokens'
 
 /* ------------------------------ wordmark ------------------------------ */
 
@@ -104,34 +104,34 @@ function tabBar(device: Device, active: TabId | null): FrameNode {
   const holder = stack({
     name: 'nav/tabbar',
     direction: 'HORIZONTAL',
-    padding: [0, DOCK.side, DOCK.below, DOCK.side],
+    padding: [0, DOCK.margin, DOCK.below, DOCK.margin],
     width: device.width,
   })
   const dock = stack({
     name: 'dock',
     direction: 'HORIZONTAL',
-    padding: [0, 6, 8, 6],
+    padding: [0, DOCK.side, DOCK.pad, DOCK.side],
     fill: 'card',
     radius: SHAPE.dock,
     border: { color: 'line', weight: 1 },
-    width: device.width - DOCK.side * 2,
+    width: device.width - DOCK.margin * 2,
   })
   for (const tab of TABS) {
     const isActive = tab.id === active
     const ink: ColorName = isActive ? 'caneta' : 'ink2'
-    const cell = stack({ name: `tab/${tab.id}`, gap: 5, align: 'CENTER', justify: 'CENTER' })
+    // MIN, so the step stays on the dock's top edge and the slack falls under
+    // the label, where the thumb wants it
+    const cell = stack({ name: `tab/${tab.id}`, gap: DOCK.gap, align: 'CENTER', justify: 'MIN' })
     cell.appendChild(step(isActive))
     cell.appendChild(icon(tab.svg, 23, ink))
     cell.appendChild(text(tab.label, { size: TYPE.micro, weight: isActive ? 700 : 500, color: ink }))
-    // the 44px floor for a thumb, unless the row already needs more
-    setSize(cell, { height: Math.max(44, cell.height) })
+    // the 44px floor for a thumb, with the step's own row over it
+    setSize(cell, { height: Math.max(DOCK.step + DOCK.gap + DOCK.thumb, cell.height) })
     dock.appendChild(grow(cell))
   }
   holder.appendChild(fill(dock))
   return holder
 }
-
-const DOCK = { side: 14, below: 12, step: 3, stepWidth: 30 }
 
 /** The caneta step over the live tab. The other tabs keep the same empty slot,
  *  so every icon sits on one row instead of centring itself in its own cell. */

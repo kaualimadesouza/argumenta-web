@@ -273,6 +273,20 @@ describe('the dock under the thumb', () => {
     expect(dock.strokes.length).toBe(1)
   })
 
+  it('stands tall enough to read as an object, not as a thin pill', () => {
+    const dock = find(trilha(deviceOf('phone')), 'dock') as FrameNode
+    expect(dock.height).toBe(66)
+  })
+
+  it('hangs the step off the top edge and puts the room under the labels', () => {
+    const frame = trilha(deviceOf('phone'))
+    const dock = find(frame, 'dock') as FrameNode
+    const cell = find(frame, 'tab/trilha') as FrameNode
+    expect(dock.paddingTop).toBe(0)
+    expect(dock.paddingBottom).toBe(12)
+    expect(cell.primaryAxisAlignItems).toBe('MIN')
+  })
+
   it('steps the live tab and leaves the others alone', () => {
     const frame = trilha(deviceOf('phone'))
     const live = find(frame, 'tab/trilha') as FrameNode
