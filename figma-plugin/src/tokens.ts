@@ -76,7 +76,7 @@ export interface Shape {
   dock: number
 }
 
-export const SHAPE: Shape = { card: 14, button: 12, tile: 10, chip: 999, dock: 22 }
+export const SHAPE: Shape = { card: 14, button: 12, tile: 10, chip: 999, dock: 18 }
 
 export interface Layout {
   contentMax: number

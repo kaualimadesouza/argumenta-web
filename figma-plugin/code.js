@@ -58,7 +58,7 @@
     micro: 11
   };
   var TRACKING = { title: -3, lead: -2, body: -1.1 };
-  var SHAPE = { card: 14, button: 12, tile: 10, chip: 999, dock: 22 };
+  var SHAPE = { card: 14, button: 12, tile: 10, chip: 999, dock: 18 };
   var LAYOUT = {
     contentMax: 544,
     contentMaxWide: 672,
@@ -386,7 +386,7 @@
     const dock = stack({
       name: "dock",
       direction: "HORIZONTAL",
-      padding: [0, 6, 8, 6],
+      padding: [0, 6, DOCK.pad, 6],
       fill: "card",
       radius: SHAPE.dock,
       border: { color: "line", weight: 1 },
@@ -395,17 +395,17 @@
     for (const tab of TABS) {
       const isActive = tab.id === active;
       const ink = isActive ? "caneta" : "ink2";
-      const cell = stack({ name: `tab/${tab.id}`, gap: 5, align: "CENTER", justify: "CENTER" });
+      const cell = stack({ name: `tab/${tab.id}`, gap: DOCK.gap, align: "CENTER", justify: "MIN" });
       cell.appendChild(step(isActive));
       cell.appendChild(icon(tab.svg, 23, ink));
       cell.appendChild(text(tab.label, { size: TYPE.micro, weight: isActive ? 700 : 500, color: ink }));
-      setSize(cell, { height: Math.max(44, cell.height) });
+      setSize(cell, { height: Math.max(DOCK.step + DOCK.gap + DOCK.thumb, cell.height) });
       dock.appendChild(grow(cell));
     }
     holder.appendChild(fill(dock));
     return holder;
   }
-  var DOCK = { side: 14, below: 12, step: 3, stepWidth: 30 };
+  var DOCK = { side: 14, below: 12, pad: 12, gap: 5, step: 3, stepWidth: 30, thumb: 44 };
   function step(live) {
     const frame = stack({ name: "step", fill: live ? "caneta" : null, radius: DOCK.step });
     setSize(frame, { width: DOCK.stepWidth, height: DOCK.step });
