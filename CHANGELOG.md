@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/kaualimadesouza/argumenta-web/compare/v1.5.0...v1.5.1) (2026-09-06)
+
+
+### Bug Fixes
+
+* stand the phone dock taller and square off its corners ([de99b18](https://github.com/kaualimadesouza/argumenta-web/commit/de99b1871ecd6cf06b8efb56d9ba582ef2b88c22))
+
 ## [1.5.0](https://github.com/kaualimadesouza/argumenta-web/compare/v1.4.0...v1.5.0) (2026-09-06)
 
 
