@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/kaualimadesouza/argumenta-web/compare/v1.4.0...v1.5.0) (2026-09-06)
+
+
+### Features
+
+* give the phone nav a dock and draw every Figma frame at its real size ([5ae0df7](https://github.com/kaualimadesouza/argumenta-web/commit/5ae0df7c0395590691c53dc901017878c617065f))
+
 ## [1.4.0](https://github.com/kaualimadesouza/argumenta-web/compare/v1.3.0...v1.4.0) (2026-09-06)
 
 
