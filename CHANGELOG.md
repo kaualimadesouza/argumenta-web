@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/kaualimadesouza/argumenta-web/compare/v1.3.0...v1.4.0) (2026-09-06)
+
+
+### Features
+
+* redraw the Figma plugin as one v3 page with every screen ([#48](https://github.com/kaualimadesouza/argumenta-web/issues/48)) ([89580f4](https://github.com/kaualimadesouza/argumenta-web/commit/89580f40a7d1d144903220a0e307a1021439c83a))
+
 ## [1.3.0](https://github.com/kaualimadesouza/argumenta-web/compare/v1.2.0...v1.3.0) (2026-09-05)
 
 
