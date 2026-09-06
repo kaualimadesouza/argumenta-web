@@ -17,7 +17,7 @@ import {
 } from '../landingContent'
 import { LANDING_SCALE, SHAPE, TRACKING, TYPE } from '../tokens'
 import { button, card, cardInner, checkGlyph, chip, kicker } from '../ui'
-import { columns } from './layout'
+import { columns, evenHeights } from './layout'
 import { THUMBNAILS } from './thumbnails'
 
 interface Sizes {
@@ -338,8 +338,9 @@ function marquee(device: Device): FrameNode {
       gap: 16,
       align: 'MIN',
     })
-    for (const entry of row) line.appendChild(chapterCard(entry, cardWidth))
-    frame.appendChild(line)
+    for (const entry of row) line.appendChild(fill(chapterCard(entry, cardWidth)))
+    const span = row.length * cardWidth + (row.length - 1) * 16
+    frame.appendChild(evenHeights(line, span))
   }
   return frame
 }

@@ -1,7 +1,7 @@
 /** Sizing helpers shared by every screen: the reading step, the screen title
  *  and the row-of-equal-columns stand-in for a CSS grid. */
 import type { Device } from '../devices'
-import { stack, text } from '../nodes'
+import { fill, setSize, stack, text } from '../nodes'
 import { TRACKING, TYPE } from '../tokens'
 
 /** The reading step goes up once on a desktop, as the stylesheet does. */
@@ -48,9 +48,18 @@ export function columns<T>(grid: Grid<T>): FrameNode[] {
       width: grid.width,
     })
     for (const item of grid.items.slice(index, index + grid.perRow)) {
-      row.appendChild(grid.build(item, cell))
+      row.appendChild(fill(grid.build(item, cell)))
     }
-    rows.push(row)
+    rows.push(evenHeights(row, grid.width))
   }
   return rows
+}
+
+/** A row of cards is a flex row in the stylesheet: they share the height of the
+ *  tallest one, so their bottom edges line up. The row has to state that height
+ *  for the cards to be able to fill it. */
+export function evenHeights(row: FrameNode, width: number): FrameNode {
+  const tallest = Math.max(...row.children.map((child) => child.height))
+  setSize(row, { width, height: tallest })
+  return row
 }

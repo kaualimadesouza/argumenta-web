@@ -86,8 +86,8 @@ export function storyCard(options: StoryCardOptions): FrameNode {
 const SPARK = { width: 120, height: 26, inset: 2, max: 100 }
 
 /** The same polyline the app draws, so the shape a designer sees is the real one. */
-export function sparkline(points: number[], down: boolean): FrameNode {
-  const step = (SPARK.width - SPARK.inset * 2) / (points.length - 1)
+export function sparkline(points: number[], down: boolean, width = SPARK.width): FrameNode {
+  const step = (width - SPARK.inset * 2) / (points.length - 1)
   const usable = SPARK.height - SPARK.inset * 2
   const drawn = points
     .map((score, index) => {
@@ -96,10 +96,10 @@ export function sparkline(points: number[], down: boolean): FrameNode {
     })
     .join(' ')
   const stroke = down ? COLORS.corretor : COLORS.caneta
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SPARK.width} ${SPARK.height}"><polyline points="${drawn}" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${SPARK.height}"><polyline points="${drawn}" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`
   const node = figma.createNodeFromSvg(svg)
   node.name = 'sparkline'
-  node.resize(SPARK.width, SPARK.height)
+  node.resize(width, SPARK.height)
   return node
 }
 
@@ -213,13 +213,18 @@ function trendsCard(width: number): FrameNode {
   )
   shell.appendChild(fill(head))
   const list = stack({ name: 'trends', gap: 14, width: inner })
-  for (const trend of TRENDS) {
+  // a table: the label column is as wide as the longest name, and the chart
+  // takes what the columns leave, so nothing wraps and nothing is pushed out
+  const names = TRENDS.map((trend) => text(trend.label, { size: TYPE.meta, weight: 600 }))
+  const nameWidth = Math.max(...names.map((name) => name.width))
+  const chart = Math.max(56, Math.floor(inner - 16 - nameWidth - 28 - 36 - 40))
+  for (const [index, trend] of TRENDS.entries()) {
     const row = stack({ name: `trend/${trend.code}`, direction: 'HORIZONTAL', gap: 10, align: 'CENTER', width: inner })
-    row.appendChild(text(trend.code, { size: TYPE.meta, weight: 700, color: 'muted' }))
-    row.appendChild(
-      fill(text(trend.label, { size: TYPE.meta, weight: 600, width: inner - 120 - 28 - 36 - 40 })),
-    )
-    row.appendChild(sparkline(trend.points, trend.delta < 0))
+    row.appendChild(text(trend.code, { size: TYPE.meta, weight: 700, color: 'muted', width: 16 }))
+    const name = names[index]
+    name.resize(nameWidth, name.height)
+    row.appendChild(name)
+    row.appendChild(sparkline(trend.points, trend.delta < 0, chart))
     row.appendChild(text(String(trend.latest), { size: TYPE.meta, weight: 700, align: 'RIGHT', width: 28 }))
     const delta = trend.delta === 0 ? '' : trend.delta > 0 ? `+${trend.delta}` : `−${Math.abs(trend.delta)}`
     row.appendChild(

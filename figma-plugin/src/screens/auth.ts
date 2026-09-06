@@ -45,6 +45,7 @@ export function entrada(device: Device): FrameNode {
   const frame = deviceFrame(device, {
     name: 'Entrada',
     axis: wide ? 'HORIZONTAL' : 'VERTICAL',
+    justify: wide ? 'MIN' : 'CENTER',
   })
 
   const brandWidth = wide ? Math.round(device.width * 0.52) : device.width
@@ -101,7 +102,7 @@ export function entrada(device: Device): FrameNode {
   list.appendChild(fill(quietRow))
   actions.appendChild(list)
 
-  frame.appendChild(wide ? fill(brand) : grow(fill(brand)))
+  frame.appendChild(fill(brand))
   frame.appendChild(wide ? grow(fill(actions)) : fill(actions))
   return fitToDevice(frame, device)
 }
@@ -109,7 +110,12 @@ export function entrada(device: Device): FrameNode {
 /* -------------------------------- forms -------------------------------- */
 
 export function entrarEmail(device: Device): FrameNode {
-  const screen = screenFrame(device, { name: 'Entrar com e-mail', shell: false, shape: 'narrow' })
+  const screen = screenFrame(device, {
+    name: 'Entrar com e-mail',
+    shell: false,
+    shape: 'narrow',
+    centred: true,
+  })
   const width = screen.width
   screen.content.appendChild(text('← Voltar', { size: TYPE.meta, weight: 600, color: 'ink2' }))
   screen.content.appendChild(
@@ -142,7 +148,12 @@ function consentRow(width: number): FrameNode {
 }
 
 export function criarConta(device: Device): FrameNode {
-  const screen = screenFrame(device, { name: 'Criar conta', shell: false, shape: 'narrow' })
+  const screen = screenFrame(device, {
+    name: 'Criar conta',
+    shell: false,
+    shape: 'narrow',
+    centred: true,
+  })
   const width = screen.width
   screen.content.appendChild(text('← Voltar', { size: TYPE.meta, weight: 600, color: 'ink2' }))
   screen.content.appendChild(

@@ -180,6 +180,8 @@ export interface FrameSpec {
   name: string
   axis: 'VERTICAL' | 'HORIZONTAL'
   align?: 'MIN' | 'CENTER'
+  /** Where the blocks sit along the frame's own direction. */
+  justify?: 'MIN' | 'CENTER'
 }
 
 /** The paper the viewport is drawn on. Every frame on the canvas starts here,
@@ -194,6 +196,7 @@ export function deviceFrame(device: Device, spec: FrameSpec): FrameNode {
   frame.clipsContent = false
   frame.layoutMode = spec.axis
   frame.counterAxisAlignItems = spec.align ?? 'MIN'
+  frame.primaryAxisAlignItems = spec.justify ?? 'MIN'
   setSize(frame, { width: device.width })
   return frame
 }

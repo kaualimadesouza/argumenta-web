@@ -43,12 +43,15 @@ function targetItem(name: string, active: boolean, width: number, ruled: boolean
     gap: 8,
     padding: ruled ? [8, 0, 0, 0] : 0,
     align: 'CENTER',
+    justify: 'SPACE_BETWEEN',
     width,
     border: ruled ? { color: 'line', weight: 1, sides: ['top'] } : undefined,
   })
-  item.appendChild(grow(text(name, { size: TYPE.body, weight: 600 })))
-  item.appendChild(active ? chip('Lente ativa') : button(`Usar a lente ${name}`, 'quiet'))
-  item.appendChild(button('Remover', 'quiet'))
+  item.appendChild(text(name, { size: TYPE.body, weight: 600 }))
+  const actions = stack({ name: 'acoes', direction: 'HORIZONTAL', gap: 8, align: 'CENTER' })
+  actions.appendChild(active ? chip('Lente ativa') : button('Usar esta lente', 'quiet'))
+  actions.appendChild(button('Remover', 'quiet'))
+  item.appendChild(actions)
   return item
 }
 

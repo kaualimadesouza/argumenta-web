@@ -1,7 +1,7 @@
 /** The anatomy of the correction screen. It is drawn twice, full size on the
  *  screen itself and as a thumbnail on the landing, so the pieces live here
  *  instead of once in each place. */
-import { fill, fontOf, grow, paint, stack, text } from '../nodes'
+import { fill, fontOf, paint, stack, text } from '../nodes'
 import { DRAFT, MARKS, PRAISE, SCORE_FLOOR, SCORE_MAX, SLIP, type ScoreRow } from '../samples'
 import { SHAPE, TRACKING, TYPE } from '../tokens'
 import { arrowBullet, card, cardInner, markBadge, progressBar } from '../ui'
@@ -29,23 +29,38 @@ export interface ScoreStyle {
 
 export function scoreRow(row: ScoreRow, width: number, style: ScoreStyle): FrameNode {
   const line = stack({ name: `criterio/${row.code}`, gap: 7, width })
-  const head = stack({ name: 'head', direction: 'HORIZONTAL', gap: 8, align: 'BASELINE', width })
-  head.appendChild(text(row.code, { size: TYPE.meta, weight: 700, color: 'muted' }))
-  head.appendChild(
+  const score = text(style.showMax ? `${row.score}/${SCORE_MAX}` : String(row.score), {
+    size: TYPE.meta,
+    weight: 700,
+    color: row.belowFloor ? 'corretorInk' : 'ink',
+  })
+  const head = stack({
+    name: 'head',
+    direction: 'HORIZONTAL',
+    gap: 8,
+    align: 'CENTER',
+    justify: 'SPACE_BETWEEN',
+    width,
+  })
+  // the name wraps in what the score leaves, so the score never leaves the card
+  const named = stack({
+    name: 'nome',
+    direction: 'HORIZONTAL',
+    gap: 8,
+    align: 'CENTER',
+    wrap: true,
+    width: width - score.width - 8,
+  })
+  named.appendChild(text(row.code, { size: TYPE.meta, weight: 700, color: 'muted' }))
+  named.appendChild(
     text(row.label, { size: TYPE.meta, weight: 600, color: row.belowFloor ? 'corretorInk' : 'ink' }),
   )
   const aside = style.aside === 'criterion' ? row.extra : row.belowFloor ? 'abaixo do piso' : undefined
   if (aside !== undefined) {
-    head.appendChild(text(aside, { size: TYPE.meta, weight: 500, color: 'muted' }))
+    named.appendChild(text(aside, { size: TYPE.meta, weight: 500, color: 'muted' }))
   }
-  head.appendChild(grow(stack({ name: 'gap' })))
-  head.appendChild(
-    text(style.showMax ? `${row.score}/${SCORE_MAX}` : String(row.score), {
-      size: TYPE.meta,
-      weight: 700,
-      color: row.belowFloor ? 'corretorInk' : 'ink',
-    }),
-  )
+  head.appendChild(named)
+  head.appendChild(score)
   line.appendChild(fill(head))
   line.appendChild(
     progressBar({

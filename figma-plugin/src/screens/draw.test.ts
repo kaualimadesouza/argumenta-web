@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import { columnFor, DEVICES, deviceOf } from '../devices'
-import { loadFonts, stack, text } from '../nodes'
+import { loadFonts, settleSizing, stack, text } from '../nodes'
 import { createStyles } from '../styles'
 import { installFakeFigma, type FakeFigma } from '../testing/fakeFigma'
 import { overflows, pinned, unfilled } from '../testing/invariants'
@@ -222,5 +222,36 @@ describe('a child that fills its parent', () => {
   it('runs the rail down the full height of a desktop screen', () => {
     const frame = trilha(deviceOf('desktop'))
     expect(child(frame, 'nav/rail').height).toBe(frame.height)
+  })
+})
+
+/** A row of cards is a flex row in the stylesheet: the cards share the height
+ *  of the tallest one, so their bottom edges line up. */
+describe('cards in a row', () => {
+  const heightsOf = (row: FrameNode): number[] => row.children.map((child) => child.height)
+
+  it('share the height of the tallest, in a grid', () => {
+    const rows = columns({
+      items: ['curto', 'um texto bem mais longo que o outro para empurrar a altura'],
+      perRow: 2,
+      width: 400,
+      gap: 20,
+      build: (item, cell) => {
+        const frame = stack({ width: cell })
+        frame.appendChild(text(item, { size: 15, width: cell }))
+        return frame
+      },
+    })
+    expect(new Set(heightsOf(settleSizing(rows[0]))).size).toBe(1)
+  })
+
+  it('share it in the landing marquee too', () => {
+    for (const device of DEVICES) {
+      const frame = LANDING.build(device)
+      const marquee = frame.children.find((child) => child.name === 'marquee') as FrameNode
+      for (const line of marquee.children as FrameNode[]) {
+        expect(new Set(heightsOf(line)).size, `${line.name} at ${device.width}`).toBe(1)
+      }
+    }
   })
 })

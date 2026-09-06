@@ -433,13 +433,14 @@
     return nav;
   }
   function deviceFrame(device, spec) {
-    var _a;
+    var _a, _b;
     const frame = figma.createFrame();
     frame.name = `${spec.name} · ${device.width}`;
     frame.fills = paint("paper");
     frame.clipsContent = false;
     frame.layoutMode = spec.axis;
     frame.counterAxisAlignItems = (_a = spec.align) != null ? _a : "MIN";
+    frame.primaryAxisAlignItems = (_b = spec.justify) != null ? _b : "MIN";
     setSize(frame, { width: device.width });
     return frame;
   }
@@ -966,11 +967,16 @@
         width: grid.width
       });
       for (const item of grid.items.slice(index, index + grid.perRow)) {
-        row2.appendChild(grid.build(item, cell));
+        row2.appendChild(fill(grid.build(item, cell)));
       }
-      rows.push(row2);
+      rows.push(evenHeights(row2, grid.width));
     }
     return rows;
+  }
+  function evenHeights(row2, width) {
+    const tallest = Math.max(...row2.children.map((child) => child.height));
+    setSize(row2, { width, height: tallest });
+    return row2;
   }
 
   // figma-plugin/src/screens/profile.ts
@@ -1012,12 +1018,15 @@
       gap: 8,
       padding: ruled ? [8, 0, 0, 0] : 0,
       align: "CENTER",
+      justify: "SPACE_BETWEEN",
       width,
       border: ruled ? { color: "line", weight: 1, sides: ["top"] } : void 0
     });
-    item.appendChild(grow(text(name, { size: TYPE.body, weight: 600 })));
-    item.appendChild(active ? chip("Lente ativa") : button(`Usar a lente ${name}`, "quiet"));
-    item.appendChild(button("Remover", "quiet"));
+    item.appendChild(text(name, { size: TYPE.body, weight: 600 }));
+    const actions = stack({ name: "acoes", direction: "HORIZONTAL", gap: 8, align: "CENTER" });
+    actions.appendChild(active ? chip("Lente ativa") : button("Usar esta lente", "quiet"));
+    actions.appendChild(button("Remover", "quiet"));
+    item.appendChild(actions);
     return item;
   }
   function dangerCard(width) {
@@ -1095,18 +1104,18 @@
     return shell;
   }
   var SPARK = { width: 120, height: 26, inset: 2, max: 100 };
-  function sparkline(points, down) {
-    const step = (SPARK.width - SPARK.inset * 2) / (points.length - 1);
+  function sparkline(points, down, width = SPARK.width) {
+    const step = (width - SPARK.inset * 2) / (points.length - 1);
     const usable = SPARK.height - SPARK.inset * 2;
     const drawn = points.map((score, index) => {
       const y = SPARK.inset + usable * (1 - Math.min(Math.max(score, 0), SPARK.max) / SPARK.max);
       return `${SPARK.inset + step * index},${y}`;
     }).join(" ");
     const stroke = down ? COLORS.corretor : COLORS.caneta;
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SPARK.width} ${SPARK.height}"><polyline points="${drawn}" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${SPARK.height}"><polyline points="${drawn}" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
     const node = figma.createNodeFromSvg(svg);
     node.name = "sparkline";
-    node.resize(SPARK.width, SPARK.height);
+    node.resize(width, SPARK.height);
     return node;
   }
   function milestoneRow(label, done, width) {
@@ -1211,13 +1220,16 @@
     );
     shell.appendChild(fill(head));
     const list = stack({ name: "trends", gap: 14, width: inner });
-    for (const trend of TRENDS) {
+    const names = TRENDS.map((trend) => text(trend.label, { size: TYPE.meta, weight: 600 }));
+    const nameWidth = Math.max(...names.map((name) => name.width));
+    const chart = Math.max(56, Math.floor(inner - 16 - nameWidth - 28 - 36 - 40));
+    for (const [index, trend] of TRENDS.entries()) {
       const row2 = stack({ name: `trend/${trend.code}`, direction: "HORIZONTAL", gap: 10, align: "CENTER", width: inner });
-      row2.appendChild(text(trend.code, { size: TYPE.meta, weight: 700, color: "muted" }));
-      row2.appendChild(
-        fill(text(trend.label, { size: TYPE.meta, weight: 600, width: inner - 120 - 28 - 36 - 40 }))
-      );
-      row2.appendChild(sparkline(trend.points, trend.delta < 0));
+      row2.appendChild(text(trend.code, { size: TYPE.meta, weight: 700, color: "muted", width: 16 }));
+      const name = names[index];
+      name.resize(nameWidth, name.height);
+      row2.appendChild(name);
+      row2.appendChild(sparkline(trend.points, trend.delta < 0, chart));
       row2.appendChild(text(String(trend.latest), { size: TYPE.meta, weight: 700, align: "RIGHT", width: 28 }));
       const delta = trend.delta === 0 ? "" : trend.delta > 0 ? `+${trend.delta}` : `−${Math.abs(trend.delta)}`;
       row2.appendChild(
@@ -1327,7 +1339,8 @@
     const wide = device.id === "desktop";
     const frame = deviceFrame(device, {
       name: "Entrada",
-      axis: wide ? "HORIZONTAL" : "VERTICAL"
+      axis: wide ? "HORIZONTAL" : "VERTICAL",
+      justify: wide ? "MIN" : "CENTER"
     });
     const brandWidth = wide ? Math.round(device.width * 0.52) : device.width;
     const brand = stack({
@@ -1379,12 +1392,17 @@
     quietRow.appendChild(quiet);
     list.appendChild(fill(quietRow));
     actions.appendChild(list);
-    frame.appendChild(wide ? fill(brand) : grow(fill(brand)));
+    frame.appendChild(fill(brand));
     frame.appendChild(wide ? grow(fill(actions)) : fill(actions));
     return fitToDevice(frame, device);
   }
   function entrarEmail(device) {
-    const screen = screenFrame(device, { name: "Entrar com e-mail", shell: false, shape: "narrow" });
+    const screen = screenFrame(device, {
+      name: "Entrar com e-mail",
+      shell: false,
+      shape: "narrow",
+      centred: true
+    });
     const width = screen.width;
     screen.content.appendChild(text("← Voltar", { size: TYPE.meta, weight: 600, color: "ink2" }));
     screen.content.appendChild(
@@ -1414,7 +1432,12 @@
     return row2;
   }
   function criarConta(device) {
-    const screen = screenFrame(device, { name: "Criar conta", shell: false, shape: "narrow" });
+    const screen = screenFrame(device, {
+      name: "Criar conta",
+      shell: false,
+      shape: "narrow",
+      centred: true
+    });
     const width = screen.width;
     screen.content.appendChild(text("← Voltar", { size: TYPE.meta, weight: 600, color: "ink2" }));
     screen.content.appendChild(
@@ -1769,23 +1792,37 @@
   }
   function scoreRow(row2, width, style) {
     const line = stack({ name: `criterio/${row2.code}`, gap: 7, width });
-    const head = stack({ name: "head", direction: "HORIZONTAL", gap: 8, align: "BASELINE", width });
-    head.appendChild(text(row2.code, { size: TYPE.meta, weight: 700, color: "muted" }));
-    head.appendChild(
+    const score = text(style.showMax ? `${row2.score}/${SCORE_MAX}` : String(row2.score), {
+      size: TYPE.meta,
+      weight: 700,
+      color: row2.belowFloor ? "corretorInk" : "ink"
+    });
+    const head = stack({
+      name: "head",
+      direction: "HORIZONTAL",
+      gap: 8,
+      align: "CENTER",
+      justify: "SPACE_BETWEEN",
+      width
+    });
+    const named = stack({
+      name: "nome",
+      direction: "HORIZONTAL",
+      gap: 8,
+      align: "CENTER",
+      wrap: true,
+      width: width - score.width - 8
+    });
+    named.appendChild(text(row2.code, { size: TYPE.meta, weight: 700, color: "muted" }));
+    named.appendChild(
       text(row2.label, { size: TYPE.meta, weight: 600, color: row2.belowFloor ? "corretorInk" : "ink" })
     );
     const aside = style.aside === "criterion" ? row2.extra : row2.belowFloor ? "abaixo do piso" : void 0;
     if (aside !== void 0) {
-      head.appendChild(text(aside, { size: TYPE.meta, weight: 500, color: "muted" }));
+      named.appendChild(text(aside, { size: TYPE.meta, weight: 500, color: "muted" }));
     }
-    head.appendChild(grow(stack({ name: "gap" })));
-    head.appendChild(
-      text(style.showMax ? `${row2.score}/${SCORE_MAX}` : String(row2.score), {
-        size: TYPE.meta,
-        weight: 700,
-        color: row2.belowFloor ? "corretorInk" : "ink"
-      })
-    );
+    head.appendChild(named);
+    head.appendChild(score);
     line.appendChild(fill(head));
     line.appendChild(
       progressBar({
@@ -2307,8 +2344,9 @@
         gap: 16,
         align: "MIN"
       });
-      for (const entry of row2) line.appendChild(chapterCard(entry, cardWidth));
-      frame.appendChild(line);
+      for (const entry of row2) line.appendChild(fill(chapterCard(entry, cardWidth)));
+      const span = row2.length * cardWidth + (row2.length - 1) * 16;
+      frame.appendChild(evenHeights(line, span));
     }
     return frame;
   }
