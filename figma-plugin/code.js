@@ -59,6 +59,16 @@
   };
   var TRACKING = { title: -3, lead: -2, body: -1.1 };
   var SHAPE = { card: 14, button: 12, tile: 10, chip: 999, dock: 18 };
+  var DOCK = {
+    margin: 14,
+    below: 12,
+    side: 6,
+    pad: 12,
+    gap: 5,
+    step: 3,
+    stepWidth: 30,
+    thumb: 44
+  };
   var LAYOUT = {
     contentMax: 544,
     contentMaxWide: 672,
@@ -380,17 +390,17 @@
     const holder = stack({
       name: "nav/tabbar",
       direction: "HORIZONTAL",
-      padding: [0, DOCK.side, DOCK.below, DOCK.side],
+      padding: [0, DOCK.margin, DOCK.below, DOCK.margin],
       width: device.width
     });
     const dock = stack({
       name: "dock",
       direction: "HORIZONTAL",
-      padding: [0, 6, DOCK.pad, 6],
+      padding: [0, DOCK.side, DOCK.pad, DOCK.side],
       fill: "card",
       radius: SHAPE.dock,
       border: { color: "line", weight: 1 },
-      width: device.width - DOCK.side * 2
+      width: device.width - DOCK.margin * 2
     });
     for (const tab of TABS) {
       const isActive = tab.id === active;
@@ -405,7 +415,6 @@
     holder.appendChild(fill(dock));
     return holder;
   }
-  var DOCK = { side: 14, below: 12, pad: 12, gap: 5, step: 3, stepWidth: 30, thumb: 44 };
   function step(live) {
     const frame = stack({ name: "step", fill: live ? "caneta" : null, radius: DOCK.step });
     setSize(frame, { width: DOCK.stepWidth, height: DOCK.step });

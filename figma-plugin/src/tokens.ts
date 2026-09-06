@@ -78,6 +78,35 @@ export interface Shape {
 
 export const SHAPE: Shape = { card: 14, button: 12, tile: 10, chip: 999, dock: 18 }
 
+/** The dock's geometry, the same numbers `src/layout/Nav.module.css` reads out
+ *  of the sheet, so the two engines draw one object. */
+export interface Dock {
+  /** From the screen's left and right edges. */
+  margin: number
+  /** From the screen's bottom. */
+  below: number
+  /** Inside, beside the cells. */
+  side: number
+  /** Inside, under the labels, where the step leaves the top edge free. */
+  pad: number
+  gap: number
+  step: number
+  stepWidth: number
+  /** The touch floor for the icon and its label. */
+  thumb: number
+}
+
+export const DOCK: Dock = {
+  margin: 14,
+  below: 12,
+  side: 6,
+  pad: 12,
+  gap: 5,
+  step: 3,
+  stepWidth: 30,
+  thumb: 44,
+}
+
 export interface Layout {
   contentMax: number
   contentMaxWide: number

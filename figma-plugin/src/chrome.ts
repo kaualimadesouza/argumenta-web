@@ -1,6 +1,6 @@
 import { columnFor, type ColumnShape, type Device } from './devices'
 import { fill, grow, icon, paint, rect, room, setSize, settleSizing, stack, text } from './nodes'
-import { COLORS, SHAPE, TRACKING, TYPE, type ColorName } from './tokens'
+import { COLORS, DOCK, SHAPE, TRACKING, TYPE, type ColorName } from './tokens'
 
 /* ------------------------------ wordmark ------------------------------ */
 
@@ -104,17 +104,17 @@ function tabBar(device: Device, active: TabId | null): FrameNode {
   const holder = stack({
     name: 'nav/tabbar',
     direction: 'HORIZONTAL',
-    padding: [0, DOCK.side, DOCK.below, DOCK.side],
+    padding: [0, DOCK.margin, DOCK.below, DOCK.margin],
     width: device.width,
   })
   const dock = stack({
     name: 'dock',
     direction: 'HORIZONTAL',
-    padding: [0, 6, DOCK.pad, 6],
+    padding: [0, DOCK.side, DOCK.pad, DOCK.side],
     fill: 'card',
     radius: SHAPE.dock,
     border: { color: 'line', weight: 1 },
-    width: device.width - DOCK.side * 2,
+    width: device.width - DOCK.margin * 2,
   })
   for (const tab of TABS) {
     const isActive = tab.id === active
@@ -132,8 +132,6 @@ function tabBar(device: Device, active: TabId | null): FrameNode {
   holder.appendChild(fill(dock))
   return holder
 }
-
-const DOCK = { side: 14, below: 12, pad: 12, gap: 5, step: 3, stepWidth: 30, thumb: 44 }
 
 /** The caneta step over the live tab. The other tabs keep the same empty slot,
  *  so every icon sits on one row instead of centring itself in its own cell. */

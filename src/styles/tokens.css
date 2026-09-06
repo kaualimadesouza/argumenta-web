@@ -66,6 +66,19 @@
   /* the dock under the thumb: bigger than a card, still not a chip */
   --radius-dock: 18px;
 
+  /* the dock's own geometry. The Figma plugin draws the same object from these
+     numbers (figma-plugin/src/tokens.ts, checked against this sheet), so they
+     live here instead of once in each engine. */
+  --dock-margin: 14px;
+  --dock-below: 12px;
+  --dock-side: 6px;
+  --dock-pad: 12px;
+  --dock-gap: 5px;
+  --dock-step: 3px;
+  --dock-step-width: 30px;
+  /* the touch floor for the icon and its label */
+  --dock-thumb: 44px;
+
   /* the one shadow */
   --press: 0 3px 0 var(--color-caneta-press);
 

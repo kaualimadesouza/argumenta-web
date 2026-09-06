@@ -7,15 +7,15 @@
   --live: 0;
   --tabs: 3;
   position: fixed;
-  left: 0.875rem;
-  right: 0.875rem;
-  bottom: 0.75rem;
+  left: var(--dock-margin);
+  right: var(--dock-margin);
+  bottom: var(--dock-below);
   z-index: 10;
   background: var(--color-card);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-dock);
   /* nothing on top: the step hangs off the inner edge of the border */
-  padding: 0 0.375rem 0.75rem;
+  padding: 0 var(--dock-side) var(--dock-pad);
 }
 
 .wordmark {
@@ -37,9 +37,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.3125rem;
-  /* the 44px floor for a thumb target, with the step's own row over it */
-  min-height: 3.25rem;
+  gap: var(--dock-gap);
+  /* the touch floor, with the step's own row over it */
+  min-height: calc(var(--dock-step) + var(--dock-gap) + var(--dock-thumb));
   justify-content: center;
   text-decoration: none;
   color: var(--color-ink-2);
@@ -47,7 +47,7 @@
   transition: color 160ms ease;
   /* the step's own row and its gap, kept even when the step is not drawn, so
      every icon sits on one line */
-  padding-top: 0.5rem;
+  padding-top: calc(var(--dock-step) + var(--dock-gap));
 }
 
 /* One step for the whole dock, which slides from the tab the student left to
@@ -61,7 +61,7 @@
   top: 0;
   left: 0;
   width: calc(100% / var(--tabs));
-  height: 0.1875rem;
+  height: var(--dock-step);
   display: flex;
   justify-content: center;
   transform: translateX(calc(var(--live) * 100%));
@@ -70,9 +70,9 @@
 
 .step::after {
   content: '';
-  width: 1.875rem;
+  width: var(--dock-step-width);
   height: 100%;
-  border-radius: 0 0 0.1875rem 0.1875rem;
+  border-radius: 0 0 var(--dock-step) var(--dock-step);
   background: var(--color-caneta);
 }
 
