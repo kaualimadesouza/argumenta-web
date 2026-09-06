@@ -63,6 +63,8 @@
   --radius-button: 12px;
   --radius-tile: 10px;
   --radius-chip: 999px;
+  /* the dock under the thumb: bigger than a card, still not a chip */
+  --radius-dock: 22px;
 
   /* the one shadow */
   --press: 0 3px 0 var(--color-caneta-press);

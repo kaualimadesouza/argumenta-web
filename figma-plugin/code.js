@@ -58,7 +58,7 @@
     micro: 11
   };
   var TRACKING = { title: -3, lead: -2, body: -1.1 };
-  var SHAPE = { card: 14, button: 12, tile: 10, chip: 999 };
+  var SHAPE = { card: 14, button: 12, tile: 10, chip: 999, dock: 22 };
   var LAYOUT = {
     contentMax: 544,
     contentMaxWide: 672,
@@ -377,24 +377,39 @@
     return pill;
   }
   function tabBar(device, active) {
-    const bar = stack({
+    const holder = stack({
       name: "nav/tabbar",
       direction: "HORIZONTAL",
-      padding: [10, 12, 18, 12],
-      fill: "card",
-      border: { color: "line", weight: 1, sides: ["top"] },
+      padding: [0, DOCK.side, DOCK.below, DOCK.side],
       width: device.width
+    });
+    const dock = stack({
+      name: "dock",
+      direction: "HORIZONTAL",
+      padding: [0, 6, 8, 6],
+      fill: "card",
+      radius: SHAPE.dock,
+      border: { color: "line", weight: 1 },
+      width: device.width - DOCK.side * 2
     });
     for (const tab of TABS) {
       const isActive = tab.id === active;
       const ink = isActive ? "caneta" : "ink2";
       const cell = stack({ name: `tab/${tab.id}`, gap: 5, align: "CENTER", justify: "CENTER" });
-      setSize(cell, { height: 44 });
+      cell.appendChild(step(isActive));
       cell.appendChild(icon(tab.svg, 23, ink));
       cell.appendChild(text(tab.label, { size: TYPE.micro, weight: isActive ? 700 : 500, color: ink }));
-      bar.appendChild(grow(cell));
+      setSize(cell, { height: Math.max(44, cell.height) });
+      dock.appendChild(grow(cell));
     }
-    return bar;
+    holder.appendChild(fill(dock));
+    return holder;
+  }
+  var DOCK = { side: 14, below: 12, step: 3, stepWidth: 30 };
+  function step(live) {
+    const frame = stack({ name: "step", fill: live ? "caneta" : null, radius: DOCK.step });
+    setSize(frame, { width: DOCK.stepWidth, height: DOCK.step });
+    return frame;
   }
   function topBar(device, active) {
     const bar = stack({
@@ -1105,11 +1120,11 @@
   }
   var SPARK = { width: 120, height: 26, inset: 2, max: 100 };
   function sparkline(points, down, width = SPARK.width) {
-    const step = (width - SPARK.inset * 2) / (points.length - 1);
+    const step2 = (width - SPARK.inset * 2) / (points.length - 1);
     const usable = SPARK.height - SPARK.inset * 2;
     const drawn = points.map((score, index) => {
       const y = SPARK.inset + usable * (1 - Math.min(Math.max(score, 0), SPARK.max) / SPARK.max);
-      return `${SPARK.inset + step * index},${y}`;
+      return `${SPARK.inset + step2 * index},${y}`;
     }).join(" ");
     const stroke = down ? COLORS.corretor : COLORS.caneta;
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${SPARK.height}"><polyline points="${drawn}" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
@@ -1939,10 +1954,10 @@
     const shell = card({ gap: 16, width, name: "card/para-passar" });
     shell.appendChild(text("Para passar", { size: TYPE.lead, weight: 700, tracking: TRACKING.lead }));
     const list = stack({ name: "steps", gap: 14, width: inner });
-    for (const step of steps) {
+    for (const step2 of steps) {
       const row2 = stack({ name: "step", direction: "HORIZONTAL", gap: 11, align: "MIN", width: inner });
       row2.appendChild(arrowBullet());
-      row2.appendChild(fill(text(step, { size: TYPE.body, lineHeight: 1.55, width: inner - 24 })));
+      row2.appendChild(fill(text(step2, { size: TYPE.body, lineHeight: 1.55, width: inner - 24 })));
       list.appendChild(fill(row2));
     }
     shell.appendChild(fill(list));
@@ -2035,8 +2050,8 @@
     frame.appendChild(fill(marked));
     const pass = card({ gap: 10, width, name: "para-passar" });
     pass.appendChild(kicker("Para passar"));
-    for (const step of TO_PASS) {
-      pass.appendChild(fill(text(`→ ${step}`, { size: TYPE.body, lineHeight: 1.5, width: cardInner(width) })));
+    for (const step2 of TO_PASS) {
+      pass.appendChild(fill(text(`→ ${step2}`, { size: TYPE.body, lineHeight: 1.5, width: cardInner(width) })));
     }
     frame.appendChild(fill(pass));
     return frame;
@@ -2357,10 +2372,10 @@
   function howItWorks(width, device) {
     const desktop = device.id === "desktop";
     const steps = stack({ name: "steps", gap: desktop ? 24 : 20, width });
-    for (const [index, step] of STEPS.entries()) {
+    for (const [index, step2] of STEPS.entries()) {
       const pad = desktop ? 40 : 24;
       const shell = stack({
-        name: `step/${step.number}`,
+        name: `step/${step2.number}`,
         direction: desktop ? "HORIZONTAL" : "VERTICAL",
         gap: desktop ? 56 : 22,
         padding: pad,
@@ -2374,10 +2389,10 @@
       const headWidth = desktop ? Math.round((inner - 56) * (5 / 12)) : inner;
       const miniWidth = desktop ? inner - 56 - headWidth : inner;
       const head = stack({ name: "head", gap: 10, width: headWidth });
-      head.appendChild(text(step.number, { size: TYPE.meta, weight: 700, color: "caneta" }));
+      head.appendChild(text(step2.number, { size: TYPE.meta, weight: 700, color: "caneta" }));
       head.appendChild(
         fill(
-          text(step.title, {
+          text(step2.title, {
             size: TYPE.title,
             weight: 800,
             tracking: TRACKING.title,
@@ -2388,7 +2403,7 @@
       );
       head.appendChild(
         fill(
-          text(step.text, {
+          text(step2.text, {
             size: TYPE.body,
             color: "ink2",
             lineHeight: 1.58,
@@ -3198,22 +3213,22 @@
   function typography() {
     const frame = stack({ name: "tipografia", gap: 18, width: INNER });
     frame.appendChild(sectionTitle("Tipografia: uma família, Inter, e quatro passos"));
-    for (const step of STEPS2) {
+    for (const step2 of STEPS2) {
       const row2 = stack({
-        name: step.token,
+        name: step2.token,
         direction: "HORIZONTAL",
         gap: 24,
         align: "BASELINE",
         width: INNER
       });
-      row2.appendChild(text(step.label, { size: TYPE.meta, weight: 600, color: "muted", width: 200 }));
-      row2.appendChild(text(step.token, { size: TYPE.micro, color: "muted", width: 130 }));
+      row2.appendChild(text(step2.label, { size: TYPE.meta, weight: 600, color: "muted", width: 200 }));
+      row2.appendChild(text(step2.token, { size: TYPE.micro, color: "muted", width: 130 }));
       row2.appendChild(
         grow(
-          text(step.sample, {
-            size: step.size,
-            weight: step.weight,
-            tracking: step.size >= TYPE.title ? TRACKING.title : TRACKING.body
+          text(step2.sample, {
+            size: step2.size,
+            weight: step2.weight,
+            tracking: step2.size >= TYPE.title ? TRACKING.title : TRACKING.body
           })
         )
       );

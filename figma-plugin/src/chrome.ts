@@ -97,25 +97,48 @@ function tabPill(tab: Tab, active: boolean, size: number, height: number, gap: n
   return pill
 }
 
+/** The phone nav is a dock: it leaves the edges, carries its own border and
+ *  marks the live tab with a step of caneta on its top edge, which is where the
+ *  eye lands before it reads the label. */
 function tabBar(device: Device, active: TabId | null): FrameNode {
-  const bar = stack({
+  const holder = stack({
     name: 'nav/tabbar',
     direction: 'HORIZONTAL',
-    padding: [10, 12, 18, 12],
-    fill: 'card',
-    border: { color: 'line', weight: 1, sides: ['top'] },
+    padding: [0, DOCK.side, DOCK.below, DOCK.side],
     width: device.width,
+  })
+  const dock = stack({
+    name: 'dock',
+    direction: 'HORIZONTAL',
+    padding: [0, 6, 8, 6],
+    fill: 'card',
+    radius: SHAPE.dock,
+    border: { color: 'line', weight: 1 },
+    width: device.width - DOCK.side * 2,
   })
   for (const tab of TABS) {
     const isActive = tab.id === active
     const ink: ColorName = isActive ? 'caneta' : 'ink2'
     const cell = stack({ name: `tab/${tab.id}`, gap: 5, align: 'CENTER', justify: 'CENTER' })
-    setSize(cell, { height: 44 })
+    cell.appendChild(step(isActive))
     cell.appendChild(icon(tab.svg, 23, ink))
     cell.appendChild(text(tab.label, { size: TYPE.micro, weight: isActive ? 700 : 500, color: ink }))
-    bar.appendChild(grow(cell))
+    // the 44px floor for a thumb, unless the row already needs more
+    setSize(cell, { height: Math.max(44, cell.height) })
+    dock.appendChild(grow(cell))
   }
-  return bar
+  holder.appendChild(fill(dock))
+  return holder
+}
+
+const DOCK = { side: 14, below: 12, step: 3, stepWidth: 30 }
+
+/** The caneta step over the live tab. The other tabs keep the same empty slot,
+ *  so every icon sits on one row instead of centring itself in its own cell. */
+function step(live: boolean): FrameNode {
+  const frame = stack({ name: 'step', fill: live ? 'caneta' : null, radius: DOCK.step })
+  setSize(frame, { width: DOCK.stepWidth, height: DOCK.step })
+  return frame
 }
 
 function topBar(device: Device, active: TabId | null): FrameNode {

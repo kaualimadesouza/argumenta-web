@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react'
-import { NavLink } from 'react-router-dom'
+import type { CSSProperties, ReactNode } from 'react'
+import { NavLink, useLocation } from 'react-router-dom'
 
 import styles from './Nav.module.css'
 
@@ -47,28 +47,41 @@ const TABS: Tab[] = [
 ]
 
 export function Nav() {
+  const { pathname } = useLocation()
+  // the step slides to the live tab, so the two indices ride on the element
+  // instead of on a class: CSS can move a single mark, not swap one for another
+  const live = TABS.findIndex((tab) => pathname.startsWith(tab.to))
+  const rail = { '--live': String(Math.max(live, 0)), '--tabs': String(TABS.length) }
+
   return (
-    <nav className={styles.nav} aria-label="Navegação principal">
+    <nav
+      className={styles.nav}
+      aria-label="Navegação principal"
+      style={rail as CSSProperties}
+    >
       <span className={styles.wordmark} aria-hidden="true">
         argumenta
       </span>
-      <ul className={styles.tabs}>
-        {TABS.map((tab) => (
-          <li key={tab.to}>
-            <NavLink
-              to={tab.to}
-              className={({ isActive }) =>
-                [styles.tab, isActive ? styles.active : undefined].filter(Boolean).join(' ')
-              }
-            >
-              <svg className={styles.icon} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                {tab.icon}
-              </svg>
-              <span className={styles.label}>{tab.label}</span>
-            </NavLink>
-          </li>
-        ))}
-      </ul>
+      <div className={styles.rail}>
+        {live >= 0 ? <span className={styles.step} aria-hidden="true" /> : null}
+        <ul className={styles.tabs}>
+          {TABS.map((tab) => (
+            <li key={tab.to}>
+              <NavLink
+                to={tab.to}
+                className={({ isActive }) =>
+                  [styles.tab, isActive ? styles.active : undefined].filter(Boolean).join(' ')
+                }
+              >
+                <svg className={styles.icon} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  {tab.icon}
+                </svg>
+                <span className={styles.label}>{tab.label}</span>
+              </NavLink>
+            </li>
+          ))}
+        </ul>
+      </div>
     </nav>
   )
 }

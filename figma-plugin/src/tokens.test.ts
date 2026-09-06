@@ -78,6 +78,7 @@ describe('the plugin scales against src/styles/tokens.css', () => {
     expect(SHAPE.button).toBe(px(base('--radius-button')))
     expect(SHAPE.tile).toBe(px(base('--radius-tile')))
     expect(SHAPE.chip).toBe(px(base('--radius-chip')))
+    expect(SHAPE.dock).toBe(px(base('--radius-dock')))
   })
 
   it('reads the reading columns and rails', () => {

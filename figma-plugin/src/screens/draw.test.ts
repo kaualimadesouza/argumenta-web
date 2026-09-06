@@ -5,7 +5,7 @@ import { loadFonts, settleSizing, stack, text } from '../nodes'
 import { createStyles } from '../styles'
 import { installFakeFigma, type FakeFigma } from '../testing/fakeFigma'
 import { overflows, pinned, unfilled } from '../testing/invariants'
-import { COLORS } from '../tokens'
+import { COLORS, SHAPE } from '../tokens'
 import { trilha } from './app'
 import { entrada } from './auth'
 import { columns } from './layout'
@@ -253,5 +253,34 @@ describe('cards in a row', () => {
         expect(new Set(heightsOf(line)).size, `${line.name} at ${device.width}`).toBe(1)
       }
     }
+  })
+})
+
+/** The phone nav is a dock: it leaves the edges, carries its own border and
+ *  marks the live tab with a step of caneta on its top edge. */
+describe('the dock under the thumb', () => {
+  const find = (frame: FrameNode, name: string): SceneNode => {
+    const found = frame.findAll(() => true).find((node) => node.name === name)
+    if (found === undefined) throw new Error(`no ${name} in ${frame.name}`)
+    return found
+  }
+
+  it('floats inside the phone instead of running edge to edge', () => {
+    const device = deviceOf('phone')
+    const dock = find(trilha(device), 'dock') as FrameNode
+    expect(dock.width).toBe(device.width - 28)
+    expect(dock.cornerRadius).toBe(SHAPE.dock)
+    expect(dock.strokes.length).toBe(1)
+  })
+
+  it('steps the live tab and leaves the others alone', () => {
+    const frame = trilha(deviceOf('phone'))
+    const live = find(frame, 'tab/trilha') as FrameNode
+    const other = find(frame, 'tab/conta') as FrameNode
+    const stepOf = (tab: FrameNode): FrameNode => tab.children[0] as FrameNode
+    expect(stepOf(live).height).toBe(3)
+    expect(stepOf(live).fills).not.toEqual([])
+    expect(stepOf(other).height).toBe(3)
+    expect(stepOf(other).fills).toEqual([])
   })
 })
