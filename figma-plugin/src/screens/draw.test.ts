@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import { DEVICES, deviceOf } from '../devices'
-import { loadFonts } from '../nodes'
+import { loadFonts, stack } from '../nodes'
 import { createStyles } from '../styles'
 import { installFakeFigma, type FakeFigma } from '../testing/fakeFigma'
 import { COLORS } from '../tokens'
@@ -111,5 +111,13 @@ describe('the nav changes shape with the width', () => {
         expect(names(build(device)).some((name) => name.startsWith('nav/'))).toBe(false)
       }
     }
+  })
+})
+
+describe('the fake API', () => {
+  /** The negative padding that reached Figma once: art the real API refuses
+   *  must not build here either. */
+  it('refuses a negative padding, as Figma does', () => {
+    expect(() => stack({ padding: [0, 0, 0, -120] })).toThrow(/greater than or equal to 0/)
   })
 })

@@ -18,6 +18,18 @@ function assertSize(value: number, what: string): void {
   }
 }
 
+type Side = 'Top' | 'Right' | 'Bottom' | 'Left'
+
+/** Figma refuses a negative padding, so the fake has to refuse it too: art that
+ *  cannot exist must not pass the tests. */
+function assertPadding(value: number, side: Side): void {
+  if (!Number.isFinite(value) || value < 0) {
+    throw new Error(
+      `in set_padding${side}: Property "padding${side}" failed: Number must be greater than or equal to 0`,
+    )
+  }
+}
+
 class FakeNode {
   name = 'node'
   x = 0
@@ -77,15 +89,48 @@ class FakeFrame extends FakeNode {
   layoutWrap = 'NO_WRAP'
   itemSpacing = 0
   counterAxisSpacing = 0
-  paddingTop = 0
-  paddingRight = 0
-  paddingBottom = 0
-  paddingLeft = 0
+  private pad: Record<Side, number> = { Top: 0, Right: 0, Bottom: 0, Left: 0 }
   primaryAxisSizingMode: Sizing = 'AUTO'
   counterAxisSizingMode: Sizing = 'AUTO'
   primaryAxisAlignItems = 'MIN'
   counterAxisAlignItems = 'MIN'
   clipsContent = true
+
+  get paddingTop(): number {
+    return this.pad.Top
+  }
+
+  set paddingTop(value: number) {
+    assertPadding(value, 'Top')
+    this.pad.Top = value
+  }
+
+  get paddingRight(): number {
+    return this.pad.Right
+  }
+
+  set paddingRight(value: number) {
+    assertPadding(value, 'Right')
+    this.pad.Right = value
+  }
+
+  get paddingBottom(): number {
+    return this.pad.Bottom
+  }
+
+  set paddingBottom(value: number) {
+    assertPadding(value, 'Bottom')
+    this.pad.Bottom = value
+  }
+
+  get paddingLeft(): number {
+    return this.pad.Left
+  }
+
+  set paddingLeft(value: number) {
+    assertPadding(value, 'Left')
+    this.pad.Left = value
+  }
 
   appendChild(child: FakeNode): void {
     child.parent = this

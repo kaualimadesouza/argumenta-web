@@ -2268,7 +2268,6 @@
         name: `row/${index + 1}`,
         direction: "HORIZONTAL",
         gap: 16,
-        padding: [0, 0, 0, index === 1 ? -120 : 20],
         align: "MIN"
       });
       for (const entry of row2) line.appendChild(chapterCard(entry, cardWidth));

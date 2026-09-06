@@ -323,8 +323,11 @@ interface ChapterRow {
   objective: string
 }
 
-/** The marquee rolls in the browser; here it is the same row of cards, clipped
- *  by the viewport exactly as the animation shows it. */
+/** The marquee rolls in the browser; here it is the same rows of cards, clipped
+ *  by the viewport exactly as the animation shows them. Both rows sit flush
+ *  against the left edge, as the stylesheet has them: the offset a reader sees
+ *  comes from the two animations running in opposite directions, and a static
+ *  frame cannot carry that. */
 function marquee(device: Device): FrameNode {
   const cardWidth = device.id === 'phone' ? 300 : 340
   const frame = stack({ name: 'marquee', gap: 16, width: device.width })
@@ -334,7 +337,6 @@ function marquee(device: Device): FrameNode {
       name: `row/${index + 1}`,
       direction: 'HORIZONTAL',
       gap: 16,
-      padding: [0, 0, 0, index === 1 ? -120 : 20],
       align: 'MIN',
     })
     for (const entry of row) line.appendChild(chapterCard(entry, cardWidth))
