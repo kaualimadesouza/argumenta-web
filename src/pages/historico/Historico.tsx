@@ -5,6 +5,7 @@ import { Loaded } from '../../api/Loaded'
 import { useApi } from '../../api/context'
 import type { Verdict } from '../../api/types'
 import { useResource } from '../../api/useResource'
+import { Chip } from '../../components/Chip'
 import styles from './Historico.module.css'
 
 function formatVerdict(verdict: Verdict): string {
@@ -22,9 +23,9 @@ export function Historico() {
   return (
     <Loaded resource={state} onRetry={reload}>
       {(submissions) => {
-        // Ordena pela mais recente primeiro
+        // the latest attempt first: it is the one the student just wrote
         const sorted = [...submissions].sort((a, b) => b.attempt_number - a.attempt_number)
-        
+
         return (
           <main className={styles.page}>
             <header className={styles.bar}>
@@ -39,13 +40,11 @@ export function Historico() {
               {sorted.map((sub) => (
                 <article key={sub.submission_id} className={styles.card}>
                   <header className={styles.header}>
-                    <div>
+                    <div className={styles.who}>
                       <div className={styles.attempt}>Tentativa {sub.attempt_number}</div>
                       <div className={styles.verdict}>{formatVerdict(sub.verdict)}</div>
                     </div>
-                    <div className={styles.score}>
-                      {sub.average_score}/{sub.lens.total_max ?? 100}
-                    </div>
+                    <Chip>{`${sub.average_score}/${sub.lens.total_max ?? 100}`}</Chip>
                   </header>
                   <div className={styles.body}>{sub.body}</div>
                 </article>
