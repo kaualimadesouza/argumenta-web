@@ -185,6 +185,30 @@
     frame.primaryAxisSizingMode = primary === void 0 ? "AUTO" : "FIXED";
     frame.counterAxisSizingMode = counter === void 0 ? "AUTO" : "FIXED";
   }
+  function states(frame, dimension) {
+    if (frame.layoutMode === "NONE") return true;
+    const primary = dimension === (frame.layoutMode === "HORIZONTAL" ? "width" : "height");
+    return primary ? frame.primaryAxisSizingMode === "FIXED" : frame.counterAxisSizingMode === "FIXED";
+  }
+  function isAutoLayout(node) {
+    return node.type === "FRAME" && node.layoutMode !== "NONE";
+  }
+  function settleSizing(frame) {
+    const sideways = frame.layoutMode === "HORIZONTAL";
+    for (const child of frame.children) {
+      if (child.type === "FRAME") settleSizing(child);
+      if (!isAutoLayout(child)) continue;
+      const cross = sideways ? "height" : "width";
+      const main2 = sideways ? "width" : "height";
+      if (child.layoutAlign === "STRETCH" && states(frame, cross)) fillDimension(child, cross);
+      if (child.layoutGrow === 1 && states(frame, main2)) fillDimension(child, main2);
+    }
+    return frame;
+  }
+  function fillDimension(frame, dimension) {
+    if (dimension === "width") frame.layoutSizingHorizontal = "FILL";
+    else frame.layoutSizingVertical = "FILL";
+  }
   function applyBorder(node, border) {
     node.strokes = paint(border.color);
     node.strokeAlign = "INSIDE";
@@ -433,7 +457,7 @@
   function fitToDevice(frame, device) {
     setSize(frame, { width: device.width });
     if (frame.height < device.height) setSize(frame, { width: device.width, height: device.height });
-    return frame;
+    return settleSizing(frame);
   }
   function settle(screen, device) {
     return fitToDevice(screen.frame, device);
@@ -2127,15 +2151,13 @@
       )
     );
     copy.appendChild(
-      fill(
-        text(HERO_LEAD, {
-          size: TYPE.lead,
-          color: "ink2",
-          lineHeight: 1.55,
-          tracking: TRACKING.lead,
-          width: Math.min(544, copyWidth)
-        })
-      )
+      text(HERO_LEAD, {
+        size: TYPE.lead,
+        color: "ink2",
+        lineHeight: 1.55,
+        tracking: TRACKING.lead,
+        width: Math.min(544, copyWidth)
+      })
     );
     const ctaRow = stack({ name: "ctaRow", direction: "HORIZONTAL", gap: 12, align: "CENTER", wrap: true, width: copyWidth });
     const cta = button("Começar grátis");
@@ -2686,14 +2708,12 @@
     });
     for (const row2 of dimensionRows) criteria.appendChild(fill(row2));
     criteria.appendChild(
-      fill(
-        text("Toda nota vem com o trecho do seu texto que a justifica. Sem evidência, sem desconto.", {
-          size: TYPE.body,
-          color: "ink2",
-          lineHeight: 1.55,
-          width: Math.min(736, width)
-        })
-      )
+      text("Toda nota vem com o trecho do seu texto que a justifica. Sem evidência, sem desconto.", {
+        size: TYPE.body,
+        color: "ink2",
+        lineHeight: 1.55,
+        width: Math.min(736, width)
+      })
     );
     frame.appendChild(criteria);
     const plans = section(width, device, true);
@@ -2717,14 +2737,12 @@
     });
     for (const row2 of planRows) plans.appendChild(fill(row2));
     plans.appendChild(
-      fill(
-        text("Qualquer envio mantém a sua sequência, em qualquer plano.", {
-          size: TYPE.meta,
-          color: "muted",
-          lineHeight: 1.55,
-          width: Math.min(736, width)
-        })
-      )
+      text("Qualquer envio mantém a sua sequência, em qualquer plano.", {
+        size: TYPE.meta,
+        color: "muted",
+        lineHeight: 1.55,
+        width: Math.min(736, width)
+      })
     );
     frame.appendChild(plans);
     const questions = section(width, device, true);
@@ -2733,7 +2751,7 @@
     frame.appendChild(questions);
     frame.appendChild(closing(width, device));
     frame.appendChild(footer(width, device));
-    return frame;
+    return settleSizing(frame);
   }
 
   // figma-plugin/src/screens/writing.ts

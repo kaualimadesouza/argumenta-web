@@ -1,6 +1,6 @@
 import { brandWordmark, deviceFrame, nightPanel, penMark, speechRow } from '../chrome'
 import { columnFor, type Device } from '../devices'
-import { fill, pressShadow, rect, setSize, stack, text } from '../nodes'
+import { fill, pressShadow, rect, setSize, settleSizing, stack, text } from '../nodes'
 import {
   CHAPTER_ROWS,
   CLOSING_FACTS,
@@ -174,15 +174,13 @@ function hero(width: number, device: Device): FrameNode {
     ),
   )
   copy.appendChild(
-    fill(
-      text(HERO_LEAD, {
-        size: TYPE.lead,
-        color: 'ink2',
-        lineHeight: 1.55,
-        tracking: TRACKING.lead,
-        width: Math.min(544, copyWidth),
-      }),
-    ),
+    text(HERO_LEAD, {
+      size: TYPE.lead,
+      color: 'ink2',
+      lineHeight: 1.55,
+      tracking: TRACKING.lead,
+      width: Math.min(544, copyWidth),
+    }),
   )
   const ctaRow = stack({ name: 'ctaRow', direction: 'HORIZONTAL', gap: 12, align: 'CENTER', wrap: true, width: copyWidth })
   const cta = button('Começar grátis')
@@ -791,14 +789,12 @@ export function landing(device: Device): FrameNode {
   })
   for (const row of dimensionRows) criteria.appendChild(fill(row))
   criteria.appendChild(
-    fill(
-      text('Toda nota vem com o trecho do seu texto que a justifica. Sem evidência, sem desconto.', {
-        size: TYPE.body,
-        color: 'ink2',
-        lineHeight: 1.55,
-        width: Math.min(736, width),
-      }),
-    ),
+    text('Toda nota vem com o trecho do seu texto que a justifica. Sem evidência, sem desconto.', {
+      size: TYPE.body,
+      color: 'ink2',
+      lineHeight: 1.55,
+      width: Math.min(736, width),
+    }),
   )
   frame.appendChild(criteria)
 
@@ -823,14 +819,12 @@ export function landing(device: Device): FrameNode {
   })
   for (const row of planRows) plans.appendChild(fill(row))
   plans.appendChild(
-    fill(
-      text('Qualquer envio mantém a sua sequência, em qualquer plano.', {
-        size: TYPE.meta,
-        color: 'muted',
-        lineHeight: 1.55,
-        width: Math.min(736, width),
-      }),
-    ),
+    text('Qualquer envio mantém a sua sequência, em qualquer plano.', {
+      size: TYPE.meta,
+      color: 'muted',
+      lineHeight: 1.55,
+      width: Math.min(736, width),
+    }),
   )
   frame.appendChild(plans)
 
@@ -841,5 +835,5 @@ export function landing(device: Device): FrameNode {
 
   frame.appendChild(closing(width, device))
   frame.appendChild(footer(width, device))
-  return frame
+  return settleSizing(frame)
 }

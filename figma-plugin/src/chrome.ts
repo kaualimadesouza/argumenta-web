@@ -1,5 +1,5 @@
 import { columnFor, type ColumnShape, type Device } from './devices'
-import { fill, grow, icon, paint, rect, setSize, stack, text } from './nodes'
+import { fill, grow, icon, paint, rect, setSize, settleSizing, stack, text } from './nodes'
 import { COLORS, SHAPE, TRACKING, TYPE, type ColorName } from './tokens'
 
 /* ------------------------------ wordmark ------------------------------ */
@@ -236,7 +236,7 @@ export function screenFrame(device: Device, spec: ScreenSpec): Screen {
 export function fitToDevice(frame: FrameNode, device: Device): FrameNode {
   setSize(frame, { width: device.width })
   if (frame.height < device.height) setSize(frame, { width: device.width, height: device.height })
-  return frame
+  return settleSizing(frame)
 }
 
 /** What a column screen ends with: the frame, sized to its own content. */

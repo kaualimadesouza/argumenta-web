@@ -4,9 +4,10 @@ import { columnFor, DEVICES, deviceOf } from '../devices'
 import { loadFonts, stack, text } from '../nodes'
 import { createStyles } from '../styles'
 import { installFakeFigma, type FakeFigma } from '../testing/fakeFigma'
-import { overflows } from '../testing/overflow'
+import { overflows, unfilled } from '../testing/invariants'
 import { COLORS } from '../tokens'
 import { trilha } from './app'
+import { entrada } from './auth'
 import { columns } from './layout'
 import { DEVICE_SCREENS, LANDING, SCREENS } from './index'
 import { cena, consequencia, correcao, editor, historico } from './writing'
@@ -134,6 +135,16 @@ describe('no block sits on top of the next one', () => {
   }
 })
 
+describe('every frame that fills its parent measures it', () => {
+  for (const device of DEVICES) {
+    for (const screen of SCREENS) {
+      it(`${screen.label} at ${device.width}`, () => {
+        expect(unfilled(screen.build(device))).toEqual([])
+      })
+    }
+  }
+})
+
 describe('a stack with a width', () => {
   it('hugs its height when it lies sideways', () => {
     const row = stack({ direction: 'HORIZONTAL', width: 300 })
@@ -174,5 +185,32 @@ describe('a grid of columns', () => {
     })
     expect(widths).toEqual([286, 286, 286, 286])
     expect(rows.map((row) => row.children.length)).toEqual([3, 1])
+  })
+})
+
+/** `fill` and `grow` are this file's `display: block` and `flex: 1`. Figma keeps
+ *  the hug when a child stretches an axis it also hugs, and then a button
+ *  shrinks to its label and a panel stops at its text. */
+describe('a child that fills its parent', () => {
+  const child = (frame: FrameNode, name: string): SceneNode => {
+    const found = frame.findAll(() => true).find((node) => node.name === name)
+    if (found === undefined) throw new Error(`no ${name} in ${frame.name}`)
+    return found
+  }
+
+  it('spans the column, instead of hugging its label', () => {
+    const frame = entrada(deviceOf('desktop'))
+    const list = child(frame, 'list') as FrameNode
+    expect(child(frame, 'button/Entrar com Google').width).toBe(list.width)
+  })
+
+  it('gives the night panel the whole viewport height', () => {
+    const frame = entrada(deviceOf('desktop'))
+    expect(child(frame, 'brand').height).toBe(frame.height)
+  })
+
+  it('runs the rail down the full height of a desktop screen', () => {
+    const frame = trilha(deviceOf('desktop'))
+    expect(child(frame, 'nav/rail').height).toBe(frame.height)
   })
 })

@@ -112,6 +112,43 @@ export function setSize(frame: FrameNode, size: Size): void {
   frame.counterAxisSizingMode = counter === undefined ? 'AUTO' : 'FIXED'
 }
 
+export type Dimension = 'width' | 'height'
+
+/** Whether the frame states a dimension instead of hugging its content. Which
+ *  sizing mode owns it flips with the direction: on a row the primary axis is
+ *  the width, on a column it is the height. */
+export function states(frame: FrameNode, dimension: Dimension): boolean {
+  if (frame.layoutMode === 'NONE') return true
+  const primary = dimension === (frame.layoutMode === 'HORIZONTAL' ? 'width' : 'height')
+  return primary ? frame.primaryAxisSizingMode === 'FIXED' : frame.counterAxisSizingMode === 'FIXED'
+}
+
+function isAutoLayout(node: SceneNode): node is FrameNode {
+  return node.type === 'FRAME' && node.layoutMode !== 'NONE'
+}
+
+/** `fill` and `grow` only mark the child, and Figma keeps the hug when a frame
+ *  stretches an axis it also hugs: the button shrinks to its label. Which axis
+ *  that is depends on the parent's direction, known only once the tree stands,
+ *  so the marks are settled in one pass at the end of a build. */
+export function settleSizing(frame: FrameNode): FrameNode {
+  const sideways = frame.layoutMode === 'HORIZONTAL'
+  for (const child of frame.children) {
+    if (child.type === 'FRAME') settleSizing(child)
+    if (!isAutoLayout(child)) continue
+    const cross: Dimension = sideways ? 'height' : 'width'
+    const main: Dimension = sideways ? 'width' : 'height'
+    if (child.layoutAlign === 'STRETCH' && states(frame, cross)) fillDimension(child, cross)
+    if (child.layoutGrow === 1 && states(frame, main)) fillDimension(child, main)
+  }
+  return frame
+}
+
+function fillDimension(frame: FrameNode, dimension: Dimension): void {
+  if (dimension === 'width') frame.layoutSizingHorizontal = 'FILL'
+  else frame.layoutSizingVertical = 'FILL'
+}
+
 export function applyBorder(node: FrameNode | RectangleNode, border: Border): void {
   node.strokes = paint(border.color)
   node.strokeAlign = 'INSIDE'

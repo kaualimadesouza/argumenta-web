@@ -4,6 +4,9 @@
 
 type Axis = 'VERTICAL' | 'HORIZONTAL'
 type Sizing = 'AUTO' | 'FIXED'
+type Dimension = 'width' | 'height'
+/** The shorthand Figma's own panel shows: fixed, hug the content, fill the parent. */
+type Fit = 'FIXED' | 'HUG' | 'FILL'
 
 /** Figma never reports a zero dimension: an empty auto-layout frame is 0.01. */
 const FLOOR = 0.01
@@ -51,10 +54,30 @@ class FakeNode {
   layoutAlign = 'INHERIT'
   layoutGrow = 0
   layoutPositioning = 'AUTO'
-  layoutSizingHorizontal = 'FIXED'
-  layoutSizingVertical = 'FIXED'
+  /** Figma's own per-dimension sizing: what the node does with the space. */
+  fit: Record<Dimension, Fit> = { width: 'FIXED', height: 'FIXED' }
   protected fixedWidth = 100
   protected fixedHeight = 20
+
+  get layoutSizingHorizontal(): Fit {
+    return this.fit.width
+  }
+
+  set layoutSizingHorizontal(value: Fit) {
+    this.setFit('width', value)
+  }
+
+  get layoutSizingVertical(): Fit {
+    return this.fit.height
+  }
+
+  set layoutSizingVertical(value: Fit) {
+    this.setFit('height', value)
+  }
+
+  protected setFit(dimension: Dimension, value: Fit): void {
+    this.fit[dimension] = value
+  }
 
   get width(): number {
     return this.fixedWidth
@@ -62,6 +85,10 @@ class FakeNode {
 
   get height(): number {
     return this.fixedHeight
+  }
+
+  size(dimension: Dimension): number {
+    return dimension === 'width' ? this.width : this.height
   }
 
   resize(width: number, height: number): void {
@@ -163,7 +190,7 @@ class FakeFrame extends FakeNode {
 
   /** Which sizing mode owns a dimension flips with the direction: on a row the
    *  primary axis is the width, on a column it is the height. */
-  private isFixed(dimension: 'width' | 'height'): boolean {
+  private isFixed(dimension: Dimension): boolean {
     if (this.layoutMode === 'NONE') return true
     const primary = dimension === (this.layoutMode === 'HORIZONTAL' ? 'width' : 'height')
     return primary
@@ -171,17 +198,64 @@ class FakeFrame extends FakeNode {
       : this.counterAxisSizingMode === 'FIXED'
   }
 
+  /** Figma's shorthand writes through to the axis modes, and refuses to fill a
+   *  parent that is hugging the same dimension: one of the two has to give. */
+  protected setFit(dimension: Dimension, value: Fit): void {
+    const parent = this.parent
+    if (value === 'FILL' && (parent === null || !parent.isFixed(dimension))) {
+      throw new Error(`Cannot set ${dimension} to FILL: the parent hugs its ${dimension}`)
+    }
+    super.setFit(dimension, value)
+    const primary = dimension === (this.layoutMode === 'HORIZONTAL' ? 'width' : 'height')
+    const mode: Sizing = value === 'HUG' ? 'AUTO' : 'FIXED'
+    if (primary) this.primaryAxisSizingMode = mode
+    else this.counterAxisSizingMode = mode
+    if (value !== 'FILL' || parent === null) return
+    if (dimension === alongMainAxisOf(parent)) this.layoutGrow = 1
+    else this.layoutAlign = 'STRETCH'
+  }
+
+  padding(dimension: Dimension): number {
+    return dimension === 'width'
+      ? this.paddingLeft + this.paddingRight
+      : this.paddingTop + this.paddingBottom
+  }
+
+  /** The size a filling child gets: the parent's room on the cross axis, and an
+   *  equal share of what the siblings leave on the main one. */
+  private filled(dimension: Dimension): number {
+    const parent = this.parent as FakeFrame
+    const room = parent.size(dimension) - parent.padding(dimension)
+    if (dimension !== alongMainAxisOf(parent)) return atLeastFloor(room)
+    const gaps = Math.max(0, parent.children.length - 1) * parent.itemSpacing
+    const others = parent.children.filter((child) => child !== this)
+    const taken = others.reduce(
+      (carried, child) => carried + (child.fit[dimension] === 'FILL' ? 0 : child.size(dimension)),
+      0,
+    )
+    const sharing = parent.children.filter((child) => child.fit[dimension] === 'FILL').length
+    return atLeastFloor((room - gaps - taken) / Math.max(1, sharing))
+  }
+
+  size(dimension: Dimension): number {
+    if (this.fit[dimension] === 'FILL' && this.parent !== null) return this.filled(dimension)
+    if (this.isFixed(dimension)) return dimension === 'width' ? this.fixedWidth : this.fixedHeight
+    const along = dimension === alongMainAxisOf(this) ? this.mainAxisExtent() : this.crossAxisExtent()
+    return atLeastFloor(along + this.padding(dimension))
+  }
+
   get width(): number {
-    if (this.isFixed('width')) return this.fixedWidth
-    const extent = this.layoutMode === 'HORIZONTAL' ? this.mainAxisExtent() : this.crossAxisExtent()
-    return atLeastFloor(extent + this.paddingLeft + this.paddingRight)
+    return this.size('width')
   }
 
   get height(): number {
-    if (this.isFixed('height')) return this.fixedHeight
-    const extent = this.layoutMode === 'VERTICAL' ? this.mainAxisExtent() : this.crossAxisExtent()
-    return atLeastFloor(extent + this.paddingTop + this.paddingBottom)
+    return this.size('height')
   }
+}
+
+/** The dimension a stack lays its children along. */
+function alongMainAxisOf(frame: FakeFrame): Dimension {
+  return frame.layoutMode === 'HORIZONTAL' ? 'width' : 'height'
 }
 
 /** Rough metrics, but deterministic: enough for a layout to have a size. */
