@@ -160,7 +160,19 @@ describe('the landing centres its column', () => {
 })
 
 describe('a grid of columns', () => {
-  it('refuses a card that was not built at the cell width', () => {
-    expect(() => columns([stack({ width: 300 })], 3, 900, 20)).toThrow(/cell/)
+  it('builds every cell at the width it is going to occupy', () => {
+    const widths: number[] = []
+    const rows = columns({
+      items: [1, 2, 3, 4],
+      perRow: 3,
+      width: 900,
+      gap: 20,
+      build: (_item, cell) => {
+        widths.push(cell)
+        return stack({ width: cell })
+      },
+    })
+    expect(widths).toEqual([286, 286, 286, 286])
+    expect(rows.map((row) => row.children.length)).toEqual([3, 1])
   })
 })

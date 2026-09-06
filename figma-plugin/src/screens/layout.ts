@@ -18,26 +18,38 @@ export function screenTitle(label: string, device: Device): TextNode {
   })
 }
 
-/** The width one cell of a `columns` grid gets. Callers need it up front,
- *  because a card sizes its own text against it. */
-export function cellWidth(width: number, perRow: number, gap: number): number {
+/** The width one cell of a `columns` grid gets. */
+function cellWidth(width: number, perRow: number, gap: number): number {
   return Math.floor((width - gap * (perRow - 1)) / perRow)
 }
 
-/** Rows of equal columns, since Figma auto-layout has no grid. Resizing a card
- *  here would only move its shell: what it holds was sized against the width it
- *  was built at, so a card of the wrong width is a caller's mistake. */
-export function columns(cards: FrameNode[], perRow: number, width: number, gap: number): FrameNode[] {
-  const cell = cellWidth(width, perRow, gap)
+export interface Grid<T> {
+  items: T[]
+  perRow: number
+  /** The row's width, which its cells divide between them. */
+  width: number
+  gap: number
+  /** Builds one cell, at the width it is going to occupy. */
+  build: (item: T, cell: number) => FrameNode
+}
+
+/** Rows of equal columns, since Figma auto-layout has no grid. The cell width
+ *  goes to the builder because resizing a card afterwards moves only its shell:
+ *  everything inside was sized against the width it was built at. */
+export function columns<T>(grid: Grid<T>): FrameNode[] {
+  const cell = cellWidth(grid.width, grid.perRow, grid.gap)
   const rows: FrameNode[] = []
-  for (const card of cards) {
-    if (Math.round(card.width) !== cell) {
-      throw new Error(`${card.name} is ${card.width}px wide in a ${cell}px cell: build it at cellWidth`)
+  for (let index = 0; index < grid.items.length; index += grid.perRow) {
+    const row = stack({
+      name: 'row',
+      direction: 'HORIZONTAL',
+      gap: grid.gap,
+      align: 'MIN',
+      width: grid.width,
+    })
+    for (const item of grid.items.slice(index, index + grid.perRow)) {
+      row.appendChild(grid.build(item, cell))
     }
-  }
-  for (let index = 0; index < cards.length; index += perRow) {
-    const row = stack({ name: 'row', direction: 'HORIZONTAL', gap, align: 'MIN', width })
-    for (const node of cards.slice(index, index + perRow)) row.appendChild(node)
     rows.push(row)
   }
   return rows

@@ -1,18 +1,7 @@
 /** Figma's sizing modes are axis-relative, so a frame can end up with a fixed
- *  height of 0.01 and its children spilling over the block below it. This walks
- *  a built tree and reports every auto-layout frame shorter than what it holds. */
-
-interface LayoutFrame {
-  name: string
-  width: number
-  height: number
-  layoutMode: 'VERTICAL' | 'HORIZONTAL' | 'NONE'
-  layoutWrap: string
-  itemSpacing: number
-  paddingTop: number
-  paddingBottom: number
-  children: unknown[]
-}
+ *  height of 0.01 and its children spilling over the block below it. The
+ *  content is measured here rather than read off the node, so a wrong hug in
+ *  the fake cannot make the invariant vacuous. */
 
 export interface Overflow {
   frame: string
@@ -23,12 +12,8 @@ export interface Overflow {
 /** Half a pixel of slack: the fake's text metrics are rough on purpose. */
 const SLACK = 0.5
 
-function isLayoutFrame(node: unknown): node is LayoutFrame {
-  return typeof node === 'object' && node !== null && 'layoutMode' in node && 'children' in node
-}
-
-function contentHeight(frame: LayoutFrame): number {
-  const children = frame.children.filter(hasHeight)
+function contentHeight(frame: FrameNode): number {
+  const children = frame.children
   if (children.length === 0) return 0
   const padding = frame.paddingTop + frame.paddingBottom
   if (frame.layoutMode === 'HORIZONTAL') {
@@ -38,15 +23,10 @@ function contentHeight(frame: LayoutFrame): number {
   return children.reduce((carried, child) => carried + child.height, 0) + gaps + padding
 }
 
-function hasHeight(node: unknown): node is { height: number } {
-  return typeof node === 'object' && node !== null && 'height' in node
-}
-
-export function overflows(node: unknown): Overflow[] {
-  if (!isLayoutFrame(node)) return []
-  const own: Overflow[] =
-    node.layoutMode !== 'NONE' && node.layoutWrap !== 'WRAP' && node.height + SLACK < contentHeight(node)
-      ? [{ frame: node.name, height: node.height, content: contentHeight(node) }]
-      : []
+export function overflows(node: SceneNode): Overflow[] {
+  if (node.type !== 'FRAME') return []
+  const content = contentHeight(node)
+  const spills = node.layoutMode !== 'NONE' && node.layoutWrap !== 'WRAP' && node.height + SLACK < content
+  const own: Overflow[] = spills ? [{ frame: node.name, height: node.height, content }] : []
   return [...own, ...node.children.flatMap(overflows)]
 }

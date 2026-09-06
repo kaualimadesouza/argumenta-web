@@ -105,7 +105,7 @@ export interface Size {
  *  dimension left out hugs its content. */
 export function setSize(frame: FrameNode, size: Size): void {
   const sideways = frame.layoutMode === 'HORIZONTAL'
-  frame.resize(Math.max(0.01, size.width ?? frame.width), Math.max(0.01, size.height ?? frame.height))
+  frame.resize(size.width ?? frame.width, size.height ?? frame.height)
   const primary = sideways ? size.width : size.height
   const counter = sideways ? size.height : size.width
   frame.primaryAxisSizingMode = primary === undefined ? 'AUTO' : 'FIXED'

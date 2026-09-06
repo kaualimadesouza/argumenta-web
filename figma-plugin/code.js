@@ -179,7 +179,7 @@
   function setSize(frame, size) {
     var _a, _b;
     const sideways = frame.layoutMode === "HORIZONTAL";
-    frame.resize(Math.max(0.01, (_a = size.width) != null ? _a : frame.width), Math.max(0.01, (_b = size.height) != null ? _b : frame.height));
+    frame.resize((_a = size.width) != null ? _a : frame.width, (_b = size.height) != null ? _b : frame.height);
     const primary = sideways ? size.width : size.height;
     const counter = sideways ? size.height : size.width;
     frame.primaryAxisSizingMode = primary === void 0 ? "AUTO" : "FIXED";
@@ -915,17 +915,20 @@
   function cellWidth(width, perRow, gap) {
     return Math.floor((width - gap * (perRow - 1)) / perRow);
   }
-  function columns(cards, perRow, width, gap) {
-    const cell = cellWidth(width, perRow, gap);
+  function columns(grid) {
+    const cell = cellWidth(grid.width, grid.perRow, grid.gap);
     const rows = [];
-    for (const card2 of cards) {
-      if (Math.round(card2.width) !== cell) {
-        throw new Error(`${card2.name} is ${card2.width}px wide in a ${cell}px cell: build it at cellWidth`);
+    for (let index = 0; index < grid.items.length; index += grid.perRow) {
+      const row2 = stack({
+        name: "row",
+        direction: "HORIZONTAL",
+        gap: grid.gap,
+        align: "MIN",
+        width: grid.width
+      });
+      for (const item of grid.items.slice(index, index + grid.perRow)) {
+        row2.appendChild(grid.build(item, cell));
       }
-    }
-    for (let index = 0; index < cards.length; index += perRow) {
-      const row2 = stack({ name: "row", direction: "HORIZONTAL", gap, align: "MIN", width });
-      for (const node of cards.slice(index, index + perRow)) row2.appendChild(node);
       rows.push(row2);
     }
     return rows;
@@ -1123,9 +1126,14 @@
         fill(storyCard({ story: featured, width, featured: true, device }))
       );
     }
-    const cell = cellWidth(width, perRow, gap);
-    const cards = rest.map((story) => storyCard({ story, width: cell, featured: false, device }));
-    for (const row2 of columns(cards, perRow, width, gap)) screen.content.appendChild(fill(row2));
+    const rows = columns({
+      items: rest,
+      perRow,
+      width,
+      gap,
+      build: (story, cell) => storyCard({ story, width: cell, featured: false, device })
+    });
+    for (const row2 of rows) screen.content.appendChild(fill(row2));
     return settle(screen, device);
   }
   function streakCard(width, device) {
@@ -2179,9 +2187,14 @@
     });
     const perRow = desktop ? 4 : 2;
     const gap = desktop ? 40 : 20;
-    const cell = cellWidth(width, perRow, gap);
-    const blocks = FACTS.map((fact) => factBlock(fact, cell, sizesOf(device).stat));
-    for (const row2 of columns(blocks, perRow, width, gap)) strip.appendChild(fill(row2));
+    const rows = columns({
+      items: FACTS,
+      perRow,
+      width,
+      gap,
+      build: (fact, cell) => factBlock(fact, cell, sizesOf(device).stat)
+    });
+    for (const row2 of rows) strip.appendChild(fill(row2));
     return strip;
   }
   function sectionHead(title, sub, width, device) {
@@ -2573,11 +2586,14 @@
     });
     const closingPerRow = desktop ? 4 : 2;
     const closingGap = desktop ? 40 : 20;
-    const closingCell = cellWidth(factsWidth, closingPerRow, closingGap);
-    const blocks = CLOSING_FACTS.map((fact) => factBlock(fact, closingCell, 36));
-    for (const row2 of columns(blocks, closingPerRow, factsWidth, closingGap)) {
-      strip.appendChild(fill(row2));
-    }
+    const closingRows = columns({
+      items: CLOSING_FACTS,
+      perRow: closingPerRow,
+      width: factsWidth,
+      gap: closingGap,
+      build: (fact, cell) => factBlock(fact, cell, 36)
+    });
+    for (const row2 of closingRows) strip.appendChild(fill(row2));
     frame.appendChild(strip);
     return frame;
   }
@@ -2661,9 +2677,14 @@
       )
     );
     const perRow = device.id === "desktop" ? 5 : device.id === "tablet" ? 2 : 1;
-    const dimensionWidth = cellWidth(width, perRow, 16);
-    const cards = DIMENSIONS.map((entry) => dimensionCard(dimensionWidth, entry));
-    for (const row2 of columns(cards, perRow, width, 16)) criteria.appendChild(fill(row2));
+    const dimensionRows = columns({
+      items: DIMENSIONS,
+      perRow,
+      width,
+      gap: 16,
+      build: (entry, cell) => dimensionCard(cell, entry)
+    });
+    for (const row2 of dimensionRows) criteria.appendChild(fill(row2));
     criteria.appendChild(
       fill(
         text("Toda nota vem com o trecho do seu texto que a justifica. Sem evidência, sem desconto.", {
@@ -2687,11 +2708,14 @@
       )
     );
     const planPerRow = device.id === "phone" ? 1 : 3;
-    const planWidth = cellWidth(width, planPerRow, 20);
-    const planCards = PLANS.map((plan) => planCard(planWidth, plan));
-    for (const row2 of columns(planCards, planPerRow, width, 20)) {
-      plans.appendChild(fill(row2));
-    }
+    const planRows = columns({
+      items: PLANS,
+      perRow: planPerRow,
+      width,
+      gap: 20,
+      build: (plan, cell) => planCard(cell, plan)
+    });
+    for (const row2 of planRows) plans.appendChild(fill(row2));
     plans.appendChild(
       fill(
         text("Qualquer envio mantém a sua sequência, em qualquer plano.", {

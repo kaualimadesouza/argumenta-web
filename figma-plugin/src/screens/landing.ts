@@ -17,7 +17,7 @@ import {
 } from '../landingContent'
 import { LANDING_SCALE, SHAPE, TRACKING, TYPE } from '../tokens'
 import { button, card, checkGlyph, chip, kicker } from '../ui'
-import { cellWidth, columns } from './layout'
+import { columns } from './layout'
 import { THUMBNAILS } from './thumbnails'
 
 interface Sizes {
@@ -239,9 +239,14 @@ function factsStrip(width: number, device: Device): FrameNode {
   })
   const perRow = desktop ? 4 : 2
   const gap = desktop ? 40 : 20
-  const cell = cellWidth(width, perRow, gap)
-  const blocks = FACTS.map((fact) => factBlock(fact, cell, sizesOf(device).stat))
-  for (const row of columns(blocks, perRow, width, gap)) strip.appendChild(fill(row))
+  const rows = columns({
+    items: FACTS,
+    perRow,
+    width,
+    gap,
+    build: (fact, cell) => factBlock(fact, cell, sizesOf(device).stat),
+  })
+  for (const row of rows) strip.appendChild(fill(row))
   return strip
 }
 
@@ -672,11 +677,14 @@ function closing(width: number, device: Device): FrameNode {
   })
   const closingPerRow = desktop ? 4 : 2
   const closingGap = desktop ? 40 : 20
-  const closingCell = cellWidth(factsWidth, closingPerRow, closingGap)
-  const blocks = CLOSING_FACTS.map((fact) => factBlock(fact, closingCell, 36))
-  for (const row of columns(blocks, closingPerRow, factsWidth, closingGap)) {
-    strip.appendChild(fill(row))
-  }
+  const closingRows = columns({
+    items: CLOSING_FACTS,
+    perRow: closingPerRow,
+    width: factsWidth,
+    gap: closingGap,
+    build: (fact, cell) => factBlock(fact, cell, 36),
+  })
+  for (const row of closingRows) strip.appendChild(fill(row))
   frame.appendChild(strip)
   return frame
 }
@@ -774,9 +782,14 @@ export function landing(device: Device): FrameNode {
     ),
   )
   const perRow = device.id === 'desktop' ? 5 : device.id === 'tablet' ? 2 : 1
-  const dimensionWidth = cellWidth(width, perRow, 16)
-  const cards = DIMENSIONS.map((entry) => dimensionCard(dimensionWidth, entry))
-  for (const row of columns(cards, perRow, width, 16)) criteria.appendChild(fill(row))
+  const dimensionRows = columns({
+    items: DIMENSIONS,
+    perRow,
+    width,
+    gap: 16,
+    build: (entry, cell) => dimensionCard(cell, entry),
+  })
+  for (const row of dimensionRows) criteria.appendChild(fill(row))
   criteria.appendChild(
     fill(
       text('Toda nota vem com o trecho do seu texto que a justifica. Sem evidência, sem desconto.', {
@@ -801,11 +814,14 @@ export function landing(device: Device): FrameNode {
     ),
   )
   const planPerRow = device.id === 'phone' ? 1 : 3
-  const planWidth = cellWidth(width, planPerRow, 20)
-  const planCards = PLANS.map((plan) => planCard(planWidth, plan))
-  for (const row of columns(planCards, planPerRow, width, 20)) {
-    plans.appendChild(fill(row))
-  }
+  const planRows = columns({
+    items: PLANS,
+    perRow: planPerRow,
+    width,
+    gap: 20,
+    build: (plan, cell) => planCard(cell, plan),
+  })
+  for (const row of planRows) plans.appendChild(fill(row))
   plans.appendChild(
     fill(
       text('Qualquer envio mantém a sua sequência, em qualquer plano.', {

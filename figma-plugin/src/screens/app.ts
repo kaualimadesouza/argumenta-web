@@ -4,7 +4,7 @@ import { applyBorder, fill, grow, rect, stack, text } from '../nodes'
 import { MILESTONES, TRACK, TRENDS, WEEK, type StorySample } from '../samples'
 import { COLORS, LAYOUT, SHAPE, TRACKING, TYPE } from '../tokens'
 import { button, card, chip, progressBar, tick } from '../ui'
-import { cellWidth, columns, screenTitle } from './layout'
+import { columns, screenTitle } from './layout'
 import { dangerCard, nicknameCard, targetsCard } from './profile'
 
 /* -------------------------------- trilha ------------------------------- */
@@ -163,9 +163,14 @@ export function trilha(device: Device): FrameNode {
       fill(storyCard({ story: featured, width, featured: true, device })),
     )
   }
-  const cell = cellWidth(width, perRow, gap)
-  const cards = rest.map((story) => storyCard({ story, width: cell, featured: false, device }))
-  for (const row of columns(cards, perRow, width, gap)) screen.content.appendChild(fill(row))
+  const rows = columns({
+    items: rest,
+    perRow,
+    width,
+    gap,
+    build: (story, cell) => storyCard({ story, width: cell, featured: false, device }),
+  })
+  for (const row of rows) screen.content.appendChild(fill(row))
   return settle(screen, device)
 }
 
