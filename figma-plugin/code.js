@@ -166,17 +166,24 @@
     frame.paddingRight = right;
     frame.paddingBottom = bottom;
     frame.paddingLeft = left;
-    frame.primaryAxisSizingMode = "AUTO";
-    frame.counterAxisSizingMode = options.width === void 0 ? "AUTO" : "FIXED";
     frame.counterAxisAlignItems = options.align === "BASELINE" ? "BASELINE" : (_e = options.align) != null ? _e : "MIN";
     frame.primaryAxisAlignItems = (_f = options.justify) != null ? _f : "MIN";
     frame.clipsContent = false;
     frame.fills = options.fill === void 0 || options.fill === null ? [] : paint(options.fill);
     if (options.radius !== void 0) frame.cornerRadius = options.radius;
     if (options.wrap === true) frame.layoutWrap = "WRAP";
-    if (options.width !== void 0) frame.resize(options.width, frame.height);
+    setSize(frame, { width: options.width });
     if (options.border) applyBorder(frame, options.border);
     return frame;
+  }
+  function setSize(frame, size) {
+    var _a, _b;
+    const sideways = frame.layoutMode === "HORIZONTAL";
+    frame.resize(Math.max(0.01, (_a = size.width) != null ? _a : frame.width), Math.max(0.01, (_b = size.height) != null ? _b : frame.height));
+    const primary = sideways ? size.width : size.height;
+    const counter = sideways ? size.height : size.width;
+    frame.primaryAxisSizingMode = primary === void 0 ? "AUTO" : "FIXED";
+    frame.counterAxisSizingMode = counter === void 0 ? "AUTO" : "FIXED";
   }
   function applyBorder(node, border) {
     node.strokes = paint(border.color);
@@ -325,8 +332,7 @@
       radius: height >= 46 ? SHAPE.button : SHAPE.tile,
       align: "CENTER"
     });
-    pill.primaryAxisSizingMode = "FIXED";
-    pill.resize(pill.width, height);
+    setSize(pill, { height });
     pill.appendChild(icon(tab.svg, size, ink));
     pill.appendChild(text(tab.label, { size: TYPE.body, weight: 600, color: ink, tracking: TRACKING.body }));
     return pill;
@@ -344,8 +350,7 @@
       const isActive = tab.id === active;
       const ink = isActive ? "caneta" : "ink2";
       const cell = stack({ name: `tab/${tab.id}`, gap: 5, align: "CENTER", justify: "CENTER" });
-      cell.primaryAxisSizingMode = "FIXED";
-      cell.resize(cell.width, 44);
+      setSize(cell, { height: 44 });
       cell.appendChild(icon(tab.svg, 23, ink));
       cell.appendChild(text(tab.label, { size: TYPE.micro, weight: isActive ? 700 : 500, color: ink }));
       bar.appendChild(grow(cell));
@@ -363,8 +368,7 @@
       align: "CENTER",
       width: device.width
     });
-    bar.primaryAxisSizingMode = "FIXED";
-    bar.resize(device.width, 66);
+    setSize(bar, { width: device.width, height: 66 });
     bar.appendChild(navWordmark(TYPE.lead));
     const tabs = stack({ name: "tabs", direction: "HORIZONTAL", gap: 4, align: "CENTER" });
     for (const tab of TABS) tabs.appendChild(tabPill(tab, tab.id === active, 20, 40, 9));
@@ -393,13 +397,14 @@
     var _a;
     const frame = figma.createFrame();
     frame.name = `${spec.name} · ${device.width}`;
-    frame.resize(device.width, device.height);
     frame.fills = paint("paper");
     frame.clipsContent = false;
     frame.layoutMode = spec.axis;
-    frame.primaryAxisSizingMode = spec.height === "content" ? "AUTO" : "FIXED";
-    frame.counterAxisSizingMode = "FIXED";
     frame.counterAxisAlignItems = (_a = spec.align) != null ? _a : "MIN";
+    setSize(frame, {
+      width: device.width,
+      height: spec.height === "content" ? void 0 : device.height
+    });
     return frame;
   }
   function screenFrame(device, spec) {
@@ -426,20 +431,8 @@
     return { frame, content, width: column.width };
   }
   function fitToDevice(frame, device) {
-    const sideways = frame.layoutMode === "HORIZONTAL";
-    if (sideways) {
-      frame.counterAxisSizingMode = "AUTO";
-      if (frame.height < device.height) {
-        frame.counterAxisSizingMode = "FIXED";
-        frame.resize(device.width, device.height);
-      }
-      return frame;
-    }
-    frame.primaryAxisSizingMode = "AUTO";
-    if (frame.height < device.height) {
-      frame.primaryAxisSizingMode = "FIXED";
-      frame.resize(device.width, device.height);
-    }
+    setSize(frame, { width: device.width });
+    if (frame.height < device.height) setSize(frame, { width: device.width, height: device.height });
     return frame;
   }
   function settle(screen, device) {
@@ -525,8 +518,7 @@
       justify: "CENTER",
       width: 52
     });
-    frame.primaryAxisSizingMode = "FIXED";
-    frame.resize(52, 52);
+    setSize(frame, { width: 52, height: 52 });
     if (done) frame.appendChild(icon(COVER_DONE, 22, "aprovado"));
     else if (locked) frame.appendChild(icon(COVER_LOCKED, 22, "muted"));
     else frame.appendChild(text(String(position), { size: TYPE.lead, weight: 800, color: "luz", tracking: TRACKING.title }));
@@ -735,8 +727,7 @@
       align: "CENTER",
       justify: "CENTER"
     });
-    frame.primaryAxisSizingMode = "FIXED";
-    frame.resize(frame.width, height);
+    setSize(frame, { height });
     if (ghost) applyBorder(frame, { color: "lineStrong", weight: 1 });
     if (variant === "primary") frame.effects = pressShadow("canetaPress");
     if (variant === "danger") frame.effects = pressShadow("corretorInk");
@@ -795,8 +786,7 @@
       justify: options.select === true ? "SPACE_BETWEEN" : "MIN",
       width: options.width
     });
-    control.primaryAxisSizingMode = "FIXED";
-    control.resize(options.width, 46);
+    setSize(control, { width: options.width, height: 46 });
     control.appendChild(
       text(options.value, {
         size: TYPE.body,
@@ -829,8 +819,7 @@
       border: { color: "caneta", weight: 1.5 },
       width
     });
-    frame.primaryAxisSizingMode = "FIXED";
-    frame.resize(width, height);
+    setSize(frame, { width, height });
     frame.appendChild(
       text(body, {
         size: TYPE.body,
@@ -872,8 +861,7 @@
       justify: "CENTER",
       width: 15
     });
-    frame.primaryAxisSizingMode = "FIXED";
-    frame.resize(15, 15);
+    setSize(frame, { width: 15, height: 15 });
     frame.appendChild(text(String(number), { size: 9.5, weight: 700, color: "card" }));
     return frame;
   }
@@ -888,8 +876,7 @@
       justify: "CENTER",
       width: 20
     });
-    frame.primaryAxisSizingMode = "FIXED";
-    frame.resize(20, 20);
+    setSize(frame, { width: 20, height: 20 });
     if (!done) applyBorder(frame, { color: "lineStrong", weight: 1.75, dashed: true });
     if (done) {
       const glyph = figma.createNodeFromSvg(CHECK_SVG);
@@ -931,12 +918,14 @@
   function columns(cards, perRow, width, gap) {
     const cell = cellWidth(width, perRow, gap);
     const rows = [];
+    for (const card2 of cards) {
+      if (Math.round(card2.width) !== cell) {
+        throw new Error(`${card2.name} is ${card2.width}px wide in a ${cell}px cell: build it at cellWidth`);
+      }
+    }
     for (let index = 0; index < cards.length; index += perRow) {
       const row2 = stack({ name: "row", direction: "HORIZONTAL", gap, align: "MIN", width });
-      for (const node of cards.slice(index, index + perRow)) {
-        node.resize(cell, node.height);
-        row2.appendChild(node);
-      }
+      for (const node of cards.slice(index, index + perRow)) row2.appendChild(node);
       rows.push(row2);
     }
     return rows;
@@ -1134,7 +1123,8 @@
         fill(storyCard({ story: featured, width, featured: true, device }))
       );
     }
-    const cards = rest.map((story) => storyCard({ story, width, featured: false, device }));
+    const cell = cellWidth(width, perRow, gap);
+    const cards = rest.map((story) => storyCard({ story, width: cell, featured: false, device }));
     for (const row2 of columns(cards, perRow, width, gap)) screen.content.appendChild(fill(row2));
     return settle(screen, device);
   }
@@ -1146,9 +1136,9 @@
     head.appendChild(text("Seu recorde é 9 dias", { size: TYPE.meta, weight: 500, color: "muted" }));
     shell.appendChild(fill(head));
     const week = stack({ name: "week", direction: "HORIZONTAL", gap: 7, width: inner });
-    const cellWidth2 = Math.floor((inner - 7 * 6) / 7);
+    const boxWidth = Math.floor((inner - 7 * 6) / 7);
     const height = device.id === "desktop" ? 48 : 34;
-    for (const day of WEEK) week.appendChild(dayBox(day, cellWidth2, height));
+    for (const day of WEEK) week.appendChild(dayBox(day, boxWidth, height));
     shell.appendChild(fill(week));
     shell.appendChild(
       fill(
@@ -1279,8 +1269,7 @@
       justify: "CENTER",
       width: 22
     });
-    tile.primaryAxisSizingMode = "FIXED";
-    tile.resize(22, 22);
+    setSize(tile, { width: 22, height: 22 });
     const glyph = figma.createNodeFromSvg(GOOGLE_G);
     glyph.resize(13, 13);
     tile.appendChild(glyph);
@@ -1365,8 +1354,7 @@
   function consentRow(width) {
     const row2 = stack({ name: "consent", direction: "HORIZONTAL", gap: 10, align: "MIN", width });
     const box = stack({ name: "checkbox", radius: 4, fill: "card", width: 18 });
-    box.primaryAxisSizingMode = "FIXED";
-    box.resize(18, 18);
+    setSize(box, { width: 18, height: 18 });
     applyBorder(box, { color: "lineStrong", weight: 1 });
     row2.appendChild(box);
     const body = "Li e aceito os termos de uso e a política de privacidade. Se você tem menos de 18 anos, mostre as duas páginas para quem responde por você.";
@@ -2007,8 +1995,7 @@
       justify: "SPACE_BETWEEN",
       width
     });
-    bar.primaryAxisSizingMode = "FIXED";
-    bar.resize(width, 72);
+    setSize(bar, { width, height: 72 });
     bar.appendChild(brandWordmark(22));
     if (device.id === "desktop") {
       const links = stack({ name: "links", direction: "HORIZONTAL", gap: 28, align: "CENTER" });
@@ -2041,8 +2028,7 @@
       align: "CENTER",
       justify: "CENTER"
     });
-    frame.primaryAxisSizingMode = "FIXED";
-    frame.resize(frame.width, 44);
+    setSize(frame, { height: 44 });
     frame.appendChild(
       text(label, { size: TYPE.body, weight: 600, color: "ink2", tracking: TRACKING.body })
     );
@@ -2107,8 +2093,7 @@
       justify: "CENTER",
       width: column
     });
-    fake.primaryAxisSizingMode = "FIXED";
-    fake.resize(column, 50);
+    setSize(fake, { width: column, height: 50 });
     fake.effects = pressShadow("canetaPress");
     fake.appendChild(text("Argumentar", { size: TYPE.body, weight: 700, color: "card" }));
     screen.appendChild(fill(fake));
@@ -2482,8 +2467,7 @@
       shell.appendChild(fill(button("Começar grátis")));
     } else {
       const waiting = stack({ name: "waiting", align: "CENTER", justify: "CENTER", width: inner });
-      waiting.primaryAxisSizingMode = "FIXED";
-      waiting.resize(inner, 50);
+      setSize(waiting, { width: inner, height: 50 });
       waiting.appendChild(
         text("Disponível depois do beta.", { size: TYPE.meta, weight: 600, color: "muted" })
       );
@@ -2637,22 +2621,16 @@
     return frame;
   }
   function landing(device) {
-    const column = columnFor(device, "landing");
-    const width = column.width;
+    const width = columnFor(device, "landing").width;
     const frame = deviceFrame(device, {
       name: "Landing",
       axis: "VERTICAL",
       height: "content",
       align: "CENTER"
     });
-    const wrap = (child) => {
-      const holder = stack({ name: "wrap", padding: [0, column.padX], align: "MIN", width: device.width });
-      holder.appendChild(child);
-      return holder;
-    };
-    frame.appendChild(fill(wrap(navBar(width, device))));
-    frame.appendChild(fill(wrap(hero(width, device))));
-    frame.appendChild(fill(wrap(factsStrip(width, device))));
+    frame.appendChild(navBar(width, device));
+    frame.appendChild(hero(width, device));
+    frame.appendChild(factsStrip(width, device));
     const stories = section(width, device);
     stories.appendChild(
       fill(
@@ -2664,13 +2642,13 @@
         )
       )
     );
-    frame.appendChild(fill(wrap(stories)));
-    frame.appendChild(fill(marquee(device)));
+    frame.appendChild(stories);
+    frame.appendChild(marquee(device));
     const how = section(width, device, true);
     how.appendChild(fill(sectionHead("Como funciona", "Você escreve. O personagem responde. A história segue, ou não.", width, device)));
     how.appendChild(fill(howItWorks(width, device)));
-    frame.appendChild(fill(wrap(how)));
-    frame.appendChild(fill(wrap(thesis(width, device))));
+    frame.appendChild(how);
+    frame.appendChild(thesis(width, device));
     const criteria = section(width, device);
     criteria.appendChild(
       fill(
@@ -2696,7 +2674,7 @@
         })
       )
     );
-    frame.appendChild(fill(wrap(criteria)));
+    frame.appendChild(criteria);
     const plans = section(width, device, true);
     plans.appendChild(
       fill(
@@ -2724,13 +2702,13 @@
         })
       )
     );
-    frame.appendChild(fill(wrap(plans)));
+    frame.appendChild(plans);
     const questions = section(width, device, true);
     questions.appendChild(fill(sectionHead("As três perguntas que todo mundo faz", null, width, device)));
     questions.appendChild(fill(faqList(width, device)));
-    frame.appendChild(fill(wrap(questions)));
-    frame.appendChild(fill(wrap(closing(width, device))));
-    frame.appendChild(fill(wrap(footer(width, device))));
+    frame.appendChild(questions);
+    frame.appendChild(closing(width, device));
+    frame.appendChild(footer(width, device));
     return frame;
   }
 

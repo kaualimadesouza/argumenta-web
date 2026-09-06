@@ -4,6 +4,7 @@ import {
   paint,
   pressShadow,
   rect,
+  setSize,
   stack,
   text,
   type Border,
@@ -97,8 +98,7 @@ export function button(label: string, variant: ButtonVariant = 'primary'): Frame
     align: 'CENTER',
     justify: 'CENTER',
   })
-  frame.primaryAxisSizingMode = 'FIXED'
-  frame.resize(frame.width, height)
+  setSize(frame, { height })
   if (ghost) applyBorder(frame, { color: 'lineStrong', weight: 1 })
   if (variant === 'primary') frame.effects = pressShadow('canetaPress')
   if (variant === 'danger') frame.effects = pressShadow('corretorInk')
@@ -186,8 +186,7 @@ export function field(options: FieldOptions): FrameNode {
     justify: options.select === true ? 'SPACE_BETWEEN' : 'MIN',
     width: options.width,
   })
-  control.primaryAxisSizingMode = 'FIXED'
-  control.resize(options.width, 46)
+  setSize(control, { width: options.width, height: 46 })
   control.appendChild(
     text(options.value, {
       size: TYPE.body,
@@ -223,8 +222,7 @@ export function textarea(body: string, width: number, height: number): FrameNode
     border: { color: 'caneta', weight: 1.5 },
     width,
   })
-  frame.primaryAxisSizingMode = 'FIXED'
-  frame.resize(width, height)
+  setSize(frame, { width, height })
   frame.appendChild(
     text(body, {
       size: TYPE.body,
@@ -276,8 +274,7 @@ export function markBadge(number: number, tone: 'slip' | 'praise'): FrameNode {
     justify: 'CENTER',
     width: 15,
   })
-  frame.primaryAxisSizingMode = 'FIXED'
-  frame.resize(15, 15)
+  setSize(frame, { width: 15, height: 15 })
   frame.appendChild(text(String(number), { size: 9.5, weight: 700, color: 'card' }))
   return frame
 }
@@ -295,8 +292,7 @@ export function tick(done: boolean): FrameNode {
     justify: 'CENTER',
     width: 20,
   })
-  frame.primaryAxisSizingMode = 'FIXED'
-  frame.resize(20, 20)
+  setSize(frame, { width: 20, height: 20 })
   if (!done) applyBorder(frame, { color: 'lineStrong', weight: 1.75, dashed: true })
   if (done) {
     const glyph = figma.createNodeFromSvg(CHECK_SVG)

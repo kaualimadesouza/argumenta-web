@@ -1,11 +1,13 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 
-import { DEVICES, deviceOf } from '../devices'
-import { loadFonts, stack } from '../nodes'
+import { columnFor, DEVICES, deviceOf } from '../devices'
+import { loadFonts, stack, text } from '../nodes'
 import { createStyles } from '../styles'
 import { installFakeFigma, type FakeFigma } from '../testing/fakeFigma'
+import { overflows } from '../testing/overflow'
 import { COLORS } from '../tokens'
 import { trilha } from './app'
+import { columns } from './layout'
 import { DEVICE_SCREENS, LANDING, SCREENS } from './index'
 import { cena, consequencia, correcao, editor, historico } from './writing'
 import { systemBoard } from './system'
@@ -119,5 +121,46 @@ describe('the fake API', () => {
    *  must not build here either. */
   it('refuses a negative padding, as Figma does', () => {
     expect(() => stack({ padding: [0, 0, 0, -120] })).toThrow(/greater than or equal to 0/)
+  })
+})
+
+describe('no block sits on top of the next one', () => {
+  for (const device of DEVICES) {
+    for (const screen of SCREENS) {
+      it(`${screen.label} at ${device.width} holds every child inside its height`, () => {
+        expect(overflows(screen.build(device))).toEqual([])
+      })
+    }
+  }
+})
+
+describe('a stack with a width', () => {
+  it('hugs its height when it lies sideways', () => {
+    const row = stack({ direction: 'HORIZONTAL', width: 300 })
+    row.appendChild(text('uma linha qualquer', { size: 15 }))
+    expect(row.width).toBe(300)
+    expect(row.height).toBeGreaterThan(1)
+  })
+})
+
+/** The stylesheet's `.wrap` is `max-width` plus `margin: 0 auto`, so a block is
+ *  either the centred column or the full-bleed marquee, never the viewport with
+ *  padding: that one draws the whole page flush against the left edge. */
+describe('the landing centres its column', () => {
+  for (const device of DEVICES) {
+    it(`gives every block the column width at ${device.width}`, () => {
+      const frame = LANDING.build(device)
+      expect(frame.counterAxisAlignItems).toBe('CENTER')
+      const column = columnFor(device, 'landing').width
+      for (const block of frame.children) {
+        expect(block.width, block.name).toBe(block.name === 'marquee' ? device.width : column)
+      }
+    })
+  }
+})
+
+describe('a grid of columns', () => {
+  it('refuses a card that was not built at the cell width', () => {
+    expect(() => columns([stack({ width: 300 })], 3, 900, 20)).toThrow(/cell/)
   })
 })

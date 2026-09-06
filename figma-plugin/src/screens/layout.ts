@@ -24,16 +24,20 @@ export function cellWidth(width: number, perRow: number, gap: number): number {
   return Math.floor((width - gap * (perRow - 1)) / perRow)
 }
 
-/** Rows of equal columns, since Figma auto-layout has no grid. */
+/** Rows of equal columns, since Figma auto-layout has no grid. Resizing a card
+ *  here would only move its shell: what it holds was sized against the width it
+ *  was built at, so a card of the wrong width is a caller's mistake. */
 export function columns(cards: FrameNode[], perRow: number, width: number, gap: number): FrameNode[] {
   const cell = cellWidth(width, perRow, gap)
   const rows: FrameNode[] = []
+  for (const card of cards) {
+    if (Math.round(card.width) !== cell) {
+      throw new Error(`${card.name} is ${card.width}px wide in a ${cell}px cell: build it at cellWidth`)
+    }
+  }
   for (let index = 0; index < cards.length; index += perRow) {
     const row = stack({ name: 'row', direction: 'HORIZONTAL', gap, align: 'MIN', width })
-    for (const node of cards.slice(index, index + perRow)) {
-      node.resize(cell, node.height)
-      row.appendChild(node)
-    }
+    for (const node of cards.slice(index, index + perRow)) row.appendChild(node)
     rows.push(row)
   }
   return rows

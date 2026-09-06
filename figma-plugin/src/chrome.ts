@@ -1,5 +1,5 @@
 import { columnFor, type ColumnShape, type Device } from './devices'
-import { fill, grow, icon, paint, rect, stack, text } from './nodes'
+import { fill, grow, icon, paint, rect, setSize, stack, text } from './nodes'
 import { COLORS, SHAPE, TRACKING, TYPE, type ColorName } from './tokens'
 
 /* ------------------------------ wordmark ------------------------------ */
@@ -91,8 +91,7 @@ function tabPill(tab: Tab, active: boolean, size: number, height: number, gap: n
     radius: height >= 46 ? SHAPE.button : SHAPE.tile,
     align: 'CENTER',
   })
-  pill.primaryAxisSizingMode = 'FIXED'
-  pill.resize(pill.width, height)
+  setSize(pill, { height })
   pill.appendChild(icon(tab.svg, size, ink))
   pill.appendChild(text(tab.label, { size: TYPE.body, weight: 600, color: ink, tracking: TRACKING.body }))
   return pill
@@ -111,8 +110,7 @@ function tabBar(device: Device, active: TabId | null): FrameNode {
     const isActive = tab.id === active
     const ink: ColorName = isActive ? 'caneta' : 'ink2'
     const cell = stack({ name: `tab/${tab.id}`, gap: 5, align: 'CENTER', justify: 'CENTER' })
-    cell.primaryAxisSizingMode = 'FIXED'
-    cell.resize(cell.width, 44)
+    setSize(cell, { height: 44 })
     cell.appendChild(icon(tab.svg, 23, ink))
     cell.appendChild(text(tab.label, { size: TYPE.micro, weight: isActive ? 700 : 500, color: ink }))
     bar.appendChild(grow(cell))
@@ -131,8 +129,7 @@ function topBar(device: Device, active: TabId | null): FrameNode {
     align: 'CENTER',
     width: device.width,
   })
-  bar.primaryAxisSizingMode = 'FIXED'
-  bar.resize(device.width, 66)
+  setSize(bar, { width: device.width, height: 66 })
   bar.appendChild(navWordmark(TYPE.lead))
   const tabs = stack({ name: 'tabs', direction: 'HORIZONTAL', gap: 4, align: 'CENTER' })
   for (const tab of TABS) tabs.appendChild(tabPill(tab, tab.id === active, 20, 40, 9))
@@ -192,13 +189,14 @@ export interface FrameSpec {
 export function deviceFrame(device: Device, spec: FrameSpec): FrameNode {
   const frame = figma.createFrame()
   frame.name = `${spec.name} · ${device.width}`
-  frame.resize(device.width, device.height)
   frame.fills = paint('paper')
   frame.clipsContent = false
   frame.layoutMode = spec.axis
-  frame.primaryAxisSizingMode = spec.height === 'content' ? 'AUTO' : 'FIXED'
-  frame.counterAxisSizingMode = 'FIXED'
   frame.counterAxisAlignItems = spec.align ?? 'MIN'
+  setSize(frame, {
+    width: device.width,
+    height: spec.height === 'content' ? undefined : device.height,
+  })
   return frame
 }
 
@@ -233,25 +231,11 @@ export function screenFrame(device: Device, spec: ScreenSpec): Screen {
   return { frame, content, width: column.width }
 }
 
-/** Grows the frame when the screen is taller than the device, so nothing is cut,
- *  and keeps the tab bar at the bottom of a short one. Height is the primary
- *  axis when the screen stacks and the counter axis when it sits beside a rail,
- *  so the mode to relax is not the same one. */
+/** Grows the frame when the screen is taller than the device, so nothing is
+ *  cut, and keeps the tab bar at the bottom of a short one. */
 export function fitToDevice(frame: FrameNode, device: Device): FrameNode {
-  const sideways = frame.layoutMode === 'HORIZONTAL'
-  if (sideways) {
-    frame.counterAxisSizingMode = 'AUTO'
-    if (frame.height < device.height) {
-      frame.counterAxisSizingMode = 'FIXED'
-      frame.resize(device.width, device.height)
-    }
-    return frame
-  }
-  frame.primaryAxisSizingMode = 'AUTO'
-  if (frame.height < device.height) {
-    frame.primaryAxisSizingMode = 'FIXED'
-    frame.resize(device.width, device.height)
-  }
+  setSize(frame, { width: device.width })
+  if (frame.height < device.height) setSize(frame, { width: device.width, height: device.height })
   return frame
 }
 
@@ -365,8 +349,7 @@ export function storyCover(position: number, state: StoryState): FrameNode {
     justify: 'CENTER',
     width: 52,
   })
-  frame.primaryAxisSizingMode = 'FIXED'
-  frame.resize(52, 52)
+  setSize(frame, { width: 52, height: 52 })
   if (done) frame.appendChild(icon(COVER_DONE, 22, 'aprovado'))
   else if (locked) frame.appendChild(icon(COVER_LOCKED, 22, 'muted'))
   else frame.appendChild(text(String(position), { size: TYPE.lead, weight: 800, color: 'luz', tracking: TRACKING.title }))

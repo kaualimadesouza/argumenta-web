@@ -161,25 +161,24 @@ class FakeFrame extends FakeNode {
     return sizes.length === 0 ? 0 : Math.max(...sizes)
   }
 
+  /** Which sizing mode owns a dimension flips with the direction: on a row the
+   *  primary axis is the width, on a column it is the height. */
+  private isFixed(dimension: 'width' | 'height'): boolean {
+    if (this.layoutMode === 'NONE') return true
+    const primary = dimension === (this.layoutMode === 'HORIZONTAL' ? 'width' : 'height')
+    return primary
+      ? this.primaryAxisSizingMode === 'FIXED'
+      : this.counterAxisSizingMode === 'FIXED'
+  }
+
   get width(): number {
-    if (this.layoutMode === 'NONE' || this.counterAxisSizingMode === 'FIXED') {
-      if (this.layoutMode === 'HORIZONTAL' && this.primaryAxisSizingMode === 'AUTO') {
-        return atLeastFloor(this.mainAxisExtent() + this.paddingLeft + this.paddingRight)
-      }
-      return this.fixedWidth
-    }
+    if (this.isFixed('width')) return this.fixedWidth
     const extent = this.layoutMode === 'HORIZONTAL' ? this.mainAxisExtent() : this.crossAxisExtent()
     return atLeastFloor(extent + this.paddingLeft + this.paddingRight)
   }
 
   get height(): number {
-    if (this.layoutMode === 'NONE') return this.fixedHeight
-    if (this.layoutMode === 'VERTICAL' && this.primaryAxisSizingMode === 'FIXED') {
-      return this.fixedHeight
-    }
-    if (this.layoutMode === 'HORIZONTAL' && this.counterAxisSizingMode === 'FIXED') {
-      return this.fixedHeight
-    }
+    if (this.isFixed('height')) return this.fixedHeight
     const extent = this.layoutMode === 'VERTICAL' ? this.mainAxisExtent() : this.crossAxisExtent()
     return atLeastFloor(extent + this.paddingTop + this.paddingBottom)
   }
@@ -212,7 +211,9 @@ class FakeText extends FakeNode {
   }
 
   get height(): number {
-    const perLine = Math.max(1, Math.floor(this.width / (this.fontSize * GLYPH)))
+    // the slack keeps a line that fits exactly from rounding down to a
+    // character less and reporting two lines: 109.2 / 7.8 is 13.999…
+    const perLine = Math.max(1, Math.floor(this.width / (this.fontSize * GLYPH) + 1e-6))
     const lines = Math.max(1, Math.ceil(this.characters.length / perLine))
     return Math.round(lines * this.fontSize * this.factor)
   }

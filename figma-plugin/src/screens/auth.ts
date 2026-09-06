@@ -8,7 +8,7 @@ import {
   settle,
 } from '../chrome'
 import { columnFor, type Device } from '../devices'
-import { applyBorder, fill, grow, paint, stack, text } from '../nodes'
+import { applyBorder, fill, grow, paint, setSize, stack, text } from '../nodes'
 import { LEGAL } from '../samples'
 import { TRACKING, TYPE } from '../tokens'
 import { button, field } from '../ui'
@@ -30,8 +30,7 @@ function googleButton(): FrameNode {
     justify: 'CENTER',
     width: 22,
   })
-  tile.primaryAxisSizingMode = 'FIXED'
-  tile.resize(22, 22)
+  setSize(tile, { width: 22, height: 22 })
   const glyph = figma.createNodeFromSvg(GOOGLE_G)
   glyph.resize(13, 13)
   tile.appendChild(glyph)
@@ -128,8 +127,7 @@ export function entrarEmail(device: Device): FrameNode {
 function consentRow(width: number): FrameNode {
   const row = stack({ name: 'consent', direction: 'HORIZONTAL', gap: 10, align: 'MIN', width })
   const box = stack({ name: 'checkbox', radius: 4, fill: 'card', width: 18 })
-  box.primaryAxisSizingMode = 'FIXED'
-  box.resize(18, 18)
+  setSize(box, { width: 18, height: 18 })
   applyBorder(box, { color: 'lineStrong', weight: 1 })
   row.appendChild(box)
   const body =

@@ -1,6 +1,6 @@
 import { brandWordmark, deviceFrame, nightPanel, penMark, speechRow } from '../chrome'
 import { columnFor, type Device } from '../devices'
-import { fill, pressShadow, rect, stack, text } from '../nodes'
+import { fill, pressShadow, rect, setSize, stack, text } from '../nodes'
 import {
   CHAPTER_ROWS,
   CLOSING_FACTS,
@@ -42,8 +42,7 @@ function navBar(width: number, device: Device): FrameNode {
     justify: 'SPACE_BETWEEN',
     width,
   })
-  bar.primaryAxisSizingMode = 'FIXED'
-  bar.resize(width, 72)
+  setSize(bar, { width, height: 72 })
   bar.appendChild(brandWordmark(22))
   if (device.id === 'desktop') {
     const links = stack({ name: 'links', direction: 'HORIZONTAL', gap: 28, align: 'CENTER' })
@@ -80,8 +79,7 @@ function ghostLink(label: string): FrameNode {
     align: 'CENTER',
     justify: 'CENTER',
   })
-  frame.primaryAxisSizingMode = 'FIXED'
-  frame.resize(frame.width, 44)
+  setSize(frame, { height: 44 })
   frame.appendChild(
     text(label, { size: TYPE.body, weight: 600, color: 'ink2', tracking: TRACKING.body }),
   )
@@ -148,8 +146,7 @@ function heroShot(width: number): FrameNode {
     justify: 'CENTER',
     width: column,
   })
-  fake.primaryAxisSizingMode = 'FIXED'
-  fake.resize(column, 50)
+  setSize(fake, { width: column, height: 50 })
   fake.effects = pressShadow('canetaPress')
   fake.appendChild(text('Argumentar', { size: TYPE.body, weight: 700, color: 'card' }))
   screen.appendChild(fill(fake))
@@ -563,8 +560,7 @@ function planCard(width: number, plan: (typeof PLANS)[number]): FrameNode {
     shell.appendChild(fill(button('Começar grátis')))
   } else {
     const waiting = stack({ name: 'waiting', align: 'CENTER', justify: 'CENTER', width: inner })
-    waiting.primaryAxisSizingMode = 'FIXED'
-    waiting.resize(inner, 50)
+    setSize(waiting, { width: inner, height: 50 })
     waiting.appendChild(
       text('Disponível depois do beta.', { size: TYPE.meta, weight: 600, color: 'muted' }),
     )
@@ -733,8 +729,7 @@ function footer(width: number, device: Device): FrameNode {
 /** The promotional page a visitor reads before signing up: one frame per width,
  *  the full scroll, since a landing is judged by its whole length. */
 export function landing(device: Device): FrameNode {
-  const column = columnFor(device, 'landing')
-  const width = column.width
+  const width = columnFor(device, 'landing').width
   const frame = deviceFrame(device, {
     name: 'Landing',
     axis: 'VERTICAL',
@@ -742,15 +737,9 @@ export function landing(device: Device): FrameNode {
     align: 'CENTER',
   })
 
-  const wrap = (child: FrameNode): FrameNode => {
-    const holder = stack({ name: 'wrap', padding: [0, column.padX], align: 'MIN', width: device.width })
-    holder.appendChild(child)
-    return holder
-  }
-
-  frame.appendChild(fill(wrap(navBar(width, device))));
-  frame.appendChild(fill(wrap(hero(width, device))))
-  frame.appendChild(fill(wrap(factsStrip(width, device))))
+  frame.appendChild(navBar(width, device))
+  frame.appendChild(hero(width, device))
+  frame.appendChild(factsStrip(width, device))
 
   const stories = section(width, device)
   stories.appendChild(
@@ -763,15 +752,15 @@ export function landing(device: Device): FrameNode {
       ),
     ),
   )
-  frame.appendChild(fill(wrap(stories)))
-  frame.appendChild(fill(marquee(device)))
+  frame.appendChild(stories)
+  frame.appendChild(marquee(device))
 
   const how = section(width, device, true)
   how.appendChild(fill(sectionHead('Como funciona', 'Você escreve. O personagem responde. A história segue, ou não.', width, device)))
   how.appendChild(fill(howItWorks(width, device)))
-  frame.appendChild(fill(wrap(how)))
+  frame.appendChild(how)
 
-  frame.appendChild(fill(wrap(thesis(width, device))))
+  frame.appendChild(thesis(width, device))
 
   const criteria = section(width, device)
   criteria.appendChild(
@@ -798,7 +787,7 @@ export function landing(device: Device): FrameNode {
       }),
     ),
   )
-  frame.appendChild(fill(wrap(criteria)))
+  frame.appendChild(criteria)
 
   const plans = section(width, device, true)
   plans.appendChild(
@@ -827,14 +816,14 @@ export function landing(device: Device): FrameNode {
       }),
     ),
   )
-  frame.appendChild(fill(wrap(plans)))
+  frame.appendChild(plans)
 
   const questions = section(width, device, true)
   questions.appendChild(fill(sectionHead('As três perguntas que todo mundo faz', null, width, device)))
   questions.appendChild(fill(faqList(width, device)))
-  frame.appendChild(fill(wrap(questions)))
+  frame.appendChild(questions)
 
-  frame.appendChild(fill(wrap(closing(width, device))))
-  frame.appendChild(fill(wrap(footer(width, device))))
+  frame.appendChild(closing(width, device))
+  frame.appendChild(footer(width, device))
   return frame
 }

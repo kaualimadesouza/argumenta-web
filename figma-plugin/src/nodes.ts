@@ -83,17 +83,33 @@ export function stack(options: StackOptions = {}): FrameNode {
   frame.paddingRight = right
   frame.paddingBottom = bottom
   frame.paddingLeft = left
-  frame.primaryAxisSizingMode = 'AUTO'
-  frame.counterAxisSizingMode = options.width === undefined ? 'AUTO' : 'FIXED'
   frame.counterAxisAlignItems = options.align === 'BASELINE' ? 'BASELINE' : (options.align ?? 'MIN')
   frame.primaryAxisAlignItems = options.justify ?? 'MIN'
   frame.clipsContent = false
   frame.fills = options.fill === undefined || options.fill === null ? [] : paint(options.fill)
   if (options.radius !== undefined) frame.cornerRadius = options.radius
   if (options.wrap === true) frame.layoutWrap = 'WRAP'
-  if (options.width !== undefined) frame.resize(options.width, frame.height)
+  setSize(frame, { width: options.width })
   if (options.border) applyBorder(frame, options.border)
   return frame
+}
+
+export interface Size {
+  width?: number
+  height?: number
+}
+
+/** Figma's sizing modes are axis-relative, so their meaning flips with the
+ *  direction of the stack: on a row, the "primary" axis is the width. This
+ *  states the frame's sizing in the two words the caller is thinking in, and a
+ *  dimension left out hugs its content. */
+export function setSize(frame: FrameNode, size: Size): void {
+  const sideways = frame.layoutMode === 'HORIZONTAL'
+  frame.resize(Math.max(0.01, size.width ?? frame.width), Math.max(0.01, size.height ?? frame.height))
+  const primary = sideways ? size.width : size.height
+  const counter = sideways ? size.height : size.width
+  frame.primaryAxisSizingMode = primary === undefined ? 'AUTO' : 'FIXED'
+  frame.counterAxisSizingMode = counter === undefined ? 'AUTO' : 'FIXED'
 }
 
 export function applyBorder(node: FrameNode | RectangleNode, border: Border): void {

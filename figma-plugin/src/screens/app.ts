@@ -4,7 +4,7 @@ import { applyBorder, fill, grow, rect, stack, text } from '../nodes'
 import { MILESTONES, TRACK, TRENDS, WEEK, type StorySample } from '../samples'
 import { COLORS, LAYOUT, SHAPE, TRACKING, TYPE } from '../tokens'
 import { button, card, chip, progressBar, tick } from '../ui'
-import { columns, screenTitle } from './layout'
+import { cellWidth, columns, screenTitle } from './layout'
 import { dangerCard, nicknameCard, targetsCard } from './profile'
 
 /* -------------------------------- trilha ------------------------------- */
@@ -163,7 +163,8 @@ export function trilha(device: Device): FrameNode {
       fill(storyCard({ story: featured, width, featured: true, device })),
     )
   }
-  const cards = rest.map((story) => storyCard({ story, width, featured: false, device }))
+  const cell = cellWidth(width, perRow, gap)
+  const cards = rest.map((story) => storyCard({ story, width: cell, featured: false, device }))
   for (const row of columns(cards, perRow, width, gap)) screen.content.appendChild(fill(row))
   return settle(screen, device)
 }
@@ -178,9 +179,9 @@ function streakCard(width: number, device: Device): FrameNode {
   head.appendChild(text('Seu recorde é 9 dias', { size: TYPE.meta, weight: 500, color: 'muted' }))
   shell.appendChild(fill(head))
   const week = stack({ name: 'week', direction: 'HORIZONTAL', gap: 7, width: inner })
-  const cellWidth = Math.floor((inner - 7 * 6) / 7)
+  const boxWidth = Math.floor((inner - 7 * 6) / 7)
   const height = device.id === 'desktop' ? 48 : 34
-  for (const day of WEEK) week.appendChild(dayBox(day, cellWidth, height))
+  for (const day of WEEK) week.appendChild(dayBox(day, boxWidth, height))
   shell.appendChild(fill(week))
   shell.appendChild(
     fill(
